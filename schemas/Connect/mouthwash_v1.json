@@ -1,0 +1,332 @@
+[
+  {
+    "name": "D_792134396",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_792134396",
+    "fields": []
+  },
+  {
+    "name": "D_736393021",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_736393021",
+    "fields": []
+  },
+  {
+    "name": "D_430060900",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_430060900",
+    "fields": []
+  },
+  {
+    "name": "D_957305523",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_957305523",
+    "fields": []
+  },
+  {
+    "name": "d_784119588",
+    "mode": "NULLABLE",
+    "type": "INTEGER",
+    "description": "784119588",
+    "fields": []
+  },
+  {
+    "name": "D_800703566",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_800703566",
+    "fields": []
+  },
+  {
+    "name": "D_498984275",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_498984275",
+    "fields": []
+  },
+  {
+    "name": "D_526973271",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_526973271",
+    "fields": []
+  },
+  {
+    "name": "uid",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "uid",
+    "fields": []
+  },
+  {
+    "name": "D_406270109",
+    "mode": "REPEATED",
+    "type": "STRING",
+    "description": "D_406270109",
+    "fields": []
+  },
+  {
+    "name": "D_520416570",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_520416570",
+    "fields": []
+  },
+  {
+    "name": "D_349659426",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_349659426",
+    "fields": []
+  },
+  {
+    "name": "D_460873842",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_460873842",
+    "fields": []
+  },
+  {
+    "name": "D_877878167",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_877878167",
+    "fields": []
+  },
+  {
+    "name": "D_350251057",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_350251057",
+    "fields": []
+  },
+  {
+    "name": "D_736028153",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_736028153",
+    "fields": []
+  },
+  {
+    "name": "treeJSON",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "treeJSON",
+    "fields": []
+  },
+  {
+    "name": "D_360678252",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_360678252",
+    "fields": []
+  },
+  {
+    "name": "D_899251483_V2",
+    "mode": "REPEATED",
+    "type": "STRING",
+    "description": "D_899251483_V2",
+    "fields": []
+  },
+  {
+    "name": "D_542661394",
+    "mode": "REPEATED",
+    "type": "STRING",
+    "description": "D_542661394",
+    "fields": []
+  },
+  {
+    "name": "D_800752981",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_800752981",
+    "fields": []
+  },
+  {
+    "name": "D_983043203",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_983043203",
+    "fields": []
+  },
+  {
+    "name": "D_667908442",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_667908442",
+    "fields": []
+  },
+  {
+    "name": "Connect_ID",
+    "mode": "NULLABLE",
+    "type": "INTEGER",
+    "description": "Connect_ID",
+    "fields": []
+  },
+  {
+    "name": "D_724589244",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_724589244",
+    "fields": []
+  },
+  {
+    "name": "sha",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "sha",
+    "fields": []
+  },
+  {
+    "name": "D_318641324",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_318641324",
+    "fields": []
+  },
+  {
+    "name": "D_294886836",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_294886836",
+    "fields": []
+  },
+  {
+    "name": "D_921972241",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_921972241",
+    "fields": []
+  },
+  {
+    "name": "D_642044281",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_642044281",
+    "fields": []
+  },
+  {
+    "name": "D_339570897",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_339570897",
+    "fields": []
+  },
+  {
+    "name": "D_766370065",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_766370065",
+    "fields": []
+  },
+  {
+    "name": "d_850585325",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "850585325",
+    "fields": []
+  },
+  {
+    "name": "D_205713835",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_205713835",
+    "fields": []
+  },
+  {
+    "name": "D_479143504",
+    "mode": "REPEATED",
+    "type": "STRING",
+    "description": "D_479143504",
+    "fields": []
+  },
+  {
+    "name": "D_429994023",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_429994023",
+    "fields": []
+  },
+  {
+    "name": "D_353467497",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_353467497",
+    "fields": []
+  },
+  {
+    "name": "D_499977481",
+    "mode": "NULLABLE",
+    "type": "STRING",
+    "description": "D_499977481",
+    "fields": []
+  },
+  {
+    "name": "__key__",
+    "mode": "NULLABLE",
+    "type": "RECORD",
+    "description": "",
+    "fields": [
+      {
+        "name": "namespace",
+        "mode": "NULLABLE",
+        "type": "STRING",
+        "description": "",
+        "fields": []
+      },
+      {
+        "name": "app",
+        "mode": "NULLABLE",
+        "type": "STRING",
+        "description": "",
+        "fields": []
+      },
+      {
+        "name": "path",
+        "mode": "NULLABLE",
+        "type": "STRING",
+        "description": "",
+        "fields": []
+      },
+      {
+        "name": "kind",
+        "mode": "NULLABLE",
+        "type": "STRING",
+        "description": "",
+        "fields": []
+      },
+      {
+        "name": "name",
+        "mode": "NULLABLE",
+        "type": "STRING",
+        "description": "",
+        "fields": []
+      },
+      {
+        "name": "id",
+        "mode": "NULLABLE",
+        "type": "INTEGER",
+        "description": "",
+        "fields": []
+      }
+    ]
+  },
+  {
+    "name": "__error__",
+    "mode": "REPEATED",
+    "type": "STRING",
+    "description": "",
+    "fields": []
+  },
+  {
+    "name": "__has_error__",
+    "mode": "NULLABLE",
+    "type": "BOOLEAN",
+    "description": "",
+    "fields": []
+  }
+]
