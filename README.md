@@ -12,6 +12,15 @@ The full data pipeline from Firestore to analysis-ready tables has three stages:
 2. **FlatConnect → CleanConnect** ([pr2-transformation](https://github.com/Analyticsphere/pr2-transformation) + [pr2-orchestration](https://github.com/Analyticsphere/pr2-orchestration)): a serverless Cloud Run ETL that standardizes column names, converts binary 0/1 values to concept IDs, and merges multi-version survey tables.
 3. **CleanConnect → (this project)**: proposes a normalized relational layer above CleanConnect, driven by the Connect data dictionary, to support repeatable analyses across question types.
 
+### Open Design Decision: Source Layer for Relational Transformation
+
+A decision is still needed on whether the relational model should be built from:
+
+- `Connect` data directly as ingested from Firestore, or
+- `CleanConnect` as the intermediate source layer.
+
+Current leaning: it will likely be cleaner to transform directly from `Connect` to the relational model, rather than introducing `CleanConnect` as an additional dependency in this path.
+
 The `schemas/` folder in this repository captures the BigQuery schemas at stages 1 and 2:
 
 The current BigQuery representation has two layers:
