@@ -60,6 +60,13 @@ The current wide-table approach has several limitations:
 - **No explicit survey structure**: relationships between surveys, versions, questions, and responses are implicit in the column names rather than first-class entities.
 - **Skip logic is invisible**: complex branching logic that governs which questions a participant sees is not represented anywhere in the data.
 - **Hard to version**: when surveys gain new questions (e.g. `module1_v1` → `module1_v2`), there is no formal mechanism to track what changed.
+- **Rapid schema drift from flattening**: as new answers and fields are added in the upstream application, the flattening step continuously widens tables with new columns. This creates a fast-moving, "dancing schema" that is hard to stabilize for downstream analytics.
+
+- **Loop expansion creates more columns**: looped questions are emitted with `_<loop_number>` suffixes, which further expands table width as loop instances accumulate over time.
+
+A relational model with a long/narrow `responses` table eliminates this dancing-schema problem by storing new answers as rows rather than introducing new columns.
+
+The data model should handle looped questions explicitly (for example, with a `loop_instance` or equivalent response-instance attribute) so repeated items remain row-level data instead of becoming new columns.
 
 ---
 
