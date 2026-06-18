@@ -75,6 +75,8 @@ The **Proposed Data Model** below addresses each of these directly — long/narr
 
 We propose a **two-phase path**: a modest **Phase 1** that lands a fast, low-risk win, then a comprehensive **Phase 2** that realizes the full value. Both share the same long-format thesis — Phase 1 proves it cheaply, Phase 2 builds it out — so Phase 1 is a down payment on Phase 2, not throwaway work.
 
+> See **[docs/example_queries.md](docs/example_queries.md)** for standard analyst queries written three ways — challenging on the wide tables, easier in Phase 1, breezy in Phase 2.
+
 ### Phase 1 — Dictionary-Direct (start here)
 
 The minimal transformation: **adopt the [CIDTool](#cidtool-and-the-conceptvariable-dictionary) data dictionary exactly as it is emitted** (no redesign, no relabeling) and add **one** long-format `responses` table that joins to it. The familiar dictionary you already maintain, plus answers as rows.
