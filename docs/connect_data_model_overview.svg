@@ -1,14 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1448" height="141" viewBox="0 0 1448 141">
-  <rect width="1448" height="141" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="232" viewBox="0 0 700 232">
+  <rect width="700" height="232" fill="#ffffff"/>
   <text font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="13" fill="#1f2328" xml:space="preserve">
-    <tspan x="14" y="25">                                  ╭────────────────╮                 ╭──────────────────╮</tspan>
-    <tspan x="14" y="38">                                  │ question_types ├╮              ╭─┤ response_options │</tspan>
-    <tspan x="14" y="51">                                  ╰────────────────╯│ ╭───────────╮│ ╰──────────────────╯                 ╭───────────────────╮  ╭──────────────╮  ╭────────────────────╮</tspan>
-    <tspan x="14" y="64">╭─────────╮  ╭─────────────────╮                    ╰┬┤ questions ├┤                       ╭───────────╮╭┬┤ response_sessions ├──┤ participants ├──┤ biospecimen_events │</tspan>
-    <tspan x="14" y="77">│ surveys ├┬─┤ survey_versions ├╮ ╭────────────────╮ │╰───────────╯│ ╭──────────────────╮╭─┤ responses ├│╯╰───────────────────╯  ╰──────────────╯  ╰────────────────────╯</tspan>
-    <tspan x="14" y="90">╰─────────╯│ ╰─────────────────╯├─┤   skip_logic   ├─╯             ╰┬┤ survey_questions ├╯ ╰───────────╯│</tspan>
-    <tspan x="14" y="103">           │                    │ ╰────────────────╯                │╰──────────────────╯               │</tspan>
-    <tspan x="14" y="116">           ╰────────────────────│───────────────────────────────────│───────────────────────────────────╯</tspan>
-    <tspan x="14" y="129">                                ╰───────────────────────────────────╯</tspan>
+    <tspan x="14" y="25">                    ╭────────────────────╮</tspan>
+    <tspan x="14" y="38">                  ╭─┤  survey_versions   ├─╮</tspan>
+    <tspan x="14" y="51">╭────────────────╮│ ╰────────────────────╯ │</tspan>
+    <tspan x="14" y="64">│    surveys     ├┤                       ╭│─────────────────────╮</tspan>
+    <tspan x="14" y="77">╰────────────────╯│ ╭────────────────────╮││                     │</tspan>
+    <tspan x="14" y="90">                  ╰┬┤ response_sessions  ├╯│ ╭──────────────────╮│ ╭───────────╮</tspan>
+    <tspan x="14" y="103">╭────────────────╮ │╰────────────────────╯ ├┬┤ survey_questions ├┴─┤ responses │</tspan>
+    <tspan x="14" y="116">│  participants  ├─┤                       ││╰──────────────────╯  ╰───────────╯</tspan>
+    <tspan x="14" y="129">╰────────────────╯ │╭────────────────────╮ ││</tspan>
+    <tspan x="14" y="142">                   ╰┤ biospecimen_events │ ││╭──────────────────╮</tspan>
+    <tspan x="14" y="155">                    ╰────────────────────╯ ╰├┤    skip_logic    │</tspan>
+    <tspan x="14" y="168">                                            │╰──────────────────╯</tspan>
+    <tspan x="14" y="181">╭────────────────╮  ╭────────────────────╮  │</tspan>
+    <tspan x="14" y="194">│ question_types ├──┤     questions      ├──┤╭──────────────────╮</tspan>
+    <tspan x="14" y="207">╰────────────────╯  ╰────────────────────╯  ╰┤ response_options │</tspan>
+    <tspan x="14" y="220">                                             ╰──────────────────╯</tspan>
   </text>
 </svg>

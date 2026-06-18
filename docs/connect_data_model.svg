@@ -1,40 +1,57 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2364" height="479" viewBox="0 0 2364 479">
-  <rect width="2364" height="479" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1162" height="700" viewBox="0 0 1162 700">
+  <rect width="1162" height="700" fill="#ffffff"/>
   <text font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="13" fill="#1f2328" xml:space="preserve">
-    <tspan x="14" y="25">                                                                                                                                  ╭─────────────────────────────────────╮</tspan>
-    <tspan x="14" y="38">                                                                                                                                  │          response_options           │</tspan>
-    <tspan x="14" y="51">                                                                                                                                  ├─────────────────────────────────────┤</tspan>
-    <tspan x="14" y="64">                                                                                                                                  │·option_id                       int │</tspan>
-    <tspan x="14" y="77">                                                                                                                                ╭─┤ question_concept_id             int │</tspan>
-    <tspan x="14" y="90">                                                                ╭─────────────────────────────────╮                             │ │ concept_version                text │</tspan>
-    <tspan x="14" y="103">                                                                │           skip_logic            │                             │ │ response_concept_id             int │</tspan>
-    <tspan x="14" y="116">                                                                ├─────────────────────────────────┤                             │ │ label                          text │</tspan>
-    <tspan x="14" y="129">                                                                │·skip_logic_id               int │                             │ │ value                          text │</tspan>
-    <tspan x="14" y="142">                                                              ╭─┤ survey_version_id           int │                             │ │ display_order                   int │                                                                                       ╭────────────────────╮</tspan>
-    <tspan x="14" y="155">                                                              │ │ target_question_concept_id  int ├╮                            │ │ is_other                    boolean │                                                                                       │ biospecimen_events │</tspan>
-    <tspan x="14" y="168">                                                              │ │ trigger_question_concept_id int ├┤ ╭─────────────────────────╮│ │ status                         text │                               ╭────────────────────────╮  ╭────────────────────────╮  ├────────────────────┤</tspan>
-    <tspan x="14" y="181">                                     ╭───────────────────────╮│ │ operator                   text ││ │        questions        ││ │ status_date                    date │                               │   response_sessions    │  │      participants      │  │·event_id       int │</tspan>
-    <tspan x="14" y="194">╭─────────────────────────────────╮  │    survey_versions    ││ │ trigger_value              text ││ ├─────────────────────────┤│ │ replaced_by_response_concept_id int │  ╭─────────────────────────╮  ├────────────────────────┤  ├────────────────────────┤╭─┤ connect_id     int │</tspan>
-    <tspan x="14" y="207">│             surveys             │  ├───────────────────────┤│ │ action                     text │╰─┤·question_concept_id int ├┤ │ pii                         boolean │  │        responses        │╭─┤·session_id         int │╭─┤·connect_id         int ├╯ │ event_type    text │</tspan>
-    <tspan x="14" y="220">├─────────────────────────────────┤  │·survey_version_id int ├┤ ╰─────────────────────────────────╯  │ label              text ││ │ sensitivity_tier               text │  ├─────────────────────────┤│ │ connect_id         int ├╯ │ enrollment_status text │  │ event_at timestamp │</tspan>
-    <tspan x="14" y="233">│·survey_id                   int ├┬─┤ survey_id         int ││                                    ╭─┤ question_type_id    int ││ ╰─────────────────────────────────────╯  │·response_id         int ││╭┤ survey_id          int │  ╰────────────────────────╯  ╰────────────────────╯</tspan>
-    <tspan x="14" y="246">│ name                       text ││ │ version          text ││ ╭─────────────────────────────────╮│ │ variable_type      text ││                                          │ session_id          int ├╯││ wave              text │</tspan>
-    <tspan x="14" y="259">│ secondary_source_concept_id int ││ ╰───────────────────────╯│ │         question_types          ││ │ numeric_min        real ││ ╭─────────────────────────────────────╮╭─┤ survey_question_id  int │ ││ status            text │</tspan>
-    <tspan x="14" y="272">│ domain                     text ││                          │ ├─────────────────────────────────┤│ │ numeric_max        real ││ │          survey_questions           ││ │ loop_instance       int │ ││ started_at   timestamp │</tspan>
-    <tspan x="14" y="285">╰─────────────────────────────────╯│                          │ │·question_type_id            int ├╯ │ pii             boolean ││ ├─────────────────────────────────────┤│ │ response_concept_id int │ ││ completed_at timestamp │</tspan>
-    <tspan x="14" y="298">                                   │                          │ │ base_type                  text │  │ sensitivity_tier   text ││ │·survey_question_id              int ├╯ │ value_string       text │ │╰────────────────────────╯</tspan>
-    <tspan x="14" y="311">                                   │                          │ │ has_loop                boolean │  ╰─────────────────────────╯│╭┤ survey_version_id               int │  │ value_number       real │ │</tspan>
-    <tspan x="14" y="324">                                   │                          │ │ has_displayif           boolean │                             ├│┤ question_concept_id             int │  │ value_date         date │ │</tspan>
-    <tspan x="14" y="337">                                   │                          │ │ is_required             boolean │                             ╰│┤ parent_question_concept_id      int │  │ sensitivity_tier   text │ │</tspan>
-    <tspan x="14" y="350">                                   │                          │ │ has_text_box            boolean │                              ││ concept_version                text │  │ source_table       text │ │</tspan>
-    <tspan x="14" y="363">                                   │                          │ ╰─────────────────────────────────╯                              ││ display_order                   int │  │ source_column      text │ │</tspan>
-    <tspan x="14" y="376">                                   │                          │                                                                  ││ is_required                 boolean │  ╰─────────────────────────╯ │</tspan>
-    <tspan x="14" y="389">                                   │                          │                                                                  ││ is_looped                   boolean │                              │</tspan>
-    <tspan x="14" y="402">                                   │                          │                                                                  ││ loop_max                        int │                              │</tspan>
-    <tspan x="14" y="415">                                   │                          │                                                                  ││ gcp_document_table             text │                              │</tspan>
-    <tspan x="14" y="428">                                   │                          │                                                                  ││ source_column                  text │                              │</tspan>
-    <tspan x="14" y="441">                                   │                          │                                                                  │╰─────────────────────────────────────╯                              │</tspan>
-    <tspan x="14" y="454">                                   ╰──────────────────────────│──────────────────────────────────────────────────────────────────│─────────────────────────────────────────────────────────────────────╯</tspan>
-    <tspan x="14" y="467">                                                              ╰──────────────────────────────────────────────────────────────────╯</tspan>
+    <tspan x="14" y="25">                                                                ╭──────────────────────────────────────────╮</tspan>
+    <tspan x="14" y="38">                                                                │                                          │</tspan>
+    <tspan x="14" y="51">                                     ╭─────────────────────────╮│                                          │</tspan>
+    <tspan x="14" y="64">                                     │     survey_versions     ││                                          │</tspan>
+    <tspan x="14" y="77">                                     ├─────────────────────────┤│                                          │</tspan>
+    <tspan x="14" y="90">                                     │·survey_version_id   int ├│╮                                         │</tspan>
+    <tspan x="14" y="103">                                   ╭─┤ survey_id           int │││                                         │</tspan>
+    <tspan x="14" y="116">                                   │ │ version            text │││ ╭─────────────────────────────────────╮ │╭─────────────────────────╮</tspan>
+    <tspan x="14" y="129">╭─────────────────────────────────╮│ ╰─────────────────────────╯││ │          survey_questions           │ ││        responses        │</tspan>
+    <tspan x="14" y="142">│             surveys             ││                            ││ ├─────────────────────────────────────┤ │├─────────────────────────┤</tspan>
+    <tspan x="14" y="155">├─────────────────────────────────┤│ ╭─────────────────────────╮││ │·survey_question_id              int ├╮││·response_id         int │</tspan>
+    <tspan x="14" y="168">│·survey_id                   int ├┤ │    response_sessions    ││├─┤ survey_version_id               int ││╰┤ session_id          int │</tspan>
+    <tspan x="14" y="181">│ name                       text ││ ├─────────────────────────┤││╭┤ question_concept_id             int │╰─┤ survey_question_id  int │</tspan>
+    <tspan x="14" y="194">│ secondary_source_concept_id int ││ │·session_id          int ├╯│├┤ parent_question_concept_id      int │  │ loop_instance       int │</tspan>
+    <tspan x="14" y="207">│ domain                     text ││╭┤ connect_id          int │ │││ concept_version                text │  │ response_concept_id int │</tspan>
+    <tspan x="14" y="220">╰─────────────────────────────────╯╰│┤ survey_id           int │ │││ display_order                   int │  │ value_string       text │</tspan>
+    <tspan x="14" y="233">                                    ││ wave               text │ │││ is_required                 boolean │  │ value_number       real │</tspan>
+    <tspan x="14" y="246">╭─────────────────────────────────╮ ││ status             text │ │││ is_looped                   boolean │  │ value_date         date │</tspan>
+    <tspan x="14" y="259">│          participants           │ ││ started_at    timestamp │ │││ loop_max                        int │  │ sensitivity_tier   text │</tspan>
+    <tspan x="14" y="272">├─────────────────────────────────┤ ││ completed_at  timestamp │ │││ gcp_document_table             text │  │ source_table       text │</tspan>
+    <tspan x="14" y="285">│·connect_id                  int ├─┤╰─────────────────────────╯ │││ source_column                  text │  │ source_column      text │</tspan>
+    <tspan x="14" y="298">│ enrollment_status          text │ │                            ││╰─────────────────────────────────────╯  ╰─────────────────────────╯</tspan>
+    <tspan x="14" y="311">╰─────────────────────────────────╯ │╭─────────────────────────╮ ││</tspan>
+    <tspan x="14" y="324">                                    ││   biospecimen_events    │ ││╭─────────────────────────────────────╮</tspan>
+    <tspan x="14" y="337">                                    │├─────────────────────────┤ │││             skip_logic              │</tspan>
+    <tspan x="14" y="350">                                    ││·event_id            int │ ││├─────────────────────────────────────┤</tspan>
+    <tspan x="14" y="363">                                    ╰┤ connect_id          int │ │││·skip_logic_id                   int │</tspan>
+    <tspan x="14" y="376">                                     │ event_type         text │ ╰│┤ survey_version_id               int │</tspan>
+    <tspan x="14" y="389">                                     │ event_at      timestamp │  ├┤ target_question_concept_id      int │</tspan>
+    <tspan x="14" y="402">                                     ╰─────────────────────────╯  ├┤ trigger_question_concept_id     int │</tspan>
+    <tspan x="14" y="415">                                                                  ││ operator                       text │</tspan>
+    <tspan x="14" y="428">                                     ╭─────────────────────────╮  ││ trigger_value                  text │</tspan>
+    <tspan x="14" y="441">                                     │        questions        │  ││ action                         text │</tspan>
+    <tspan x="14" y="454">╭─────────────────────────────────╮  ├─────────────────────────┤  │╰─────────────────────────────────────╯</tspan>
+    <tspan x="14" y="467">│         question_types          │  │·question_concept_id int ├──┤</tspan>
+    <tspan x="14" y="480">├─────────────────────────────────┤  │ label              text │  │╭─────────────────────────────────────╮</tspan>
+    <tspan x="14" y="493">│·question_type_id            int ├──┤ question_type_id    int │  ││          response_options           │</tspan>
+    <tspan x="14" y="506">│ base_type                  text │  │ variable_type      text │  │├─────────────────────────────────────┤</tspan>
+    <tspan x="14" y="519">│ has_loop                boolean │  │ numeric_min        real │  ││·option_id                       int │</tspan>
+    <tspan x="14" y="532">│ has_displayif           boolean │  │ numeric_max        real │  ╰┤ question_concept_id             int │</tspan>
+    <tspan x="14" y="545">│ is_required             boolean │  │ pii             boolean │   │ concept_version                text │</tspan>
+    <tspan x="14" y="558">│ has_text_box            boolean │  │ sensitivity_tier   text │   │ response_concept_id             int │</tspan>
+    <tspan x="14" y="571">╰─────────────────────────────────╯  ╰─────────────────────────╯   │ label                          text │</tspan>
+    <tspan x="14" y="584">                                                                   │ value                          text │</tspan>
+    <tspan x="14" y="597">                                                                   │ display_order                   int │</tspan>
+    <tspan x="14" y="610">                                                                   │ is_other                    boolean │</tspan>
+    <tspan x="14" y="623">                                                                   │ status                         text │</tspan>
+    <tspan x="14" y="636">                                                                   │ status_date                    date │</tspan>
+    <tspan x="14" y="649">                                                                   │ replaced_by_response_concept_id int │</tspan>
+    <tspan x="14" y="662">                                                                   │ pii                         boolean │</tspan>
+    <tspan x="14" y="675">                                                                   │ sensitivity_tier               text │</tspan>
+    <tspan x="14" y="688">                                                                   ╰─────────────────────────────────────╯</tspan>
   </text>
 </svg>
