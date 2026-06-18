@@ -93,6 +93,22 @@ The minimal transformation: **adopt the [CIDTool](#cidtool-and-the-conceptvariab
 
 **What Phase 1 leaves for Phase 2:** governance/release tiers, sessions and the missingness signal, a placement bridge for clean reused-concept integrity, version/option-set validity, curated marts with lineage, the question-type view library, and researcher-facing naming. (Multi-select/grids also stay as the dictionary's binary sub-question rows rather than one row per selected option.)
 
+#### Phase 1 vs. the current wide model
+
+Phase 1 wins decisively on the two highest-value axes — schema stability and generic queryability — but leaves the harder analytics and governance work to Phase 2. It is a real step change, not a cosmetic reshape, and it is no worse than the wide tables on anything.
+
+| Concern | Wide tables (today) | Phase 1 (Dictionary-Direct) |
+|---|---|---|
+| Schema stability | "dancing" — new answers / options / loops add columns | **stable** — they become rows; downstream stops breaking |
+| Generic, reusable SQL | impractical — every column is bespoke | **yes** — query by `concept_id` / `question_type` across surveys |
+| Human-readable labels | manual; column names encode multi-concept paths | **one join** to the dictionary |
+| Multi-select / grids | binary indicator columns | binary 0/1 rows — better, but not "one row per selected option" |
+| Version coexistence (V1/V2) | parallel columns, reconciled by hand | still separate (documented, not unified) |
+| Missingness (not-selected vs not-asked vs not-taken) | ambiguous | still ambiguous (no sessions yet) |
+| **Governance — per-sensitivity (PHI/PII) access** | **none** | **none** — must be added (Phase 2) |
+
+**On governance specifically:** Phase 1 does not add access control, and PR2 shares data with external researchers, where per-sensitivity (PHI/PII) gating is effectively a hard requirement — so Phase 1 alone is **not** an external-release-ready surface. Two implications: (1) treat Phase 1 as an internal/analyst layer (or apply coarse dataset-level BigQuery IAM as a stopgap) until Phase 2 governance lands; (2) the long format actually *changes how governance is enforced* — sensitivity becomes a **row-level** property of `responses` (handled by row-access policies) rather than a column-level one, which Phase 2's design anticipates. So Phase 1 doesn't regress governance, but it also doesn't deliver it; plan Phase 2 before opening the data to the community.
+
 ### Phase 2 — Functional model (the full vision)
 
 A **relational star schema on BigQuery**, organized in three layers and grounded in two authoritative sources — the **Connect data dictionary** (concept IDs, labels, types) and the **Quest survey markup** (structure, skip logic, loops, grids).
