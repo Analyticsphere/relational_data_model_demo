@@ -112,8 +112,8 @@ biospecimen_events  — biospecimen collection/processing events (event-shaped, 
 ### Entity Relationship
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/connect_data_model_dark.svg">
-  <img alt="Connect data model ERD: responses fact at the center, keyed on response_sessions and the survey_questions placement bridge, with surveys, survey_versions, questions, question_types, response_options, skip_logic, and biospecimen_events." src="docs/connect_data_model.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/connect_data_model_overview_dark.svg">
+  <img alt="Connect data model overview: responses fact keyed on response_sessions and the survey_questions placement bridge, with surveys, survey_versions, questions, question_types, response_options, skip_logic, and biospecimen_events." src="docs/connect_data_model_overview.svg">
 </picture>
 
 <details><summary>ERD as text</summary>
@@ -128,7 +128,7 @@ participants ──< biospecimen_events
 
 </details>
 
-> Diagrams are generated with [dbsketch](https://github.com/jacobmpeters/dbsketch) from the model definition. A names-only structural view (`docs/connect_data_model_structure.svg`) and a clustered view grouping dimensions vs. fact (`docs/connect_data_model_clustered.svg`) are also available for presentations.
+> Generated with [dbsketch](https://github.com/jacobmpeters/dbsketch) from the model definition. The overview above is the names-only shape; the **[full ERD with columns and types](docs/connect_data_model.svg)** and a **[clustered view](docs/connect_data_model_clustered.svg)** (dimensions vs. fact, for slides) are also in `docs/`.
 
 ### How it handles Connect's hard cases
 
