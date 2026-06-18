@@ -73,9 +73,31 @@ The **Proposed Data Model** below addresses each of these directly — long/narr
 
 ## Proposed Data Model
 
+We propose a **two-phase path**: a modest **Phase 1** that lands a fast, low-risk win, then a comprehensive **Phase 2** that realizes the full value. Both share the same long-format thesis — Phase 1 proves it cheaply, Phase 2 builds it out — so Phase 1 is a down payment on Phase 2, not throwaway work.
+
+### Phase 1 — Dictionary-Direct (start here)
+
+The minimal transformation: **adopt the [CIDTool](#cidtool-and-the-conceptvariable-dictionary) data dictionary exactly as it is emitted** (no redesign, no relabeling) and add **one** long-format `responses` table that joins to it. The familiar dictionary you already maintain, plus answers as rows.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/connect_model_a_overview_dark.svg">
+  <img alt="Model A: the CIDTool dictionary tables (primary_source, secondary_source, source_question, question, response, variable_metadata) with one added long-format responses table joining to question, source_question, and response." src="docs/connect_model_a_overview.svg">
+</picture>
+
+> The dictionary tables are arranged to mirror the CIDTool ERD; `responses` is the only new table. [Full diagram with columns](docs/connect_model_a.svg).
+
+- **Dimensions = CIDTool ERD, verbatim:** `primary_source`, `secondary_source`, `source_question`, `question`, `response`, `question_response` (the question→response list), `variable_metadata`. Loaded from CIDTool's output — we model nothing new.
+- **Fact = `responses`** (the one new table): one row per answered cell, keyed on `(connect_id, current_source_question_concept_id, question_concept_id, loop_instance)`, with `response_concept_id` / `value` and `source_column`. It carries the source-question path so reused concepts disambiguate, and joins to the dictionary for every label, type, and flag.
+
+**Why start here:** it adopts existing CIDTool work with no new ontology to defend, kills the dancing-schema pain with a single table, and is a small, low-risk build that demonstrates the long-format value immediately. It is **forward-compatible** with Phase 2: the same `responses` fact is reached by progressively cleaning the dimensions.
+
+**What Phase 1 leaves for Phase 2:** governance/release tiers, sessions and the missingness signal, a placement bridge for clean reused-concept integrity, version/option-set validity, curated marts with lineage, the question-type view library, and researcher-facing naming. (Multi-select/grids also stay as the dictionary's binary sub-question rows rather than one row per selected option.)
+
+### Phase 2 — Functional model (the full vision)
+
 A **relational star schema on BigQuery**, organized in three layers and grounded in two authoritative sources — the **Connect data dictionary** (concept IDs, labels, types) and the **Quest survey markup** (structure, skip logic, loops, grids).
 
-### Architecture: three layers, one direction
+#### Architecture: three layers, one direction
 
 ```
 Core                  →   Analytic                 →   Marts
@@ -90,7 +112,7 @@ responses (below)         view library                  lineage intact to source
 
 Each layer reads only from the one above; Core is never mutated downstream. **dbt** is proposed to build and document the Analytic + Marts layers (automatic column-level lineage, tests, versioned SQL). The Core → downstream boundary is also the governance trust boundary (see *Governance*).
 
-### Core tables
+#### Core tables
 
 ```
 participants        — one enrolled participant
@@ -109,7 +131,7 @@ responses           — long/narrow fact: one row per answer atom
 biospecimen_events  — biospecimen collection/processing events (event-shaped, kept separate)
 ```
 
-### Entity Relationship
+#### Entity Relationship
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/connect_data_model_overview_dark.svg">
@@ -130,7 +152,7 @@ participants ──< biospecimen_events
 
 > Generated with [dbsketch](https://github.com/jacobmpeters/dbsketch) from the model definition. The overview above is the names-only shape; the **[full ERD with columns and types](docs/connect_data_model.svg)** and a **[clustered view](docs/connect_data_model_clustered.svg)** (dimensions vs. fact, for slides) are also in `docs/`.
 
-### How it handles Connect's hard cases
+#### How it handles Connect's hard cases
 
 Each row is grounded in the real data (see `schemas/`, the data dictionary, and Quest markup).
 
@@ -147,14 +169,14 @@ Each row is grounded in the real data (see `schemas/`, the data dictionary, and 
 | **Skip logic invisible** | first-class `skip_logic` rows derived from Quest `displayif` / `->` |
 | **Missingness ambiguity** | `response_sessions.status` × skip reachability separates not-administered / not-answered / skipped-by-design |
 
-### Worked example — select-all, before and after
+#### Worked example — select-all, before and after
 
 `899251483` "Have you lost any permanent teeth?" — a select-all that was revised mid-study:
 
 - **Source / wide:** a `REPEATED` array the flattener explodes into binary indicator columns `d_899251483_d_<option>`, plus a parallel `…_v2` set after the revision. A researcher must hand-reconcile ~7 V1/V2 columns and **cannot distinguish "not selected" from "not offered."**
 - **This model:** one `responses` row per *selected* option, under one logical question (`899251483`), with `concept_version` separating V1/V2 and `response_options` recording which options each version offered. "What did people select?" becomes a single `GROUP BY`; version drift becomes one attribute.
 
-### Governance & access (built in, not bolted on)
+#### Governance & access (built in, not bolted on)
 
 PR2 grants access **per-data, per-sensitivity, per-business-need**, enforced with **BigQuery IAM**.
 
@@ -171,11 +193,11 @@ PR2 grants access **per-data, per-sensitivity, per-business-need**, enforced wit
 
 - Enforced via row-access policies, column policy tags (identifiers on dimensions), and **authorized views** — researchers reach only the Analytic/Marts layers, never the Core layer.
 
-### Derived variables & lineage
+#### Derived variables & lineage
 
 Connect will curate pre-derived variables (risk factors, scored scales) as **marts**. Each exposes its **inputs (source concept IDs), method, and version**, with lineage intact to source — so researchers can reproduce, audit, and improve it, never consume a black box. dbt's model/column lineage is the proposed mechanism.
 
-### Naming: clarity over dictionary jargon
+#### Naming: clarity over dictionary jargon
 
 The model uses researcher-facing names, keeps **concept IDs identical** (they are the join keys), and maintains a crosswalk to the dictionary / CIDTool:
 
@@ -278,13 +300,18 @@ Related Quest resources: [episphere/questionnaires](https://github.com/episphere
 
 ## Next Steps
 
-The model shape above (v0) is grounded in the dictionary, Quest markup, and the BigQuery schemas, and stress-tested against the hardest `module1` structures. Remaining work:
+Both phases are grounded in the dictionary, Quest markup, and the BigQuery schemas, and stress-tested against the hardest `module1` structures.
 
-- [ ] Write the DDL / dbt models for the Core tables and generate dimensions from the data dictionary + Quest
+**Phase 1 — Dictionary-Direct (fast win):**
+- [ ] Load the CIDTool dictionary tables into BigQuery as-is
+- [ ] Build the `responses` unpivot from CleanConnect; join-validate against the dictionary
+- [ ] Validate against real participant data (a select-all, a grid, a loop, a versioned/revised question)
+
+**Phase 2 — Functional model (the vision):**
+- [ ] Write the DDL / dbt models for the Core tables; generate cleaned dimensions from the dictionary + Quest
 - [ ] Build the Analytic layer (`fact_response`, dimensions, aggregates) and a question-type view library
 - [ ] Implement governance: `sensitivity_tier` classification, row-access policies, and the three release tiers
 - [ ] Prototype one curated mart with full lineage to validate the derived-variable pattern
-- [ ] Validate against real participant data (select-all, grid, xor, loops, and a versioned/revised question)
 
 Open questions still being resolved (see design notes):
 
