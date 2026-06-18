@@ -29,6 +29,12 @@ Phase 2 builds it out.
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="connect_model_a_overview_dark.svg"><img alt="Model A overview" src="connect_model_a_overview.svg"></picture>
 
+<details><summary>Full Phase 1 model (all columns) — the dictionary as-is, arranged like the CIDTool ERD, plus <code>responses</code></summary>
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="connect_model_a_dark.svg"><img alt="Model A full ERD with all columns" src="connect_model_a.svg"></picture>
+
+</details>
+
 - **What it is:** the CIDTool dictionary tables loaded **as-is**, plus **one** new table — `responses`
   (`connect_id × question_concept_id × current_source_question_concept_id × loop_instance → response_concept_id / value`). Optional thin `question_type_norm` view for clean per-type SQL.
 - **The lift — small:**
@@ -43,6 +49,12 @@ Phase 2 builds it out.
 ## Phase 2 — Functional model (the PR2 warehouse)
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="connect_data_model_overview_dark.svg"><img alt="Model B overview" src="connect_data_model_overview.svg"></picture>
+
+<details><summary>Full Phase 2 model (all columns)</summary>
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="connect_data_model_dark.svg"><img alt="Model B full ERD with all columns" src="connect_data_model.svg"></picture>
+
+</details>
 
 - **What it adds:** cleaned researcher-facing dimensions; a **placement bridge** (`survey_questions`) so reused concepts and grids/select-all resolve cleanly; **sessions** (`response_sessions`, derived from participant status/timing) for completion + missingness; **version-scoped `response_options`**; layered **Core → Analytic → Marts**; governance built in.
 - **The lift — larger, but incremental on Phase 1's `responses` fact, and phaseable:**
@@ -63,8 +75,68 @@ Phase 2 builds it out.
 | Completion & **true** missingness | cross-table, ambiguous | still ambiguous (no sessions) | sessions + skip logic |
 | Non-PHI extract (**governance**) | manual allow-list | manual allow-list | sensitivity tier + IAM |
 
-(Worked SQL for each is in `example_queries.md`.) Phase 1 flips the top two from *painful/impossible* to
-*routine*; Phase 2 makes the bottom two — missingness and governance — possible at all.
+Phase 1 flips the top two from *painful/impossible* to *routine*; Phase 2 makes the bottom two —
+missingness and governance — possible at all. Worked SQL below (example concept IDs from the tooth-loss
+select-all `899251483` and its follow-up `724589244`).
+
+### Q1 — distribution of a multi-select ("reasons for tooth loss")
+```sql
+-- WIDE: unpivot one indicator column per option, doubled across v1/v2, COALESCE'd by hand
+SELECT 'accident' AS reason, COUNTIF(COALESCE(d_899251483_d_812107266_v2, d_899251483_d_812107266)='353358909') n
+FROM `CleanConnect.mouthwash`
+UNION ALL SELECT 'tooth decay', COUNTIF(COALESCE(d_899251483_d_452438775_v2, d_899251483_d_452438775)='353358909')
+FROM `CleanConnect.mouthwash`;   -- …and you must know every option column + the v2-only ones
+
+-- PHASE 1: one table, labels via join, v1/v2 pool automatically
+SELECT q.current_question_text AS reason, COUNT(*) n
+FROM responses r JOIN question q USING (question_concept_id)
+WHERE r.current_source_question_concept_id = 899251483 AND r.response_concept_id = 353358909
+GROUP BY reason;
+
+-- PHASE 2: one row per selected option — a plain group-by
+SELECT o.label AS reason, COUNT(*) n
+FROM responses r
+JOIN survey_questions sq ON sq.survey_question_id = r.survey_question_id
+JOIN response_options o ON o.question_concept_id = sq.question_concept_id AND o.response_concept_id = r.response_concept_id
+WHERE sq.question_concept_id = 899251483 GROUP BY reason;
+```
+
+### Q2 — labeled distribution for *any* question
+```sql
+-- WIDE: bespoke CASE per question; nothing generalizes
+SELECT CASE d_724589244 WHEN '349122068' THEN '1' WHEN '194129782' THEN '2 to 4' /* … */ END AS answer, COUNT(*) n
+FROM `CleanConnect.mouthwash` GROUP BY answer;
+
+-- PHASE 1: labels via join; swap the concept_id to run it for ANY question
+SELECT resp.current_format_value AS answer, COUNT(*) n
+FROM responses r JOIN response resp USING (response_concept_id)
+WHERE r.question_concept_id = 724589244 GROUP BY answer;
+
+-- PHASE 2: read a precomputed aggregate
+SELECT answer_label AS answer, n FROM agg_question_distribution WHERE question_concept_id = 724589244;
+```
+
+### Q3 — completion & **true** missingness (Phase 2 only)
+```sql
+-- WIDE & PHASE 1: a blank/absent answer can't distinguish not-shown vs not-answered vs survey-not-taken.
+
+-- PHASE 2: sessions give status; skip_logic gives reachability
+SELECT s.status, COUNT(DISTINCT s.connect_id) participants,
+       COUNT(DISTINCT IF(r.response_id IS NOT NULL, s.connect_id, NULL)) answered_x
+FROM response_sessions s
+JOIN survey_questions sq ON sq.question_concept_id = /* X */ 0
+LEFT JOIN responses r ON r.session_id = s.session_id AND r.survey_question_id = sq.survey_question_id
+WHERE s.survey_id = /* Module 1 */ 0 AND s.wave = 'baseline'
+GROUP BY s.status;
+```
+
+### Q4 — non-PHI extract / **governance** (Phase 2 only)
+```sql
+-- WIDE & PHASE 1: no sensitivity in the schema — a manual, unenforced allow-list of "safe" fields.
+
+-- PHASE 2: sensitivity is data + enforced by a BigQuery row-access policy; the researcher's query is unchanged
+SELECT * FROM responses WHERE sensitivity_tier = 'non_sensitive';
+```
 
 ## Transformation lift at a glance
 
