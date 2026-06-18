@@ -97,6 +97,21 @@ WHERE question_concept_id = 724589244;
 ```
 **Takeaway:** wide needs a bespoke `CASE` per question and can't be generalized; Phase 1 parameterizes by `concept_id`; Phase 2 reads a precomputed distribution.
 
+> **Phase 1 add-on — one query across *all* questions of a type.** `question_type` rides along from the
+> dictionary, but its raw values are inconsistent (partial coverage, casing, typos, compound strings). A thin
+> derived `question_type_norm` view (messy string → clean `base_type` + flags, backfilled from Quest) lets a
+> single query span every question of a type — the "common abstraction" goal:
+> ```sql
+> SELECT t.base_type, r.question_concept_id, resp.current_format_value AS answer, COUNT(*) AS n
+> FROM responses r
+> JOIN question_type_norm t USING (question_concept_id)
+> JOIN response resp        USING (response_concept_id)
+> WHERE t.base_type = 'single_select'
+> GROUP BY t.base_type, r.question_concept_id, answer;
+> ```
+> Without normalization, `WHERE question_type = 'single_select'` silently drops questions whose type cell was
+> blank, miscased, or compound. Bounded to type only; typed-value parsing (generic `AVG()` etc.) is Phase 2.
+
 ---
 
 ## Q3 — "Among people who completed the survey, who actually answered question X?" (completion & true missingness)

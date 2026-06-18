@@ -95,6 +95,21 @@ The minimal transformation: **adopt the [CIDTool](#cidtool-and-the-conceptvariab
 
 **What Phase 1 leaves for Phase 2:** governance/release tiers, sessions and the missingness signal, a placement bridge for clean reused-concept integrity, version/option-set validity, curated marts with lineage, the question-type view library, and researcher-facing naming. (Multi-select/grids also stay as the dictionary's binary sub-question rows rather than one row per selected option.)
 
+#### Optional enhancement: a normalized question-type view
+
+Phase 1 already carries `question_type` from the dictionary — so the "common abstraction" hook exists. But the dictionary's values are inconsistent (partial coverage, casing/spelling variants, typos, and compound strings like `Optional Select All that Apply, Loops`), so they can't reliably drive *templated, per-type SQL*. A cheap fix that stays within Phase 1: add **one derived view**, `question_type_norm`, mapping the messy strings to a clean `base_type` (+ flags such as `is_multi`, `has_loop`), backfilled from the Quest markup where the dictionary is blank. The verbatim dictionary stays untouched underneath.
+
+With it, one query works across *every* question of a type:
+```sql
+SELECT r.question_concept_id, resp.current_format_value AS answer, COUNT(*) AS n
+FROM responses r
+JOIN question_type_norm t USING (question_concept_id)
+JOIN response resp        USING (response_concept_id)
+WHERE t.base_type = 'single_select'
+GROUP BY r.question_concept_id, answer;
+```
+This is the highest-value add-on to Phase 1. Keep it bounded to *just* type normalization — that boundary is the seam where Phase 1 would otherwise drift into Phase 2. (Typed value parsing — e.g. numeric answers into a numeric column for generic `AVG()` — is the other half of the abstraction and is left to Phase 2.)
+
 #### Phase 1 vs. the current wide model
 
 Phase 1 wins decisively on the two highest-value axes — schema stability and generic queryability — but leaves the harder analytics and governance work to Phase 2. It is a real step change, not a cosmetic reshape, and it is no worse than the wide tables on anything.
