@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="919" height="778" viewBox="0 0 919 778">
+  <rect width="919" height="778" fill="#ffffff"/>
+  <text font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="13" fill="#1f2328" xml:space="preserve">
+    <tspan x="14" y="25">                                            ╭───────────────────────────────╮  ╭─────────────────────────╮</tspan>
+    <tspan x="14" y="38">                                            │       response_sessions       │  │        responses        │</tspan>
+    <tspan x="14" y="51">                                            ├───────────────────────────────┤  ├─────────────────────────┤</tspan>
+    <tspan x="14" y="64">                                            │·session_id                int ├╮ │·response_id         int │</tspan>
+    <tspan x="14" y="77">                                          ╭─┤ round_id                  int │╰─┤ session_id          int │</tspan>
+    <tspan x="14" y="90">                                          │╭┤ connect_id                int │  │ survey_question_id  int │</tspan>
+    <tspan x="14" y="103">                                          │││ survey_concept_id         int │  │ response_concept_id int │</tspan>
+    <tspan x="14" y="116">                                          │││ status_concept_id         int │  ╰─────────────────────────╯</tspan>
+    <tspan x="14" y="129">                                          │││ started_at          timestamp │</tspan>
+    <tspan x="14" y="142">                                          │││ completed_at        timestamp │</tspan>
+    <tspan x="14" y="155">                                          ││╰───────────────────────────────╯</tspan>
+    <tspan x="14" y="168">                  ╭───────────────────────│┴─────────────────────────────────╮</tspan>
+    <tspan x="14" y="181">                  │                       │ ╭───────────────────────────────╮│</tspan>
+    <tspan x="14" y="194">                  │                       │ │       collection_events       ││</tspan>
+    <tspan x="14" y="207">                  │                       │ ├───────────────────────────────┤│</tspan>
+    <tspan x="14" y="220">╭────────────────╮│                       │ │·collection_id             int ││</tspan>
+    <tspan x="14" y="233">│  participants  ││                       ├─┤ round_id                  int ││</tspan>
+    <tspan x="14" y="246">├────────────────┤│                       │ │ specimen_concept_id       int ││</tspan>
+    <tspan x="14" y="259">│·connect_id int ├┤                       │ │ status_concept_id         int ││</tspan>
+    <tspan x="14" y="272">╰────────────────╯│                       │ │ setting_concept_id        int ││</tspan>
+    <tspan x="14" y="285">                  │                       │ │ location_concept_id       int ││ ╭─────────────────────────╮</tspan>
+    <tspan x="14" y="298">                  │                       │ │ collected_at             date ││ │  v_participant_events   │</tspan>
+    <tspan x="14" y="311">                  │                       │ │ accession_id             text ││ ├─────────────────────────┤</tspan>
+    <tspan x="14" y="324">                  │ ╭────────────────────╮│ │ sensitivity_tier         text │╰─┤ connect_id          int │</tspan>
+    <tspan x="14" y="337">                  │ │       rounds       ││ ╰───────────────────────────────╯╭─┤ round_id            int │</tspan>
+    <tspan x="14" y="350">                  │ ├────────────────────┤│                                  │ │ category           text │</tspan>
+    <tspan x="14" y="363">                  │ │·round_id       int ├┤ ╭───────────────────────────────╮│ │ item_concept_id     int │</tspan>
+    <tspan x="14" y="376">                  ╰─┤ connect_id     int ││ │          kit_events           ││ │ status_concept_id   int │</tspan>
+    <tspan x="14" y="389">                    │ round_code    text ││ ├───────────────────────────────┤│ │ event_date         date │</tspan>
+    <tspan x="14" y="402">                    │ activity_type text ││ │·kit_id                    int ││ ╰─────────────────────────╯</tspan>
+    <tspan x="14" y="415">                    │ created_at    date │├─┤ round_id                  int ││</tspan>
+    <tspan x="14" y="428">                    ╰────────────────────╯│ │ kit_type_concept_id       int ││</tspan>
+    <tspan x="14" y="441">                                          │ │ status_concept_id         int ││</tspan>
+    <tspan x="14" y="454">                                          │ │ shipped_at               date ││</tspan>
+    <tspan x="14" y="467">                                          │ │ received_at              date ││</tspan>
+    <tspan x="14" y="480">                                          │ ╰───────────────────────────────╯│</tspan>
+    <tspan x="14" y="493">                                          ├──────────────────────────────────╯</tspan>
+    <tspan x="14" y="506">                                          │ ╭───────────────────────────────╮</tspan>
+    <tspan x="14" y="519">                                          │ │       incentive_events        │</tspan>
+    <tspan x="14" y="532">                                          │ ├───────────────────────────────┤</tspan>
+    <tspan x="14" y="545">                                          │ │·incentive_id              int │</tspan>
+    <tspan x="14" y="558">                                          ├─┤ round_id                  int │</tspan>
+    <tspan x="14" y="571">                                          │ │ payment_status_concept_id int │</tspan>
+    <tspan x="14" y="584">                                          │ │ payment_type_concept_id   int │</tspan>
+    <tspan x="14" y="597">                                          │ │ eligible_at              date │</tspan>
+    <tspan x="14" y="610">                                          │ │ issued_at                date │</tspan>
+    <tspan x="14" y="623">                                          │ ╰───────────────────────────────╯</tspan>
+    <tspan x="14" y="636">                                          │</tspan>
+    <tspan x="14" y="649">                                          │ ╭───────────────────────────────╮</tspan>
+    <tspan x="14" y="662">                                          │ │        refusal_events         │</tspan>
+    <tspan x="14" y="675">                                          │ ├───────────────────────────────┤</tspan>
+    <tspan x="14" y="688">                                          │ │·refusal_id                int │</tspan>
+    <tspan x="14" y="701">                                          ╰─┤ round_id                  int │</tspan>
+    <tspan x="14" y="714">                                            │ refusal_type_concept_id   int │</tspan>
+    <tspan x="14" y="727">                                            │ status_concept_id         int │</tspan>
+    <tspan x="14" y="740">                                            │ refused_at               date │</tspan>
+    <tspan x="14" y="753">                                            │ reason                   text │</tspan>
+    <tspan x="14" y="766">                                            ╰───────────────────────────────╯</tspan>
+  </text>
+</svg>

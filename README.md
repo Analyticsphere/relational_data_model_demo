@@ -69,6 +69,16 @@ Beyond fixing these, the model must also serve PR2's broader goals: **governed a
 
 The **Proposed Data Model** below addresses each of these directly — long/narrow responses, a concept-ID spine, explicit structure/skip-logic/loops/versions, governance, and lineage.
 
+### What this costs us today
+
+These limitations aren't hypothetical — several production pipelines spend most of their code compensating for the missing structure:
+
+- **Summary statistics** (`ccc_module_metrics_gcp_pipeline`): the Module 1 report is 6,234 lines, with ~650 of them prep *before the first statistic* — a hand-rolled v1/v2 merge, a 150-entry hand-typed label dictionary (already carrying duplicate-key bugs), skip logic and loops reimplemented as bespoke functions, and every missing value collapsed into a single "Skipped this Question" bucket.
+- **Quality control** (`qaqc_testing`): a 1,271-line rules engine driven by 14 hand-authored Excel workbooks totalling **7,025 rules** — ~85% of which simply re-state valid values, data types, lengths, and skip conditions the data dictionary already defines.
+- **Geocoding** (`geocoding-pipeline`, `preprocess_geocoding_data`, `Geocoding.R`): the same field (the street name of a residence) is **~27 unrelated concept IDs** with nothing linking them, so three separate codebases each rebuild the same address crosswalk — one even string-matching question *labels* as join keys.
+
+The model makes that structure first-class, so most of this work becomes *generated* rather than hand-maintained across separate repos.
+
 ---
 
 ## Proposed Data Model
@@ -83,13 +93,13 @@ The minimal transformation: **adopt the [CIDTool](#cidtool-and-the-conceptvariab
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/connect_model_a_overview_dark.svg">
-  <img alt="Model A: the CIDTool dictionary tables (primary_source, secondary_source, source_question, question, response, variable_metadata) with one added long-format responses table joining to question, source_question, and response." src="docs/connect_model_a_overview.svg">
+  <img alt="Model A: the CIDTool dictionary tables (primary_source, secondary_source, source_question, question, response, variable_metadata) with one added long-format responses table joining to question, source_question, secondary_source, and response." src="docs/connect_model_a_overview.svg">
 </picture>
 
 > The dictionary tables are arranged to mirror the CIDTool ERD; `responses` is the only new table. [Full diagram with columns](docs/connect_model_a.svg).
 
 - **Dimensions = CIDTool ERD, verbatim:** `primary_source`, `secondary_source`, `source_question`, `question`, `response`, `question_response` (the question→response list), `variable_metadata`. Loaded from CIDTool's output — we model nothing new.
-- **Fact = `responses`** (the one new table): one row per answered cell, keyed on `(connect_id, current_source_question_concept_id, question_concept_id, loop_instance)`, with `response_concept_id` / `value` and `source_column`. It carries the source-question path so reused concepts disambiguate, and joins to the dictionary for every label, type, and flag.
+- **Fact = `responses`** (the one new table): one row per answered cell, keyed on `(connect_id, current_source_question_concept_id, question_concept_id, loop_instance)`, with `response_concept_id` / `value` and `source_table` / `source_column` provenance. It joins to the dictionary for every label, type, and flag. It carries two **placement coordinates** so a row resolves to its position in the dictionary's hierarchy even when concepts are reused: the source-question path (`current_source_question_concept_id`) and the **survey** (`secondary_source_concept_id`). The survey is required because concept reuse is deliberate — the same question concept is shared across instruments (≈9% of survey questions; e.g. "Survey Language" appears in 15), so the survey is *not* recoverable from the rest of the row and is stamped by the unpivot transform; the domain then follows by FK.
 
 **Why start here:** it adopts existing CIDTool work with no new ontology to defend, kills the dancing-schema pain with a single table, and is a small, low-risk build that demonstrates the long-format value immediately. It is **forward-compatible** with Phase 2: the same `responses` fact is reached by progressively cleaning the dimensions.
 

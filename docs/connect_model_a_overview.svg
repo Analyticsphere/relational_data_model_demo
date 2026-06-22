@@ -2,19 +2,19 @@
   <rect width="700" height="219" fill="#ffffff"/>
   <text font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="13" fill="#1f2328" xml:space="preserve">
     <tspan x="14" y="25">                   ╭───────────────────────────────────╮</tspan>
-    <tspan x="14" y="38">                   │                     ╭─────────────┤</tspan>
-    <tspan x="14" y="51">                   │                     │             │</tspan>
-    <tspan x="14" y="64">╭─────────────────╮│                     │             │   ╭───────────────────╮</tspan>
-    <tspan x="14" y="77">│ primary_source  ├┤ ╭──────────────────╮│             ├┬┬─┤ variable_metadata │</tspan>
-    <tspan x="14" y="90">╰─────────────────╯╰─┤ secondary_source ├┤ ╭──────────╮│││ ╰───────────────────╯</tspan>
-    <tspan x="14" y="103">                     ╰──────────────────╯╰┬┤ question ├│┤│</tspan>
-    <tspan x="14" y="116">╭─────────────────╮                       │╰──────────╯│││ ╭───────────────────╮</tspan>
-    <tspan x="14" y="129">│ source_question ├╮                      │            │├├┬┤     responses     │</tspan>
-    <tspan x="14" y="142">╰─────────────────╯│                      │╭──────────╮││││╰───────────────────╯</tspan>
-    <tspan x="14" y="155">                   │                      ││ response ├││┤│</tspan>
-    <tspan x="14" y="168">                   │                      │╰──────────╯││││╭───────────────────╮</tspan>
-    <tspan x="14" y="181">                   │                      │            │╰┴│┤ question_response │</tspan>
-    <tspan x="14" y="194">                   │                      │            │  │╰───────────────────╯</tspan>
-    <tspan x="14" y="207">                   ╰──────────────────────┴────────────┴──╯</tspan>
+    <tspan x="14" y="38">                   │                                   │</tspan>
+    <tspan x="14" y="51">╭─────────────────╮│                                   │   ╭───────────────────╮</tspan>
+    <tspan x="14" y="64">│ primary_source  ├┤                                   ├┬┬─┤ variable_metadata │</tspan>
+    <tspan x="14" y="77">╰─────────────────╯│ ╭──────────────────╮  ╭──────────╮│││ ╰───────────────────╯</tspan>
+    <tspan x="14" y="90">                   ╰─┤ secondary_source ├┬┬┤ question ├│┤│</tspan>
+    <tspan x="14" y="103">╭─────────────────╮  ╰──────────────────╯││╰──────────╯│││ ╭───────────────────╮</tspan>
+    <tspan x="14" y="116">│ source_question ├╮                     ││            │├├┬┤     responses     │</tspan>
+    <tspan x="14" y="129">╰─────────────────╯│                     ││╭──────────╮││││╰───────────────────╯</tspan>
+    <tspan x="14" y="142">                   │                     │││ response ├││┤│</tspan>
+    <tspan x="14" y="155">                   │                     ││╰──────────╯││││╭───────────────────╮</tspan>
+    <tspan x="14" y="168">                   │                     ││            │╰┴│┤ question_response │</tspan>
+    <tspan x="14" y="181">                   │                     ││            │  │╰───────────────────╯</tspan>
+    <tspan x="14" y="194">                   ╰─────────────────────│┴────────────┼──┤</tspan>
+    <tspan x="14" y="207">                                         ╰─────────────┴──╯</tspan>
   </text>
 </svg>

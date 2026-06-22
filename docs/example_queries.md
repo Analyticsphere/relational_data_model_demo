@@ -189,6 +189,113 @@ SELECT * FROM responses WHERE sensitivity_tier = 'non_sensitive';
 
 ---
 
+## Q5 — "For a given answer, reconstruct its full hierarchy: domain → survey → source-question → question → response"
+
+The dictionary is a tree (`Primary → Secondary → Source Question → Question → Response`). Given one answer, name every level it sits under.
+
+### 😖 Wide
+```sql
+-- There is no hierarchy in the data — it's encoded in the table you queried and the column name.
+-- To name the levels you leave SQL and look each concept id up in the dictionary CSV by hand:
+--   table  = CleanConnect.mouthwash       -> the survey
+--   column = d_899251483_d_812107266_v2    -> source-question 899251483 · option 812107266 · rev v2
+SELECT d_899251483_d_812107266_v2 FROM `CleanConnect.mouthwash` WHERE Connect_ID = @id;
+```
+
+### 🙂 Phase 1
+```sql
+-- Every level is one join away. The survey (and therefore the domain) is read from the fact's
+-- STAMPED secondary_source_concept_id — NOT via question.secondary_source_concept_id, which would
+-- pick the single "home" survey and mislabel a reused concept.
+SELECT
+  ps.primary_source        AS domain,           -- e.g. Survey
+  ss.secondary_source      AS survey,           -- e.g. Mouthwash
+  sq.source_question_text  AS source_question,  -- NULL when the question is standalone
+  q.current_question_text  AS question,
+  COALESCE(resp.current_format_value, r.value) AS answer
+FROM responses r
+JOIN secondary_source ss     USING (secondary_source_concept_id)    -- survey  (stamped on the fact)
+JOIN primary_source  ps      USING (primary_source_concept_id)      -- domain  (follows by FK)
+LEFT JOIN source_question sq USING (current_source_question_concept_id)
+JOIN question q              USING (question_concept_id)
+LEFT JOIN response resp      USING (response_concept_id)            -- NULL for free-text / numeric answers
+WHERE r.response_row_id = @row;
+```
+
+### 😎 Phase 2
+```sql
+-- The placement (survey_questions) already encodes the whole path; the survey's domain is an attribute.
+SELECT
+  s.domain,
+  s.name                 AS survey,
+  parent.label           AS source_question,    -- the parent placement; NULL when top-level
+  q.label                AS question,
+  COALESCE(o.label, r.value_string, CAST(r.value_number AS STRING)) AS answer
+FROM responses r
+JOIN survey_questions sq     ON sq.survey_question_id = r.survey_question_id
+JOIN survey_versions sv      ON sv.survey_version_id  = sq.survey_version_id
+JOIN surveys s               ON s.survey_id           = sv.survey_id
+JOIN questions q             ON q.question_concept_id = sq.question_concept_id
+LEFT JOIN questions parent   ON parent.question_concept_id = sq.parent_question_concept_id
+LEFT JOIN response_options o ON o.question_concept_id = sq.question_concept_id
+                            AND o.response_concept_id = r.response_concept_id
+WHERE r.response_id = @row;
+```
+**Takeaway:** wide hides the hierarchy in column names (a manual dictionary lookup); Phase 1 makes every level a join and reads the survey straight off the fact; Phase 2 reads it from the placement that already carries the path.
+
+---
+
+## Q6 — "Filter to exactly the slice you want"
+
+The hierarchy coordinates on each `responses` row are your filter knobs — pick a level, constrain it, mix and match.
+
+### 😖 Wide
+```sql
+-- "Filtering" means knowing which column in which table holds what you want, by name. Pooling one
+-- question across surveys is impossible — each survey is a different table with a differently-named column.
+SELECT Connect_ID, d_899251483_d_812107266_v2
+FROM `CleanConnect.mouthwash`
+WHERE d_899251483_d_812107266_v2 = '353358909';     -- and repeat, per table, for every other survey
+```
+
+### 🙂 Phase 1
+```sql
+-- One table; each coordinate is an optional WHERE knob. Drop a line to widen the slice.
+SELECT *
+FROM responses r
+WHERE secondary_source_concept_id     = 390351864     -- survey      = Mouthwash
+  AND current_source_question_concept_id = 899251483   -- group       = tooth-loss select-all
+  AND question_concept_id             = 812107266      -- sub-question= "accident"
+  AND response_concept_id             = 353358909      -- answer      = "Yes"
+  AND loop_instance                   = 1;             -- loop iter   (default 1)
+```
+
+| To get… | Filter |
+|---|---|
+| Everything in one **survey** | `secondary_source_concept_id = 390351864` |
+| Everything in a whole **domain** | `JOIN secondary_source ss USING (secondary_source_concept_id)` → `WHERE ss.primary_source_concept_id = 129084651` (Survey) |
+| One **question, pooled across every survey** it appears in | `question_concept_id = 784119588` ("Survey Language", all 15 instruments) |
+| **The payoff** — that shared question, but only **in one survey** | `question_concept_id = 784119588 AND secondary_source_concept_id = 390351864` |
+| A whole **grid / select-all group** | `current_source_question_concept_id = 899251483` |
+| A specific **loop iteration** | `question_concept_id = 206625031 AND loop_instance = 3` |
+
+The fourth row is the one the wide model and verbatim dictionary cannot do: isolating a deliberately-reused concept to a single survey is only possible because the survey is stamped on the fact.
+
+### 😎 Phase 2
+```sql
+-- Same coordinates, resolved through the placement — or a named view.
+SELECT r.*
+FROM responses r
+JOIN survey_questions sq ON sq.survey_question_id = r.survey_question_id
+JOIN survey_versions sv  ON sv.survey_version_id  = sq.survey_version_id
+WHERE sq.question_concept_id = 812107266
+  AND sv.survey_id = 390351864;        -- one survey
+-- or simply:  SELECT * FROM v_select_all WHERE survey = 'mouthwash' AND question = 'tooth_loss_reason';
+```
+**Takeaway:** wide forces you to know columns and can't pool across surveys; Phase 1 turns each hierarchy level into a filter knob — including slicing a reused concept to one survey; Phase 2 wraps the same knobs in the placement and named views.
+
+---
+
 ## Summary
 
 | Query | Wide | Phase 1 | Phase 2 |
@@ -197,7 +304,11 @@ SELECT * FROM responses WHERE sensitivity_tier = 'non_sensitive';
 | Distribution with labels, any question | 😖 bespoke `CASE`, no reuse | 🙂 parameterized by `concept_id` | 😎 precomputed aggregate |
 | Completion & true missingness | 😖 cross-table, ambiguous | 😖 still ambiguous (no sessions) | 😎 sessions + skip logic |
 | Non-PHI extract (governance) | 😖 manual allow-list | 😖 manual allow-list | 😎 sensitivity tier + IAM |
+| Reconstruct full hierarchy for an answer | 😖 parse column name + manual dictionary lookup | 🙂 every level one join, survey off the fact | 😎 placement carries the path |
+| Filter to a slice (incl. reused concept in one survey) | 😖 know columns; can't pool across surveys | 🙂 hierarchy coordinates as filter knobs | 😎 same knobs via placement / views |
 
-Phase 1 turns "effectively unqueryable" into "queryable and labeled" and pools version drift — a real win
-on the first two rows. Phase 2 is what makes the bottom two rows (missingness, governance) possible at all —
-the capabilities that make PR2 a trustworthy, shareable research warehouse.
+Phase 1 turns "effectively unqueryable" into "queryable and labeled": it pools version drift, parameterizes
+by `concept_id`, reconstructs the full hierarchy by joins, and turns every hierarchy level into a filter knob
+— including the slice the wide tables simply can't do, isolating a deliberately-reused concept to one survey.
+Phase 2 is what makes missingness and governance possible at all — the capabilities that make PR2 a
+trustworthy, shareable research warehouse.

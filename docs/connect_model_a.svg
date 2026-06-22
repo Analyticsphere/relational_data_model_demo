@@ -1,46 +1,48 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1448" height="557" viewBox="0 0 1448 557">
-  <rect width="1448" height="557" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1456" height="583" viewBox="0 0 1456 583">
+  <rect width="1456" height="583" fill="#ffffff"/>
   <text font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="13" fill="#1f2328" xml:space="preserve">
     <tspan x="14" y="25">                                           ╭─────────────────────────────────────────────────────────────────────────────────╮</tspan>
     <tspan x="14" y="38">                                          ╭│───────────────────────────────────────────────────────────────────────────────┬╮│</tspan>
-    <tspan x="14" y="51">                                          ││                                   ╭───────────────────────────────────────────│││╮</tspan>
-    <tspan x="14" y="64">                                          ││                                   │                                           ││││</tspan>
-    <tspan x="14" y="77">                                          ││                                   │                                           ││││╭────────────────────────────────────────╮</tspan>
-    <tspan x="14" y="90">                                          ││                                   │                                           │││││           variable_metadata            │</tspan>
-    <tspan x="14" y="103">                                          ││                                   │                                           ││││├────────────────────────────────────────┤</tspan>
-    <tspan x="14" y="116">                                          ││                                   │                                           ││╰│┤ primary_source_concept_id          int │</tspan>
-    <tspan x="14" y="129">╭────────────────────────────────────────╮││                                   │                                           ││ ╰┤ secondary_source_concept_id        int │</tspan>
-    <tspan x="14" y="142">│             primary_source             │││                                   │                                           │╰──┤ current_source_question_concept_id int │</tspan>
-    <tspan x="14" y="155">├────────────────────────────────────────┤││╭─────────────────────────────────╮│                                           │╭──┤ question_concept_id                int │</tspan>
-    <tspan x="14" y="168">│·primary_source_concept_id          int ├│┤│        secondary_source         ││                                           ││╭─┤ response_concept_id                int │</tspan>
-    <tspan x="14" y="181">│ primary_source                    text │││├─────────────────────────────────┤│                                           │││ │ variable_label                    text │</tspan>
-    <tspan x="14" y="194">╰────────────────────────────────────────╯│││·secondary_source_concept_id int ├┤                                           │││ │ variable_type                     text │</tspan>
-    <tspan x="14" y="207">                                          │╰┤ primary_source_concept_id   int ││                                           │││ │ variable_length                    int │</tspan>
-    <tspan x="14" y="220">                                          │ │ secondary_source           text ││                                           │││ │ pii                            boolean │</tspan>
-    <tspan x="14" y="233">╭────────────────────────────────────────╮│ ╰─────────────────────────────────╯│ ╭────────────────────────────────────────╮│││ │ skip_logic                        text │</tspan>
-    <tspan x="14" y="246">│            source_question             ││                                    │ │                question                ││││ │ deprecated_new_or_revised         text │</tspan>
-    <tspan x="14" y="259">├────────────────────────────────────────┤│                                    │ ├────────────────────────────────────────┤│││ │ derivation_notes                  text │</tspan>
-    <tspan x="14" y="272">│·current_source_question_concept_id int ├┤                                    │ │·question_concept_id                int ├│┤│ │ gcp_document_table                text │</tspan>
-    <tspan x="14" y="285">│ source_question_text              text ││                                    │╭┤ current_source_question_concept_id int ││││ ╰────────────────────────────────────────╯</tspan>
-    <tspan x="14" y="298">│ v1_source_question                text ││                                    ╰│┤ secondary_source_concept_id        int ││││</tspan>
-    <tspan x="14" y="311">│ grid_source_question_name         text ││                                     ││ current_question_text             text ││││ ╭────────────────────────────────────────╮</tspan>
-    <tspan x="14" y="324">╰────────────────────────────────────────╯│                                     ││ question_type                     text ││││ │               responses                │</tspan>
-    <tspan x="14" y="337">                                          │                                     │╰────────────────────────────────────────╯│││ ├────────────────────────────────────────┤</tspan>
-    <tspan x="14" y="350">                                          ╰─────────────────────────────────────╯                                          │││ │·response_row_id                    int │</tspan>
-    <tspan x="14" y="363">                                                                                 ╭────────────────────────────────────────╮│││ │ connect_id                         int │</tspan>
-    <tspan x="14" y="376">                                                                                 │                response                ││├│─┤ question_concept_id                int │</tspan>
-    <tspan x="14" y="389">                                                                                 ├────────────────────────────────────────┤╰││─┤ current_source_question_concept_id int │</tspan>
-    <tspan x="14" y="402">                                                                                 │·response_concept_id                int ├─│┤ │ loop_instance                      int │</tspan>
-    <tspan x="14" y="415">                                                                                 │ current_format_value              text │ │├─┤ response_concept_id                int │</tspan>
-    <tspan x="14" y="428">                                                                                 ╰────────────────────────────────────────╯ ││ │ value                             text │</tspan>
-    <tspan x="14" y="441">                                                                                                                            ││ │ source_column                     text │</tspan>
-    <tspan x="14" y="454">                                                                                                                            ││ ╰────────────────────────────────────────╯</tspan>
-    <tspan x="14" y="467">                                                                                                                            ││</tspan>
-    <tspan x="14" y="480">                                                                                                                            ││ ╭────────────────────────────────────────╮</tspan>
-    <tspan x="14" y="493">                                                                                                                            ││ │           question_response            │</tspan>
-    <tspan x="14" y="506">                                                                                                                            ││ ├────────────────────────────────────────┤</tspan>
-    <tspan x="14" y="519">                                                                                                                            ╰│─┤ question_concept_id                int │</tspan>
-    <tspan x="14" y="532">                                                                                                                             ╰─┤ response_concept_id                int │</tspan>
-    <tspan x="14" y="545">                                                                                                                               ╰────────────────────────────────────────╯</tspan>
+    <tspan x="14" y="51">                                          ││                                   ╭───────────────────────────────────────────│││┬╮</tspan>
+    <tspan x="14" y="64">                                          ││                                   │                                           │││││</tspan>
+    <tspan x="14" y="77">                                          ││                                   │                                           │││││╭────────────────────────────────────────╮</tspan>
+    <tspan x="14" y="90">                                          ││                                   │                                           ││││││           variable_metadata            │</tspan>
+    <tspan x="14" y="103">                                          ││                                   │                                           │││││├────────────────────────────────────────┤</tspan>
+    <tspan x="14" y="116">                                          ││                                   │                                           ││╰││┤ primary_source_concept_id          int │</tspan>
+    <tspan x="14" y="129">                                          ││                                   │                                           ││ │╰┤ secondary_source_concept_id        int │</tspan>
+    <tspan x="14" y="142">╭────────────────────────────────────────╮││                                   │                                           │╰─│─┤ current_source_question_concept_id int │</tspan>
+    <tspan x="14" y="155">│             primary_source             │││                                   │                                           │╭─│─┤ question_concept_id                int │</tspan>
+    <tspan x="14" y="168">├────────────────────────────────────────┤││                                   │                                           ││╭│─┤ response_concept_id                int │</tspan>
+    <tspan x="14" y="181">│·primary_source_concept_id          int ├│┤                                   │                                           ││││ │ variable_label                    text │</tspan>
+    <tspan x="14" y="194">│ primary_source                    text │││                                   │                                           ││││ │ variable_type                     text │</tspan>
+    <tspan x="14" y="207">╰────────────────────────────────────────╯││╭─────────────────────────────────╮│                                           ││││ │ variable_length                    int │</tspan>
+    <tspan x="14" y="220">                                          │││        secondary_source         ││                                           ││││ │ pii                            boolean │</tspan>
+    <tspan x="14" y="233">╭────────────────────────────────────────╮││├─────────────────────────────────┤│                                           ││││ │ skip_logic                        text │</tspan>
+    <tspan x="14" y="246">│            source_question             ││││·secondary_source_concept_id int ├┤ ╭────────────────────────────────────────╮││││ │ deprecated_new_or_revised         text │</tspan>
+    <tspan x="14" y="259">├────────────────────────────────────────┤│╰┤ primary_source_concept_id   int ││ │                question                │││││ │ derivation_notes                  text │</tspan>
+    <tspan x="14" y="272">│·current_source_question_concept_id int ├┤ │ secondary_source           text ││ ├────────────────────────────────────────┤││││ │ gcp_document_table                text │</tspan>
+    <tspan x="14" y="285">│ source_question_text              text ││ ╰─────────────────────────────────╯│ │·question_concept_id                int ├│┤││ ╰────────────────────────────────────────╯</tspan>
+    <tspan x="14" y="298">│ v1_source_question                text ││                                    │╭┤ current_source_question_concept_id int │││││</tspan>
+    <tspan x="14" y="311">│ grid_source_question_name         text ││                                    ╰│┤ secondary_source_concept_id        int │││││ ╭────────────────────────────────────────╮</tspan>
+    <tspan x="14" y="324">╰────────────────────────────────────────╯│                                     ││ current_question_text             text │││││ │               responses                │</tspan>
+    <tspan x="14" y="337">                                          │                                     ││ question_type                     text │││││ ├────────────────────────────────────────┤</tspan>
+    <tspan x="14" y="350">                                          │                                     │╰────────────────────────────────────────╯││││ │·response_row_id                    int │</tspan>
+    <tspan x="14" y="363">                                          ╰─────────────────────────────────────╯                                          │││╰─┤ secondary_source_concept_id        int │</tspan>
+    <tspan x="14" y="376">                                                                                 ╭────────────────────────────────────────╮│├│──┤ question_concept_id                int │</tspan>
+    <tspan x="14" y="389">                                                                                 │                response                │╰││──┤ current_source_question_concept_id int │</tspan>
+    <tspan x="14" y="402">                                                                                 ├────────────────────────────────────────┤ │├──┤ response_concept_id                int │</tspan>
+    <tspan x="14" y="415">                                                                                 │·response_concept_id                int ├─│┤  │ connect_id                         int │</tspan>
+    <tspan x="14" y="428">                                                                                 │ current_format_value              text │ ││  │ loop_instance                      int │</tspan>
+    <tspan x="14" y="441">                                                                                 ╰────────────────────────────────────────╯ ││  │ value                             text │</tspan>
+    <tspan x="14" y="454">                                                                                                                            ││  │ source_table                      text │</tspan>
+    <tspan x="14" y="467">                                                                                                                            ││  │ source_column                     text │</tspan>
+    <tspan x="14" y="480">                                                                                                                            ││  ╰────────────────────────────────────────╯</tspan>
+    <tspan x="14" y="493">                                                                                                                            ││</tspan>
+    <tspan x="14" y="506">                                                                                                                            ││  ╭────────────────────────────────────────╮</tspan>
+    <tspan x="14" y="519">                                                                                                                            ││  │           question_response            │</tspan>
+    <tspan x="14" y="532">                                                                                                                            ││  ├────────────────────────────────────────┤</tspan>
+    <tspan x="14" y="545">                                                                                                                            ╰│──┤ question_concept_id                int │</tspan>
+    <tspan x="14" y="558">                                                                                                                             ╰──┤ response_concept_id                int │</tspan>
+    <tspan x="14" y="571">                                                                                                                                ╰────────────────────────────────────────╯</tspan>
   </text>
 </svg>

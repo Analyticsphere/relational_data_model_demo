@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="675" height="271" viewBox="0 0 675 271">
+  <rect width="675" height="271" fill="#0d1117"/>
+  <text font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="13" fill="#e6edf3" xml:space="preserve">
+    <tspan x="14" y="25">                              ╭───────────────────╮  ╭──────────────────────╮</tspan>
+    <tspan x="14" y="38">                            ╭┬┤ response_sessions ├──┤      responses       │</tspan>
+    <tspan x="14" y="51">                            ││╰───────────────────╯  ╰──────────────────────╯</tspan>
+    <tspan x="14" y="64">                ╭───────────│┴─────────────────────╮</tspan>
+    <tspan x="14" y="77">╭──────────────╮│           │ ╭───────────────────╮│</tspan>
+    <tspan x="14" y="90">│ participants ├┤           ├─┤ collection_events ││</tspan>
+    <tspan x="14" y="103">╰──────────────╯│           │ ╰───────────────────╯│ ╭──────────────────────╮</tspan>
+    <tspan x="14" y="116">                │ ╭────────╮│                      ├─┤ v_participant_events │</tspan>
+    <tspan x="14" y="129">                ╰─┤ rounds ├┤ ╭───────────────────╮│ ╰──────────────────────╯</tspan>
+    <tspan x="14" y="142">                  ╰────────╯├─┤    kit_events     ││</tspan>
+    <tspan x="14" y="155">                            │ ╰───────────────────╯│</tspan>
+    <tspan x="14" y="168">                            ├──────────────────────╯</tspan>
+    <tspan x="14" y="181">                            │ ╭───────────────────╮</tspan>
+    <tspan x="14" y="194">                            ├─┤ incentive_events  │</tspan>
+    <tspan x="14" y="207">                            │ ╰───────────────────╯</tspan>
+    <tspan x="14" y="220">                            │</tspan>
+    <tspan x="14" y="233">                            │ ╭───────────────────╮</tspan>
+    <tspan x="14" y="246">                            ╰─┤  refusal_events   │</tspan>
+    <tspan x="14" y="259">                              ╰───────────────────╯</tspan>
+  </text>
+</svg>
