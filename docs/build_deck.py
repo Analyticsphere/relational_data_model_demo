@@ -187,7 +187,7 @@ notes(s,"Same long-format thesis as our model, arrived at independently. The one
 s=slide();titlebar(s,"Draft: the reconciled event plane","Round = the encounter; surveys & events share it; concept-typed columns keep dictionary links")
 picture(s,A+"event_plane.png",Inches(1.4),Inches(11.0),Inches(5.35))
 textbox(s,"Separate per-type event facts + a unified view (the SMDB summary). DRAFT — pending DevOps confirmation of Round-as-encounter.",Inches(0.5),Inches(6.95),Inches(12.3),Inches(0.4),size=11,color=GREY,italic=True,align=PP_ALIGN.CENTER)
-notes(s,"Round hub (~ OMOP visit) off participants; response_sessions = DevOps 'surveys' table; collection/kit/incentive/refusal facts key on (connect_id, round); v_participant_events = SMDB unified view. See data_model_events.dbml.")
+notes(s,"Round hub (~ OMOP visit) off participants; response_sessions = DevOps 'surveys' table; collection/kit/incentive/refusal facts key on (connect_id, round); v_participant_events = SMDB unified view. See dbml/data_model_events.dbml.")
 
 # 9d CURATED DERIVED VARIABLES (dbt marts)
 s=slide();titlebar(s,"Curated derived variables (dbt marts)","Define each research variable once — tested, governed, lineage to source")

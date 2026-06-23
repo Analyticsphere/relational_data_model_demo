@@ -210,8 +210,9 @@ Phase 2 builds it out.
   1. Load CIDTool output into BigQuery (we already produce it).
   2. One **metadata-driven UNPIVOT** from CleanConnect → `responses`, generated per survey from the dictionary's column→concept map.
   3. *(optional)* `question_type_norm` view: messy `question_type` → clean `base_type` + flags.
+  4. *(optional)* `v_responses_enriched` view: pre-joins the dictionary onto `responses` so every answer row is self-describing — **zero joins** for analysts (see [example_queries.md](docs/example_queries.md)). The friendly day-one surface and the seed of Phase 2's `fact_response`.
   - No new modeling, reuses CleanConnect + the dictionary verbatim, low risk.
-- **What it buys:** stable schema (dancing stops), **generic SQL by `concept_id`/type**, labels one join away, **v1/v2 pool automatically** (both unpivot to the same concept), one answers table across all surveys.
+- **What it buys:** stable schema (dancing stops), **generic SQL by `concept_id`/type**, labels **zero joins away** via the convenience view, **v1/v2 pool automatically** (both unpivot to the same concept), one answers table across all surveys.
 - **What it does *not* buy (→ Phase 2):** governance, sessions/missingness, a placement bridge for grid/parent-path integrity, version/option-set unification, curated marts + lineage, researcher-facing naming. Multi-select/grids stay as the dictionary's binary 0/1 sub-question rows.
 - **Important:** with no access control, Phase 1 is **not externally release-ready** — it's an internal/analyst layer (or coarse dataset-level IAM) until Phase 2.
 

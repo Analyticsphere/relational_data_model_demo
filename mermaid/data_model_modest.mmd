@@ -1,0 +1,76 @@
+%% Connect Relational Data Model — Phase 1 "Dictionary-Direct" (Model A)
+%% Generated from data_model_modest.dbml. Paste into draw.io: Insert "+" > Advanced > Mermaid...
+%% PK = primary key, FK = foreign-key column. Relationships are the edges below the entities.
+erDiagram
+  primary_source {
+    int primary_source_concept_id PK
+    text primary_source
+  }
+  source_question {
+    int current_source_question_concept_id PK
+    text source_question_text
+    text v1_source_question
+    text grid_source_question_name
+  }
+  secondary_source {
+    int secondary_source_concept_id PK
+    text secondary_source
+    int primary_source_concept_id FK
+  }
+  question {
+    int question_concept_id PK
+    int current_source_question_concept_id FK
+    int secondary_source_concept_id FK
+    text current_question_text
+    text question_type
+  }
+  response {
+    int response_concept_id PK
+    text current_format_value
+  }
+  question_response {
+    int question_concept_id PK
+    int response_concept_id PK
+  }
+  variable_metadata {
+    int primary_source_concept_id PK
+    int secondary_source_concept_id PK
+    int current_source_question_concept_id PK
+    int question_concept_id PK
+    int response_concept_id PK
+    text variable_label
+    text variable_type
+    int variable_length
+    boolean pii
+    text skip_logic
+    text deprecated_new_or_revised
+    text derivation_notes
+    text gcp_document_table
+  }
+  responses {
+    int response_row_id PK
+    int connect_id
+    int secondary_source_concept_id FK
+    int question_concept_id FK
+    int current_source_question_concept_id FK
+    int loop_instance
+    int response_concept_id FK
+    text value
+    text source_table
+    text source_column
+  }
+
+  primary_source   ||--o{ secondary_source  : primary_source_concept_id
+  source_question  ||--o{ question          : current_source_question_concept_id
+  secondary_source ||--o{ question          : secondary_source_concept_id
+  question         ||--o{ question_response : question_concept_id
+  response         ||--o{ question_response : response_concept_id
+  primary_source   ||--o{ variable_metadata : primary_source_concept_id
+  secondary_source ||--o{ variable_metadata : secondary_source_concept_id
+  source_question  ||--o{ variable_metadata : current_source_question_concept_id
+  question         ||--o{ variable_metadata : question_concept_id
+  response         ||--o{ variable_metadata : response_concept_id
+  secondary_source ||--o{ responses         : secondary_source_concept_id
+  question         ||--o{ responses         : question_concept_id
+  source_question  ||--o{ responses         : current_source_question_concept_id
+  response         ||--o{ responses         : response_concept_id

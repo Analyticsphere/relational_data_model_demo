@@ -1,0 +1,83 @@
+%% Connect Event Plane — DRAFT (pending DevOps confirmation of Round-as-encounter)
+%% Generated from data_model_events.dbml. Paste into draw.io: Insert "+" > Advanced > Mermaid...
+%% PK = primary key, FK = foreign-key column. v_participant_events is a VIEW (shown as an entity).
+erDiagram
+  participants {
+    int connect_id PK
+  }
+  rounds {
+    int round_id PK
+    int connect_id FK
+    text round_code
+    text activity_type
+    date created_at
+  }
+  response_sessions {
+    int session_id PK
+    int round_id FK
+    int connect_id FK
+    int survey_concept_id
+    int status_concept_id
+    timestamp started_at
+    timestamp completed_at
+  }
+  responses {
+    int response_id PK
+    int session_id FK
+    int survey_question_id
+    int response_concept_id
+  }
+  collection_events {
+    int collection_id PK
+    int round_id FK
+    int specimen_concept_id
+    int status_concept_id
+    int setting_concept_id
+    int location_concept_id
+    date collected_at
+    text accession_id
+    text sensitivity_tier
+  }
+  kit_events {
+    int kit_id PK
+    int round_id FK
+    int kit_type_concept_id
+    int status_concept_id
+    date shipped_at
+    date received_at
+  }
+  incentive_events {
+    int incentive_id PK
+    int round_id FK
+    int payment_status_concept_id
+    int payment_type_concept_id
+    date eligible_at
+    date issued_at
+  }
+  refusal_events {
+    int refusal_id PK
+    int round_id FK
+    int refusal_type_concept_id
+    int status_concept_id
+    date refused_at
+    text reason
+  }
+  v_participant_events {
+    int connect_id FK
+    int round_id FK
+    text category
+    int item_concept_id
+    int status_concept_id
+    date event_date
+  }
+
+  participants      ||--o{ rounds               : connect_id
+  rounds            ||--o{ response_sessions    : round_id
+  participants      ||--o{ response_sessions    : connect_id
+  response_sessions ||--o{ responses            : session_id
+  rounds            ||--o{ collection_events    : round_id
+  rounds            ||--o{ kit_events           : round_id
+  rounds            ||--o{ incentive_events     : round_id
+  rounds            ||--o{ refusal_events       : round_id
+  participants      ||--o{ v_participant_events : connect_id
+  rounds            ||--o{ v_participant_events : round_id

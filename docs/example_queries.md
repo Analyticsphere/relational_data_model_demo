@@ -296,6 +296,61 @@ WHERE sq.question_concept_id = 812107266
 
 ---
 
+## Phase 1 add-on — one convenience view, *zero* joins for the analyst
+
+The queries above show labels are "one join away." We can make it **zero joins** by shipping a denormalized view that pre-joins the dictionary onto `responses` — every answer row arrives self-describing. This is the most tangible day-one win for analysts (and the seed of Phase 2's `fact_response`).
+
+```sql
+-- Built once, over the verbatim Model A tables. Survey/domain come from the STAMPED
+-- secondary_source_concept_id on the row (so reused concepts resolve to the right survey),
+-- not from the question. All LEFT JOINs so an answer never drops out.
+CREATE OR REPLACE VIEW v_responses_enriched AS
+SELECT
+  r.response_row_id, r.connect_id,
+  ps.primary_source        AS domain,
+  ss.secondary_source      AS survey,
+  sq.source_question_text  AS source_question,
+  q.current_question_text  AS question_text,
+  q.question_type,
+  r.loop_instance,
+  r.response_concept_id,
+  resp.current_format_value AS response_label,   -- "1 = Yes"
+  r.value                   AS response_value,    -- free-text / numeric
+  vm.pii, vm.variable_type, vm.variable_label,
+  opt.response_option_set,                         -- the full offered menu for this question
+  r.question_concept_id, r.secondary_source_concept_id,
+  r.current_source_question_concept_id, r.source_table, r.source_column   -- provenance kept
+FROM responses r
+LEFT JOIN secondary_source  ss   ON ss.secondary_source_concept_id        = r.secondary_source_concept_id
+LEFT JOIN primary_source    ps   ON ps.primary_source_concept_id          = ss.primary_source_concept_id
+LEFT JOIN question          q    ON q.question_concept_id                 = r.question_concept_id
+LEFT JOIN source_question   sq   ON sq.current_source_question_concept_id = r.current_source_question_concept_id
+LEFT JOIN response          resp ON resp.response_concept_id              = r.response_concept_id
+LEFT JOIN variable_metadata vm   ON vm.question_concept_id         = r.question_concept_id
+                                AND vm.secondary_source_concept_id = r.secondary_source_concept_id
+                                AND vm.response_concept_id         = r.response_concept_id
+-- offered option set per question: aggregate the allowed-answers bridge into one string
+LEFT JOIN (
+  SELECT qr.question_concept_id,
+         STRING_AGG(o.current_format_value, '; ' ORDER BY qr.response_concept_id) AS response_option_set
+  FROM question_response qr
+  LEFT JOIN response o ON o.response_concept_id = qr.response_concept_id
+  GROUP BY qr.question_concept_id
+) opt ON opt.question_concept_id = r.question_concept_id;
+```
+
+The analyst then never sees a concept ID unless they want one:
+```sql
+SELECT survey, question_text, response_label, COUNT(*) AS n
+FROM v_responses_enriched
+WHERE question_concept_id = 724589244          -- "How many teeth lost?"
+GROUP BY survey, question_text, response_label;
+```
+
+**Notes:** grain stays one-row-per-answer (driven from `responses` outward → no fan-out — `opt` and `vm` are each ≤1 row per question/key); if the dictionary has dupes, dedupe `vm` in a CTE first. `response_option_set` shows the **offered menu** for the question (e.g. `"0 = No; 1 = Yes"`), independent of what the participant picked (`response_label`) — handy for select-all interpretation and for seeing valid values inline. Its caveats: it comes from the `question_response` allowed-answers bridge (imperfect — e.g. tooth-loss lists the "No" *value* concept as an option), and ordering is by `response_concept_id` since Model A has no `display_order` (that's a Phase 2 `response_options` feature). It's a convenience surface, not the contract — raw `responses` + the dictionary stay reachable.
+
+---
+
 ## Summary
 
 | Query | Wide | Phase 1 | Phase 2 |

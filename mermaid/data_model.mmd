@@ -1,0 +1,127 @@
+%% Connect Relational Data Model — Phase 2 "Functional model" (Model B, v0)
+%% Generated from data_model.dbml. Paste into draw.io: Insert "+" > Advanced > Mermaid...
+%% PK = primary key, FK = foreign-key column. Relationships are the edges below the entities.
+erDiagram
+  participants {
+    int connect_id PK
+    text enrollment_status
+  }
+  surveys {
+    int survey_id PK
+    text name
+    int secondary_source_concept_id
+    text domain
+  }
+  question_types {
+    int question_type_id PK
+    text base_type
+    boolean has_loop
+    boolean has_displayif
+    boolean is_required
+    boolean has_text_box
+  }
+  survey_versions {
+    int survey_version_id PK
+    int survey_id FK
+    text version
+  }
+  response_sessions {
+    int session_id PK
+    int connect_id FK
+    int survey_id FK
+    text wave
+    text status
+    timestamp started_at
+    timestamp completed_at
+  }
+  questions {
+    int question_concept_id PK
+    text label
+    int question_type_id FK
+    text variable_type
+    real numeric_min
+    real numeric_max
+    boolean pii
+    text sensitivity_tier
+  }
+  response_options {
+    int option_id PK
+    int question_concept_id FK
+    text concept_version
+    int response_concept_id
+    text label
+    text value
+    int display_order
+    boolean is_other
+    text status
+    date status_date
+    int replaced_by_response_concept_id
+    boolean pii
+    text sensitivity_tier
+  }
+  survey_questions {
+    int survey_question_id PK
+    int survey_version_id FK
+    int question_concept_id FK
+    int parent_question_concept_id FK
+    text concept_version
+    int display_order
+    boolean is_required
+    boolean is_looped
+    int loop_max
+    text gcp_document_table
+    text source_column
+  }
+  skip_logic {
+    int skip_logic_id PK
+    int survey_version_id FK
+    int target_question_concept_id FK
+    text enable_behavior
+    int trigger_question_concept_id FK
+    text operator
+    text trigger_value
+    text trigger_default_value
+    text action
+    text raw_expression
+  }
+  responses {
+    int response_id PK
+    int session_id FK
+    int survey_question_id FK
+    int loop_instance
+    int response_concept_id
+    text value_string
+    real value_number
+    date value_date
+    text sensitivity_tier
+    text source_table
+    text source_column
+  }
+  session_questions {
+    int session_id FK
+    int survey_question_id FK
+    boolean reached
+    boolean answered
+  }
+  other_event_tables {
+    int connect_id FK
+    text event_type
+    timestamp event_at
+  }
+
+  surveys           ||--o{ survey_versions   : survey_id
+  participants      ||--o{ response_sessions : connect_id
+  surveys           ||--o{ response_sessions : survey_id
+  question_types    ||--o{ questions         : question_type_id
+  questions         ||--o{ response_options  : question_concept_id
+  survey_versions   ||--o{ survey_questions  : survey_version_id
+  questions         ||--o{ survey_questions  : question_concept_id
+  questions         ||--o{ survey_questions  : parent_question_concept_id
+  survey_versions   ||--o{ skip_logic        : survey_version_id
+  questions         ||--o{ skip_logic        : target_question
+  questions         ||--o{ skip_logic        : trigger_question
+  response_sessions ||--o{ responses          : session_id
+  survey_questions  ||--o{ responses          : survey_question_id
+  response_sessions ||--o{ session_questions  : session_id
+  survey_questions  ||--o{ session_questions  : survey_question_id
+  participants      ||--o{ other_event_tables : connect_id
