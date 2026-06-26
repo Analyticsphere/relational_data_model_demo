@@ -57,6 +57,18 @@ def picture(s,path,top,max_w,max_h,left=None):
     if left is None:left=Emu(int((SW-w)/2))
     s.shapes.add_picture(path,left,top,width=w,height=h)
 
+CODEBG=RGBColor(0x1E,0x29,0x35); CODEFG=RGBColor(0xE6,0xED,0xF3); CODECM=RGBColor(0x8B,0xA6,0xC0)
+def codebox(s,code,left,top,width,height,size=12):
+    box=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,left,top,width,height)
+    box.fill.solid(); box.fill.fore_color.rgb=CODEBG; box.line.color.rgb=TEAL; box.shadow.inherit=False
+    tf=box.text_frame; tf.word_wrap=True
+    tf.margin_left=Inches(0.2); tf.margin_right=Inches(0.15); tf.margin_top=Inches(0.12); tf.vertical_anchor=MSO_ANCHOR.TOP
+    for i,line in enumerate(code.split("\n")):
+        p=tf.paragraphs[0] if i==0 else tf.add_paragraph(); p.line_spacing=1.0
+        r=p.add_run(); r.text=line or " "; r.font.name="Courier New"; r.font.size=Pt(size)
+        r.font.color.rgb=CODECM if line.strip().startswith(("--","#")) else CODEFG
+    return box
+
 A="docs/slide_assets/"
 
 # 1 TITLE
@@ -68,8 +80,36 @@ textbox(s,"Why a data model — and a two-phase path to the PR2 research warehou
 textbox(s,"Team walk-through  ·  detailed notes in internal_pitch.md",Inches(0.9),Inches(4.6),Inches(11.5),Inches(0.5),size=14,color=RGBColor(0x9A,0x9D,0xA3),italic=True)
 notes(s,"We already believe in this idea (OMOP) — we just never applied it to our own Connect data. Two phases: a fast Phase 1 win, then the governed PR2 warehouse. See internal_pitch.md — The ask.")
 
-# 2 WHY
-s=slide();titlebar(s,"Why a data model at all?","The power isn't the table layout — it's relationships defined as data")
+# 1b WHY A DATA MODEL — the plain-English value props (opener)
+s=slide();titlebar(s,"Why a data model?","Make the data explain itself — so analysis doesn't depend on tribal knowledge or bespoke code")
+CARDS=[
+ ("Self-describing","Meaning travels with the data — no decoder ring required."),
+ ("No tribal knowledge","Labels, structure & valid values live in the data — query it correctly without insider context."),
+ ("Metadata in the data","Not in side-car spreadsheets or scripts that drift out of sync."),
+ ("Standardized analyses","The same question is answered the same way by everyone."),
+ ("A schema contract","Tools built on it keep running when new data arrives."),
+ ("Shared abstractions","Every select-all handled one way; every loop one way — no per-question code."),
+]
+cw, gap, x0 = Inches(3.91), Inches(0.3), Inches(0.5)
+rows_y = [Inches(2.05), Inches(4.15)]; ch = Inches(1.9)
+for i,(t,d) in enumerate(CARDS):
+    rr, cc = divmod(i, 3)
+    card=s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Emu(int(x0)+cc*(int(cw)+int(gap))), rows_y[rr], cw, ch)
+    card.fill.solid(); card.fill.fore_color.rgb=LIGHT; card.line.color.rgb=TEAL; card.shadow.inherit=False
+    tf=card.text_frame; tf.word_wrap=True
+    tf.margin_left=Inches(0.18); tf.margin_right=Inches(0.18); tf.margin_top=Inches(0.14); tf.vertical_anchor=MSO_ANCHOR.TOP
+    p=tf.paragraphs[0]; r=p.add_run(); r.text=t; r.font.bold=True; r.font.size=Pt(16); r.font.color.rgb=NAVY; r.font.name="Calibri"
+    p2=tf.add_paragraph(); p2.space_before=Pt(5); r2=p2.add_run(); r2.text=d; r2.font.size=Pt(11.5); r2.font.color.rgb=GREY; r2.font.name="Calibri"
+band=s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,Inches(0.5),Inches(6.35),Inches(12.33),Inches(0.72))
+band.fill.solid(); band.fill.fore_color.rgb=NAVY; band.line.fill.background(); band.shadow.inherit=False
+tf=band.text_frame; tf.word_wrap=True; tf.vertical_anchor=MSO_ANCHOR.MIDDLE; tf.margin_left=Inches(0.25)
+p=tf.paragraphs[0]; r=p.add_run()
+r.text="Today that knowledge lives in column-name conventions, spreadsheets, and analysts' heads. A data model puts it in the data."
+r.font.size=Pt(14); r.font.bold=True; r.font.color.rgb=WHITE; r.font.name="Calibri"
+notes(s,"The opener: why model at all. Six plain-English value props — self-describing; queryable without tribal knowledge; metadata in the data (not sidecar files); standardized analyses; a schema contract tools can build on (and survive new data); shared abstractions (all select-all handled one way, all loops one way). Sets up the next slide: this is exactly the OMOP lesson. See internal_pitch.md — Why a data model at all?")
+
+# 2 WHY — the OMOP lesson (builds on the value props)
+s=slide();titlebar(s,"…and it's the OMOP lesson — applied to our own data","The power isn't the table layout — it's relationships defined as data")
 textbox(s,"Defined relationships between concepts & domains → analytics written once, reused across teams. That is exactly why we adopted OMOP.",Inches(0.5),Inches(1.4),Inches(12.3),Inches(0.7),size=17,color=TEAL,bold=True)
 table(s,[["What OMOP defines","The same idea in our model"],
  ["concept — analyze standard concepts, not source codes","concept-ID spine — query concepts, not d_ columns"],
@@ -214,6 +254,73 @@ table(s,[["Standard query","Wide (today)","Phase 1","Phase 2"],
  Inches(0.4),Inches(1.5),Inches(12.5),Inches(3.6),col_widths=[Inches(3.5),Inches(3.0),Inches(3.0),Inches(3.0)],fs=12.5,hdr_fs=13)
 textbox(s,"Phase 1 fixes the loud, everyday pains; Phase 2 unlocks missingness, governance & harmonization.",Inches(0.4),Inches(6.4),Inches(12.5),Inches(0.6),size=15,color=GREY,italic=True)
 notes(s,"Worked SQL for each row is in internal_pitch.md — Value proposition (Q1–Q5).")
+
+# 10b ANALYZING LONG FORMAT — demo 1: codes + labels side by side
+s=slide();titlebar(s,"Analyzing long format (1/3) — labels are one join away","Every row says what it means: concept id + human label, side by side")
+codebox(s,
+"-- one join attaches a label to every answer\n"
+"SELECT connect_id, question_text,\n"
+"       response_concept_id, response_label, value\n"
+"FROM responses\n"
+"JOIN question USING (question_concept_id)\n"
+"LEFT JOIN response USING (response_concept_id)\n"
+"WHERE connect_id = 1001;",
+Inches(0.5),Inches(1.45),Inches(6.1),Inches(2.7),size=12.5)
+table(s,[["question_text","resp. id","response_label","value"],
+ ["Sex","536341288","Female",""],
+ ["Age","","","47"],
+ ["Smoking Status","700000002","Former",""],
+ ["Education","875342283","Bachelor's Degree",""],
+ ["Have you lost…teeth?","812107266","Yes, from accident or injury",""],
+ ["Have you lost…teeth?","452438775","Yes, from tooth decay or disease",""]],
+ Inches(6.8),Inches(1.45),Inches(6.0),Inches(2.7),col_widths=[Inches(1.7),Inches(1.1),Inches(2.6),Inches(0.6)],fs=10.5,hdr_fs=10.5)
+textbox(s,"No decoder ring, no 2,360-column map — the dictionary travels with the data.",Inches(0.5),Inches(6.4),Inches(12.3),Inches(0.5),size=14,color=ACCENT,bold=True)
+notes(s,"Demo data is synthetic (sql/demo_long_format.sql, runs in DuckDB ~ BigQuery). The labels come from joining the dictionary; analysts never memorize concept ids. v_long packages this join so it's literally SELECT * FROM v_long.")
+
+# 10c demo 2: pivot a subset back to wide — generic, in SQL / Python / R
+s=slide();titlebar(s,"Analyzing long format (2/3) — wide is one generic PIVOT away","Pick your tool — one line, and none of them name a single column")
+codebox(s,
+"-- SQL (DuckDB) — column names come from the DATA, not from you\n"
+"PIVOT (FROM v_long SELECT connect_id, question_text, answer\n"
+"       WHERE question_type <> 'multi_select')\n"
+"  ON question_text USING any_value(answer);\n"
+"\n"
+"# Python (pandas)\n"
+"long.pivot(index='connect_id', columns='question_text', values='answer')\n"
+"\n"
+"# R (tidyr)\n"
+"pivot_wider(long, id_cols=connect_id, names_from=question_text, values_from=answer)",
+Inches(0.5),Inches(1.38),Inches(12.3),Inches(2.95),size=12)
+table(s,[["connect_id","Age","Education","Sex","Smoking Status"],
+ ["1001","47","Bachelor's Degree","Female","Former"],
+ ["1002","62","High School Graduate or GED","Male","Current"],
+ ["1003","55","Advanced Degree","Female","Never"],
+ ["1004","39","Bachelor's Degree","Male","Never"],
+ ["1005","71","High School Graduate or GED","Female","Former"]],
+ Inches(1.6),Inches(4.55),Inches(10.1),Inches(1.7),col_widths=[Inches(1.5),Inches(1.0),Inches(4.3),Inches(1.5),Inches(1.8)],fs=11.5,hdr_fs=11.5)
+textbox(s,"Column names come from the data, not from you — add a question, get a new column. Wrap it once as get_wide(survey) and every team reuses it.",Inches(0.5),Inches(6.4),Inches(12.3),Inches(0.5),size=13.5,color=ACCENT,bold=True)
+textbox(s,"pandas & tidyr discover columns automatically; BigQuery's PIVOT lists the values (or generate them with dynamic SQL). `long` = the single-value answers.",Inches(0.5),Inches(6.92),Inches(12.3),Inches(0.4),size=10.5,color=GREY,italic=True)
+notes(s,"Reframed: the pivot is GENERIC and metadata-driven — no hardcoded column list (the opposite of a wide-table script). NOTE on completeness: DuckDB's PIVOT implicitly groups by every column not in ON/USING, so you must project to (id, name, value) first — that's the subquery shown; this exact statement runs. The fully-dynamic ON…USING form is DuckDB; BigQuery's PIVOT needs the value list (FOR question_text IN (...)) or dynamic SQL. pandas.pivot and tidyr::pivot_wider are fully dynamic and are what analysts already use. All three verified against sql/demo_long_format.sql (synthetic). Select-all is excluded (multi-valued → belongs in long, next slide). Parameterize by survey → a reusable get_wide() helper (tool built on the contract).")
+
+# 10d demo 3: counts are a simple GROUP BY (SATA is easier in long)
+s=slide();titlebar(s,"Analyzing long format (3/3) — counts are a simple GROUP BY","And select-all gets *easier*: one group-by, no summing 0/1 columns")
+codebox(s,
+"-- how many selected each tooth-loss reason?\n"
+"SELECT response_label, COUNT(*) AS n\n"
+"FROM v_long\n"
+"WHERE question_concept_id = 899251483\n"
+"GROUP BY response_label\n"
+"ORDER BY n DESC;",
+Inches(0.5),Inches(1.5),Inches(6.0),Inches(2.4),size=12.5)
+table(s,[["tooth_loss_reason","n"],
+ ["Yes, from tooth decay or disease","2"],
+ ["Yes, from accident or injury","2"],
+ ["Yes, for some other reason","1"],
+ ["No, I haven't lost any teeth","1"]],
+ Inches(6.8),Inches(1.5),Inches(6.0),Inches(2.0),col_widths=[Inches(4.7),Inches(1.3)],fs=11.5,hdr_fs=11.5)
+textbox(s,"In wide, that means summing N ever-changing 0/1 indicator columns; in long it's the same group-by you'd write for any question.",Inches(0.5),Inches(4.3),Inches(12.3),Inches(0.6),size=13,color=GREY,italic=True)
+textbox(s,"Swap the concept id and the same one-liner counts smoking, education, anything — one pattern for every question.",Inches(0.5),Inches(6.45),Inches(12.3),Inches(0.5),size=14,color=ACCENT,bold=True)
+notes(s,"Counts are GROUP BY — often simpler than wide. Select-all is the standout: wide makes you know and sum a changing set of indicator columns; long is one group-by on response_label. Same query shape works for every question by swapping the concept id (e.g. Smoking Status -> Never 2 / Former 2 / Current 1).")
 
 # 11 RECOMMENDATION
 s=slide();titlebar(s,"Recommendation")
