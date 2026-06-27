@@ -1,0 +1,25 @@
+secondary_source,secondary_source_concept_id,primary_source,is_survey,bq_table,raw_tables,questionnaire_file,notes
+Background and Overall Health,726699695,Survey,Y,module1,module1_v1; module1_v2,module1.txt,Connect baseline Module 1
+"Medications, Reproductive Health, Exercise, and Sleep",745268907,Survey,Y,module2,module2_v1; module2_v2,module2.txt,Module 2; .txt not yet published in quest
+"Smoking, Alcohol, and Sun Exposure",965707586,Survey,Y,module3,module3_v1,module3.txt,Module 3; .txt not yet published in quest
+Where You Live and Work,716117817,Survey,Y,module4,module4_v1,module4.txt,Module 4; .txt not yet published in quest
+Mouthwash,390351864,Survey,Y,mouthwash,mouthwash_v1,,
+COVID-19,793330426,Survey,Y,covid19Survey,covid19Survey_v1,,
+COVID-19 (Post-Pandemic),408693886,Survey,Y,covid19Survey,covid19Survey_v1,,VERIFY: likely same table as COVID-19 (or a later version)
+Quality of Life,601305072,Survey,Y,promis,promis_v1,,PROMIS instrument; raw promis_v1 may be an empty stub
+Menstrual cycle,912367929,Survey,Y,menstrualSurvey,menstrualSurvey_v1,,raw menstrualSurvey_v1 may be an empty stub
+Menstrual Cycle,232438133,Survey,Y,menstrualSurvey,menstrualSurvey_v1,,casing-duplicate of 'Menstrual cycle' (912367929) in the dictionary
+2024 Connect Experience Survey,506648060,Survey,Y,experience2024,experience2024,,
+Blood/Urine,826163434,Survey,Y,bioSurvey,bioSurvey_v1,,VERIFY: best guess (home/SDS blood-urine survey vs clinical)
+Blood/Urine/Mouthwash,299215535,Survey,Y,clinicalBioSurvey,clinicalBioSurvey_v1,,VERIFY: best guess (clinical/CED bio survey vs home)
+Cancer Screening History,369168474,Survey,Y,,,,no dedicated flattened table yet (dict GCP -> Participants Table)
+Self-Reported Cancer Dx,242103797,Survey,Y,,,,dict GCP -> 'SelfReportCancerDx'; not in current schemas/ dump
+DHQ3,497020618,Survey,Y,,,,Diet History Questionnaire 3; no dedicated table yet
+Diet Screener Questionnaire,515124081,Survey,Y,,,,dict GCP -> 'DietScreener Table'; not in current schemas/ dump
+Social Security,166676176,Survey,Y,participants,participants,,lives in the participants hub (no standalone table)
+2026 ROI Preference Survey,312845734,Survey,Y,,,,newer instrument; no dedicated table yet
+Cancer Site Specific Questionnaire DRAFT QUESTION TYPE,110511396,Survey,Y,,,,DRAFT in the dictionary; not finalized
+All,206639461,Survey,N,,,,not an instrument — cross-survey / global grouping in the dictionary
+Messaging,829441834,Survey,N,,,,not a survey instrument
+,,Biospecimen,N,biospecimen,biospecimen,,specimen-collection records (Primary Source = Biospecimen), not a survey
+,,(cross-survey),N,participants,participants,,participant/enrollment hub; survey status + start/complete timestamps live here
