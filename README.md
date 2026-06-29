@@ -259,6 +259,7 @@ The model uses researcher-facing names, keeps **concept IDs identical** (they ar
 ```
 connect_data_model/
 ├── README.md
+├── scripts/             # source-fetch + column-parsing scripts (see "Source-extraction scripts" below)
 └── schemas/
     ├── Connect/          # BigQuery dataset: raw Firestore export
     ├── FlatConnect/      # BigQuery dataset: flattened by flattener pipeline
@@ -286,6 +287,12 @@ This repository builds directly on prior work documented in the **PR2 pipeline**
 - A [response-centric relational data model was sketched in the PR2 documentation](https://github.com/Analyticsphere/pr2-documentation#could-we-do-better-a-response-centric-relational-data-model-yes) as a proposed middle layer between the operational (raw) data and end-user-curated datasets. That conceptual sketch — explicitly described as not fully cooked — is the direct ancestor of the model being developed here.
 
 The goal of this repo is to take that sketch to a production-ready, fully specified relational model.
+
+### Source-extraction scripts (`scripts/`)
+
+The `scripts/` folder fetches the source artifacts (BigQuery table schemas, the data dictionary, the Quest survey markup) and parses survey **column names** into their concept-ID path — concept IDs, loop number, version tag — then maps each column to its fully-qualified dictionary path (primary/secondary source, source question, question). This gets close to the rows of the long-format `responses` fact (only `response_concept_id`, the cell value, comes from the data at unpivot time).
+
+The column-parsing helpers (`extract_ordered_concept_ids`, `extract_version_suffix`, `excise_version_from_column_name`, and the loop-number extractor) are **adapted from [pr2-transformation](https://github.com/Analyticsphere/pr2-transformation)** (`core/utils.py`, `core/variable_normalizer.py`) so parsing matches the production transform. They required **slight changes** during this exploratory work — most notably loop-number extraction: **CleanConnect** (the layer we build from) uses a single trailing `_N`, whereas **FlatConnect** (which PR2 currently parses) uses a doubled `_N_N`. **Once this exploratory phase settles, this pipeline is intended to be re-integrated into `pr2-transformation`** rather than maintained separately here.
 
 ---
 
