@@ -83,7 +83,8 @@ def nonconforming_tokens(var: str) -> list:
         t = tok.strip()
         if not t or t.upper() == "D":
             continue
-        if t.isdigit() and len(t) in (1, 9):
+        # PR2 allows single-digit loop indices; CleanConnect loops exceed 9, so allow 1-2 digits too.
+        if t.isdigit() and len(t) in (1, 2, 9):
             continue
         if re.fullmatch(r"[vV]\d+", t):
             continue

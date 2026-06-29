@@ -292,7 +292,13 @@ The goal of this repo is to take that sketch to a production-ready, fully specif
 
 The `scripts/` folder fetches the source artifacts (BigQuery table schemas, the data dictionary, the Quest survey markup) and parses survey **column names** into their concept-ID path — concept IDs, loop number, version tag — then maps each column to its fully-qualified dictionary path (primary/secondary source, source question, question). This gets close to the rows of the long-format `responses` fact (only `response_concept_id`, the cell value, comes from the data at unpivot time).
 
-The column-parsing helpers (`extract_ordered_concept_ids`, `extract_version_suffix`, `excise_version_from_column_name`, and the loop-number extractor) are **adapted from [pr2-transformation](https://github.com/Analyticsphere/pr2-transformation)** (`core/utils.py`, `core/variable_normalizer.py`) so parsing matches the production transform. They required **slight changes** during this exploratory work — most notably loop-number extraction: **CleanConnect** (the layer we build from) uses a single trailing `_N`, whereas **FlatConnect** (which PR2 currently parses) uses a doubled `_N_N`. **Once this exploratory phase settles, this pipeline is intended to be re-integrated into `pr2-transformation`** rather than maintained separately here.
+The column-parsing helpers (`extract_ordered_concept_ids`, `extract_version_suffix`, `excise_version_from_column_name`, and the loop-number extractor) are **adapted from [pr2-transformation](https://github.com/Analyticsphere/pr2-transformation)** (`core/utils.py`, `core/variable_normalizer.py`) so parsing matches the production transform. They required **slight changes** for **CleanConnect** (the layer we build from), because PR2 currently parses **FlatConnect**:
+
+- **Loop suffix:** CleanConnect uses a single trailing `_N`; FlatConnect uses a doubled `_N_N`. (`--loop-style` selects the convention; auto-detected by layer.)
+- **Loop index width:** PR2's purity check allows only single-digit loop numbers (it handles loop columns separately); CleanConnect loop instances exceed 9, so 1–2 digit indices are allowed.
+- **Source-question-as-leaf:** a few flattened columns are a Source-Question concept used directly (e.g. `d_715581797_1`); these are assigned to `source_question`, not `question`.
+
+A reproducible review step (`scripts/review_unmapped_columns.py`) buckets the columns that don't map cleanly (~3% on CleanConnect) into actionable categories (concept absent from the dictionary, survey mapping needing DevOps confirmation, etc.). **Once this exploratory phase settles, this pipeline is intended to be re-integrated into `pr2-transformation`** rather than maintained separately here.
 
 ---
 

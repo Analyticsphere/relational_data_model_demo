@@ -41,9 +41,10 @@ PRIM, SECID, SQ, Q = 2, 4, 6, 13
 
 
 def load_dictionary(path):
-    """Returns (question_set, secid_to_primid, qcid_to_secids) from the flat dictionary."""
+    """Returns (question_set, source_question_set, secid_to_primid, qcid_to_secids) from the flat dictionary."""
     rows = list(csv.reader(open(path, encoding="utf-8", errors="replace")))
     question_set = set()
+    source_question_set = set()
     secid_to_primid = {}
     qcid_to_secids = defaultdict(set)
     last_prim = last_secid = ""
@@ -51,18 +52,21 @@ def load_dictionary(path):
     for r in rows[1:]:
         prim = r[PRIM].strip() if PRIM < len(r) else ""
         secid = r[SECID].strip() if SECID < len(r) else ""
+        sq = r[SQ].strip() if SQ < len(r) else ""
         q = r[Q].strip() if Q < len(r) else ""
         if prim:
             last_prim = prim
         if secid:
             last_secid = secid
             secid_to_primid.setdefault(secid, last_prim)
+        if sq:
+            source_question_set.add(sq)
         if q:
             cur_q = q
             question_set.add(q)
         if cur_q and last_secid:
             qcid_to_secids[cur_q].add(last_secid)
-    return question_set, secid_to_primid, qcid_to_secids
+    return question_set, source_question_set, secid_to_primid, qcid_to_secids
 
 
 def load_crosswalk(path):
@@ -103,12 +107,12 @@ def main():
         if not Path(p).exists():
             sys.exit(f"error: {label} not found: {p}")
 
-    question_set, secid_to_primid, qcid_to_secids = load_dictionary(args.dict)
+    question_set, source_question_set, secid_to_primid, qcid_to_secids = load_dictionary(args.dict)
     table_to_secid = load_crosswalk(args.crosswalk)
 
     reader = csv.DictReader(open(args.input, encoding="utf-8"))
     extra = ["primary_source_concept_id", "secondary_source_concept_id", "source_question_concept_id",
-             "question_concept_id", "response_concept_id", "question_in_dict", "secondary_source_match"]
+             "question_concept_id", "response_concept_id", "leaf_role", "question_in_dict", "secondary_source_match"]
     fieldnames = reader.fieldnames + [c for c in extra if c not in reader.fieldnames]
 
     out_fh = open(args.output, "w", newline="") if args.output else sys.stdout
@@ -119,15 +123,33 @@ def main():
     for row in reader:
         n += 1
         cids = [c for c in (row.get("concept_ids") or "").split(";") if c]
-        question = cids[-1] if cids else ""
-        source_question = cids[0] if len(cids) >= 2 else ""
+        leaf = cids[-1] if cids else ""
+
+        # leaf_role: a leaf is normally the question, but some flattened columns are a Source-Question concept
+        # used directly (e.g. d_715581797_1 — a loop on a grid/compound parent), which the dictionary lists
+        # only in the Source-Question column. Assign those to source_question, not question.
+        if leaf in question_set:
+            leaf_role = "question"
+        elif leaf in source_question_set:
+            leaf_role = "source_question"
+        elif leaf:
+            leaf_role = "other"
+        else:
+            leaf_role = ""
+
+        if leaf_role == "source_question":
+            question = ""
+            source_question = leaf
+        else:
+            question = leaf
+            source_question = cids[0] if len(cids) >= 2 else ""
 
         secid = table_to_secid.get(base_table(row["table"]), "")
         if not secid:
             n_unmapped_table += 1
         primid = secid_to_primid.get(secid, "")
 
-        q_in_dict = question in question_set
+        q_in_dict = leaf_role == "question"
         sec_match = secid in qcid_to_secids.get(question, set()) if (secid and question) else False
         n_q_in_dict += q_in_dict
         n_sec_match += sec_match
@@ -138,6 +160,7 @@ def main():
             "source_question_concept_id": source_question,
             "question_concept_id": question,
             "response_concept_id": "",  # the response is the cell value, filled at unpivot from data
+            "leaf_role": leaf_role,
             "question_in_dict": "Y" if q_in_dict else "N",
             "secondary_source_match": "Y" if sec_match else "N",
         })
