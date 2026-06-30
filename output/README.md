@@ -28,6 +28,14 @@ mkdir -p output/dim && duckdb output/connect_dimensions.duckdb < sql/build_dimen
 duckdb output/connect_dimensions.duckdb < sql/validate_dimension_tables.sql
 ```
 
+The build also writes **`output/dim/*.parquet`** (git-ignored, regenerable) — load-ready for BigQuery,
+since Parquet carries the schema/types (concept IDs as STRING; no `--autodetect` needed):
+
+```bash
+bq load --source_format=PARQUET connect_dim.question gs://<bucket>/question.parquet   # one per table
+# or: CREATE EXTERNAL TABLE … OPTIONS(format='PARQUET', uris=['gs://…/question.parquet'])
+```
+
 (`output/survey_columns_clean.csv` — the intermediate parse — and `data_dictionary/masterFile.csv` are
 git-ignored; the dictionary is large and drifts upstream, re-fetch as above.)
 
