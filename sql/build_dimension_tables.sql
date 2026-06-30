@@ -67,6 +67,23 @@ FROM _ff WHERE resp_cid IS NOT NULL AND q_cid_f IS NOT NULL;
 
 DROP TABLE _raw; DROP TABLE _ff;
 
+-- 2b. denormalized "data dictionary"-like VIEW: join the dimensions back into one flat row per
+-- (question × allowed response). Mirrors the masterFile grain; free-text questions (no responses)
+-- get one row with a NULL response. This is the reverse of the normalization above.
+CREATE OR REPLACE VIEW v_data_dictionary AS
+SELECT
+  ps.primary_source_concept_id,            ps.primary_source,
+  q.secondary_source_concept_id,           ss.secondary_source,
+  q.current_source_question_concept_id,    sq.source_question_text, sq.grid_source_question_name,
+  q.question_concept_id,                   q.current_question_text, q.question_type,
+  r.response_concept_id,                   r.current_format_value
+FROM question q
+LEFT JOIN secondary_source  ss USING (secondary_source_concept_id)
+LEFT JOIN primary_source    ps USING (primary_source_concept_id)
+LEFT JOIN source_question   sq USING (current_source_question_concept_id)
+LEFT JOIN question_response qr USING (question_concept_id)
+LEFT JOIN response          r  USING (response_concept_id);
+
 -- 3a. export reviewable CSVs (ORDER BY the key so rebuilds are deterministic — no git churn)
 COPY (SELECT * FROM primary_source    ORDER BY primary_source_concept_id)            TO 'output/dim/primary_source.csv'    (HEADER);
 COPY (SELECT * FROM secondary_source  ORDER BY secondary_source_concept_id)          TO 'output/dim/secondary_source.csv'  (HEADER);
@@ -74,6 +91,10 @@ COPY (SELECT * FROM source_question   ORDER BY current_source_question_concept_i
 COPY (SELECT * FROM question          ORDER BY question_concept_id)                  TO 'output/dim/question.csv'          (HEADER);
 COPY (SELECT * FROM response          ORDER BY response_concept_id)                  TO 'output/dim/response.csv'          (HEADER);
 COPY (SELECT * FROM question_response ORDER BY question_concept_id, response_concept_id) TO 'output/dim/question_response.csv' (HEADER);
+COPY (SELECT * FROM v_data_dictionary
+      ORDER BY primary_source_concept_id, secondary_source_concept_id,
+               current_source_question_concept_id NULLS FIRST, question_concept_id, response_concept_id NULLS FIRST)
+  TO 'output/dim/v_data_dictionary.csv' (HEADER);
 
 -- 3b. export Parquet — load-ready for BigQuery (schema + types embedded; no autodetect needed):
 --   bq load --source_format=PARQUET connect_dim.question gs://<bucket>/question.parquet
