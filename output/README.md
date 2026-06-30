@@ -24,6 +24,8 @@ python scripts/review_unmapped_columns.py output/survey_columns_clean_mapped.csv
 
 # demo dimension tables (also writes output/connect_dimensions.duckdb — git-ignored binary):
 mkdir -p output/dim && duckdb output/connect_dimensions.duckdb < sql/build_dimension_tables.sql
+# validate them (row counts, referential integrity, source_question cross-check):
+duckdb output/connect_dimensions.duckdb < sql/validate_dimension_tables.sql
 ```
 
 (`output/survey_columns_clean.csv` — the intermediate parse — and `data_dictionary/masterFile.csv` are
