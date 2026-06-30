@@ -67,23 +67,23 @@ FROM _ff WHERE resp_cid IS NOT NULL AND q_cid_f IS NOT NULL;
 
 DROP TABLE _raw; DROP TABLE _ff;
 
--- 3a. export reviewable CSVs
-COPY primary_source    TO 'output/dim/primary_source.csv'    (HEADER);
-COPY secondary_source  TO 'output/dim/secondary_source.csv'  (HEADER);
-COPY source_question   TO 'output/dim/source_question.csv'   (HEADER);
-COPY question          TO 'output/dim/question.csv'          (HEADER);
-COPY response          TO 'output/dim/response.csv'          (HEADER);
-COPY question_response TO 'output/dim/question_response.csv' (HEADER);
+-- 3a. export reviewable CSVs (ORDER BY the key so rebuilds are deterministic — no git churn)
+COPY (SELECT * FROM primary_source    ORDER BY primary_source_concept_id)            TO 'output/dim/primary_source.csv'    (HEADER);
+COPY (SELECT * FROM secondary_source  ORDER BY secondary_source_concept_id)          TO 'output/dim/secondary_source.csv'  (HEADER);
+COPY (SELECT * FROM source_question   ORDER BY current_source_question_concept_id)   TO 'output/dim/source_question.csv'   (HEADER);
+COPY (SELECT * FROM question          ORDER BY question_concept_id)                  TO 'output/dim/question.csv'          (HEADER);
+COPY (SELECT * FROM response          ORDER BY response_concept_id)                  TO 'output/dim/response.csv'          (HEADER);
+COPY (SELECT * FROM question_response ORDER BY question_concept_id, response_concept_id) TO 'output/dim/question_response.csv' (HEADER);
 
 -- 3b. export Parquet — load-ready for BigQuery (schema + types embedded; no autodetect needed):
 --   bq load --source_format=PARQUET connect_dim.question gs://<bucket>/question.parquet
 -- Concept IDs stay STRING here (they are identifiers, not numbers) — the desired BigQuery type.
-COPY primary_source    TO 'output/dim/primary_source.parquet'    (FORMAT parquet);
-COPY secondary_source  TO 'output/dim/secondary_source.parquet'  (FORMAT parquet);
-COPY source_question   TO 'output/dim/source_question.parquet'   (FORMAT parquet);
-COPY question          TO 'output/dim/question.parquet'          (FORMAT parquet);
-COPY response          TO 'output/dim/response.parquet'          (FORMAT parquet);
-COPY question_response TO 'output/dim/question_response.parquet' (FORMAT parquet);
+COPY (SELECT * FROM primary_source    ORDER BY primary_source_concept_id)            TO 'output/dim/primary_source.parquet'    (FORMAT parquet);
+COPY (SELECT * FROM secondary_source  ORDER BY secondary_source_concept_id)          TO 'output/dim/secondary_source.parquet'  (FORMAT parquet);
+COPY (SELECT * FROM source_question   ORDER BY current_source_question_concept_id)   TO 'output/dim/source_question.parquet'   (FORMAT parquet);
+COPY (SELECT * FROM question          ORDER BY question_concept_id)                  TO 'output/dim/question.parquet'          (FORMAT parquet);
+COPY (SELECT * FROM response          ORDER BY response_concept_id)                  TO 'output/dim/response.parquet'          (FORMAT parquet);
+COPY (SELECT * FROM question_response ORDER BY question_concept_id, response_concept_id) TO 'output/dim/question_response.parquet' (FORMAT parquet);
 
 .mode markdown
 SELECT 'primary_source' AS tbl, count(*) AS n FROM primary_source

@@ -1,14 +1,14 @@
 primary_source_concept_id,primary_source
-399585543,GWAS
-332961895,Study Manager
-237817859,Help Desk
-942936609,Geocode
-290739590,Communications Tracking
-218382402,NORC
-192505768,Recruitment
-840173959,ROI
 129084651,Survey
 173836415,Collection Details
-825323676,EMR
-819848608,Biospecimen
+192505768,Recruitment
+218382402,NORC
+237817859,Help Desk
+290739590,Communications Tracking
+332961895,Study Manager
+399585543,GWAS
 692924902,Rapid Case Ascertainment
+819848608,Biospecimen
+825323676,EMR
+840173959,ROI
+942936609,Geocode
