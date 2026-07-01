@@ -7,6 +7,7 @@ concept-ID path, the loop instance number, and the version tag — using the sam
 Usage:
     python scripts/parse_survey_columns.py                       # all survey tables in schemas/FlatConnect -> stdout CSV
     python scripts/parse_survey_columns.py --layer CleanConnect
+    python scripts/parse_survey_columns.py --layer CleanConnect --schemas-dir schemas/stage
     python scripts/parse_survey_columns.py module1_v1 mouthwash_v1
     python scripts/parse_survey_columns.py -o survey_columns.csv
     python scripts/parse_survey_columns.py --all-columns         # include non-concept columns (Connect_ID, token, ...)
@@ -113,7 +114,7 @@ def main():
     )
     ap.add_argument("tables", nargs="*", help="specific table names (schema file stems); default: all survey tables in the layer")
     ap.add_argument("--layer", default="FlatConnect", help="schemas/<layer> to read (default: FlatConnect)")
-    ap.add_argument("--schemas-dir", default="schemas", help="base schemas directory (default: schemas)")
+    ap.add_argument("--schemas-dir", default="schemas/stage", help="base schemas directory (default: schemas/stage; use schemas/prod for prod schemas)")
     ap.add_argument("-o", "--output", default=None, help="write CSV here (default: stdout)")
     ap.add_argument("--all-columns", action="store_true", help="include columns with no concept ID (Connect_ID, token, ...)")
     ap.add_argument("--loop-style", choices=["auto", "flat", "clean"], default="auto",

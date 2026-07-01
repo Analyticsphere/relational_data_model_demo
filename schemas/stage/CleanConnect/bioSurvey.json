@@ -1,0 +1,1477 @@
+[
+  {
+    "name": "d_406270109_d_259744087",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_406270109_d_404389800",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_406270109_d_463302301",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_406270109_d_523660949",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_406270109_d_762727133",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_406270109_d_877842367",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_406270109_d_886771318",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_406270109_d_950773275",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_470484596_d_214414872",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_470484596_d_235386560",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_470484596_d_406943303",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_470484596_d_535003378",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_470484596_d_756774083",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_470484596_d_811126581",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_470484596_d_955154600",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_479143504_d_165596977",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_479143504_d_184513726",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_479143504_d_203919683",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_479143504_d_390351864",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_479143504_d_578402172",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_479143504_d_807884576",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_542661394_d_104430631",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_542661394_d_167336253",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_542661394_d_178420302",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_542661394_d_181769837",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_542661394_d_215662651",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_542661394_d_329536041",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_542661394_d_365685000",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_542661394_d_371726159",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_542661394_d_656498939",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_160627865_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_160627865_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_160627865_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_160627865_4",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_162167690_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_162167690_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_162167690_4",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_178318661_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_283776061_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_367747257_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_367747257_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_367747257_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_367747257_4",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_406943303_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_406943303_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_406943303_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_423283665_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_423283665_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_423283665_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_524258008_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_524258008_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_579409935_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_579409935_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_653630699_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_657566099_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_657566099_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_679368947_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_679368947_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_684149600_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_684149600_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_756774083_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_756774083_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_756774083_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_756774083_4",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_760243464_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_760243464_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_760243464_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_807835037_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_810340693_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_810340693_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_896163801_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_896163801_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_896163801_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_705336878_d_960642359_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_899251483_d_104430631",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_899251483_d_104430631_v2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_899251483_d_452438775",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_899251483_d_452438775_v2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_899251483_d_551489317_v2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_899251483_d_812107266",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_899251483_d_812107266_v2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_899251483_d_886864375",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_899251483_d_886864375_v2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "Connect_ID",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_108733102_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_108733102_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_108733102_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_108733102_4",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_110872086_d_110872086",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_110872086_d_637540387",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_112151599",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_114280729_d_108389123",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_114280729_d_109223043",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_114280729_d_336856410",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_114280729_d_368669706",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_114280729_d_374567479",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_114280729_d_481587023",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_114280729_d_518602598",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_114280729_d_590361055",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_114280729_d_605818246",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_114280729_d_702905707",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_114280729_d_747085418",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_114280729_d_770190369",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_114280729_d_790860504",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_114280729_d_966214244",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_114280729_d_986119909",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_114280729_d_994153376",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_130311122",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_136730307_d_126794793",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_136730307_d_218793117",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_136730307_d_338613869",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_136730307_d_962475128",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_136730307_d_989576239",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_169509213_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_169509213_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_179406442_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_179406442_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_191057574",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_191057574_v2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_205713835",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_220055064_d_220055064_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_220055064_d_220055064_10",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_220055064_d_220055064_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_220055064_d_220055064_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_220055064_d_220055064_4",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_220055064_d_220055064_5",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_220055064_d_220055064_6",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_220055064_d_220055064_7",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_220055064_d_220055064_8",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_220055064_d_220055064_9",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_220055064_d_395747093_5",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_220055064_d_395747093_9",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_227848247",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_234714655",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_273371161",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_294886836",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_299417266",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_299417266_v2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_318641324",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_339570897",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_349659426",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_350251057",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_353467497",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_360678252",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_366980310_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_366980310_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_366980310_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_366980310_4",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_366980310_5",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_366980310_6",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_368715875",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_380603392",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_389465772_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_389465772_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_389465772_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_389465772_4",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_424718457_d_157417942",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_424718457_d_424718457",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_429994023",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_430060900",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_430166879_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_430166879_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_451163824_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_451163824_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_451163824_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_451163824_4",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_460873842",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_487532606_d_520755310",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_487532606_d_619765650",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_487532606_d_839329467",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_494226443",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_498462481_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_498462481_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_498462481_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_498462481_4",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_498462481_5",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_498462481_6",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_498984275",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_499977481",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_518916981",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_520416570",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_522008539",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_526973271",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_563539159",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_589004291",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_591826144",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_642044281",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_644459734",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_689861450",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_689861450_v2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_694503437_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_694503437_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_694503437_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_694503437_4",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_694503437_5",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_694503437_6",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_705336878_d_218852075_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_715581797_1_v2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_715581797_2_v2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_715581797_3_v2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_715581797_4_v2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_715581797_d_652923023_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_715581797_d_652923023_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_715581797_d_652923023_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_715581797_d_652923023_4",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_715581797_d_652923023_5",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_715581797_d_701387353_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_715581797_d_701387353_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_715581797_d_701387353_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_715581797_d_701387353_4",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_715581797_d_701387353_5",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_724589244",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_736028153",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_736393021",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_744230001_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_744230001_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_749956170_d_143206081",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_749956170_d_304155106",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_749956170_d_516899143",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_749956170_d_830581863",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_749956170_d_860444009",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_751358419_d_238135048",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_751358419_d_524096053",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_751358419_d_632714520",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_751358419_d_635026188",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_751358419_d_814101706",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_766370065",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_775313030_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_775313030_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_775313030_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_775313030_4",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_782396371_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_782396371_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_784119588",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_792134396",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_798452445",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_800703566",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_800752981",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_803339020_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_803339020_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_813989715_d_151327643",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_813989715_d_283112988",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_813989715_d_440872808",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_813989715_d_580629349",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_813989715_d_874168085",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_813989715_d_874223830",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_847578001_d_167695804",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_847578001_d_215996690",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_847578001_d_462737492",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_847578001_d_469675296",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_847578001_d_488415137",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_847578001_d_730334054",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_857165713_d_187399900",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_857165713_d_219358831",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_857165713_d_243443780",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_857165713_d_357462273",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_857165713_d_636367178",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_857165713_d_638380747",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_857165713_d_847529903",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_860011428",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_867307558",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_875535246",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_877074400",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_877074400_v2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_877878167",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_890156588",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_890156588_v2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_893966847_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_893966847_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_921972241",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_928530823_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_928530823_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_928530823_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_928530823_4",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_930944000_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_930944000_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_934384452",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_957305523",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_959877599_d_700620868",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_959877599_d_908044428",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_980800222_d_173502329_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_980800222_d_173502329_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_980800222_d_173502329_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_980800222_d_173502329_4",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_980800222_d_173502329_5",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_980800222_d_173502329_6",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_980800222_d_366972678_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_980800222_d_366972678_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_980800222_d_366972678_3",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_980800222_d_366972678_4",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_980800222_d_366972678_5",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_980800222_d_366972678_6",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_983043203",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_984121390_1",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_984121390_2",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  }
+]

@@ -1,0 +1,6 @@
+[
+  {"name": "concept_id_1",        "type": "STRING", "mode": "NULLABLE", "description": "Source concept ID"},
+  {"name": "concept_id_2",        "type": "STRING", "mode": "NULLABLE", "description": "Target concept ID (the canonical / equivalent concept)"},
+  {"name": "relationship",        "type": "STRING", "mode": "NULLABLE", "description": "Relationship type (e.g. synonym)"},
+  {"name": "relationship_source", "type": "STRING", "mode": "NULLABLE", "description": "How the relationship was derived (e.g. demo: address residence apartment)"}
+]

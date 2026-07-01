@@ -1,0 +1,4 @@
+[
+  {"name": "question_concept_id",  "type": "STRING", "mode": "NULLABLE", "description": "FK to question"},
+  {"name": "response_concept_id",  "type": "STRING", "mode": "NULLABLE", "description": "FK to response — an allowed response option for this question"}
+]

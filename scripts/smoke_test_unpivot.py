@@ -2,7 +2,7 @@
 """Reproducible, PRODUCTION-FREE smoke test of the responses unpivot (sql/unpivot/).
 
 Proves the transform *shape* without any Connect data:
-  1. builds a synthetic wide table using the REAL column names from schemas/CleanConnect/<table>.json
+  1. builds a synthetic wide table using the REAL column names from schemas/prod/CleanConnect/<table>.json
      (fake cell values; most left NULL = unanswered),
   2. loads the REAL colmap (output/survey_columns_clean_mapped.csv),
   3. runs the same BigQuery `UNPIVOT` + colmap join the generated SQL uses (DuckDB dialect),
@@ -27,7 +27,8 @@ MAPPING = "output/survey_columns_clean_mapped.csv"
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("table", nargs="?", default="mouthwash", help="CleanConnect table stem (default: mouthwash)")
-    ap.add_argument("--schemas-dir", default="schemas/CleanConnect")
+    ap.add_argument("--schemas-dir", default="schemas/prod/CleanConnect",
+                    help="CleanConnect schema dir (default: schemas/prod/CleanConnect)")
     ap.add_argument("--seeded", type=int, default=4, help="how many columns to give participant P1 a value (default 4)")
     args = ap.parse_args()
 

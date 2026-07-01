@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Connect_ID",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_593467240",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_951357171",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_784119588",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "d_901199566",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  }
+]

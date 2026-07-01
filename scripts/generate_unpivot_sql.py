@@ -6,11 +6,11 @@ value), then JOINed to a `colmap` (our column→placement mapping) to attach the
 (secondary source, source question, question, loop, version). UNPIVOT drops NULL cells, so an
 unanswered question produces no row — the long/sparse fact.
 
-**Generated from the SCHEMAS only** (schemas/CleanConnect/*.json) + the mapping
+**Generated from the SCHEMAS only** (schemas/prod/CleanConnect/*.json or schemas/stage/CleanConnect/*.json) + the mapping
 (output/survey_columns_clean_mapped.csv). It does NOT touch production data. Validate later with
 `bq query --dry_run` (reads 0 bytes) and against test data.
 
-    python scripts/generate_unpivot_sql.py                       # all CleanConnect survey tables -> sql/unpivot/
+    python scripts/generate_unpivot_sql.py                       # all CleanConnect survey tables -> sql/unpivot/  (defaults to stage project + stage schemas)
     python scripts/generate_unpivot_sql.py module1 mouthwash     # specific tables
     python scripts/generate_unpivot_sql.py --project my-proj --dataset relational
 
@@ -28,6 +28,9 @@ import json
 import sys
 from collections import defaultdict
 from pathlib import Path
+
+STAGE_PROJECT = "nih-nci-dceg-connect-stg-5519"
+
 
 NON_SURVEY = {"participants", "biospecimen"}
 
@@ -99,37 +102,15 @@ DELETE FROM `{project}.{dataset}.responses` WHERE source_table = 'CleanConnect.{
     return sql, len(cols), unmapped_skipped
 
 
-DDL = """-- Target fact + colmap for the responses unpivot. NOT run against production.
-
-CREATE TABLE IF NOT EXISTS `{project}.{dataset}.responses` (
-  connect_id STRING,
-  secondary_source_concept_id STRING,           -- the SURVEY (stamped from the table via colmap)
-  current_source_question_concept_id STRING,    -- grid / select-all parent; NULL if standalone
-  question_concept_id STRING,
-  loop_instance INT64,                          -- the _N loop suffix (1 if not looped)
-  question_version STRING,                      -- the _v2 question/concept revision tag
-  -- value columns (OMOP observation-style). as_string is ALWAYS the verbatim cell (lossless source of
-  -- truth); as_number / as_concept_id are typed extracts filled by a later step keyed on question_type.
-  response_value_as_string STRING,              -- verbatim raw cell — always populated
-  response_value_as_number FLOAT64,             -- numeric answers (Num/Year/count) for direct AVG/SUM
-  response_value_as_concept_id STRING,          -- coded answer (single/multi-select) -> joins response / response_options / concept_relationship
-  source_table STRING,
-  source_column STRING
-);
-
--- colmap: a clean-named view over the loaded column->placement mapping. Load the mapping first, e.g.
---   bq load --autodetect --source_format=CSV {dataset}.survey_columns_clean_mapped \\
---           gs://<bucket>/survey_columns_clean_mapped.csv
--- (`table`/`column` are reserved words -> backticked and aliased below.)
-CREATE OR REPLACE VIEW `{project}.{dataset}.colmap` AS
+DDL_COLMAP_VIEW = """CREATE OR REPLACE VIEW `{project}.{dataset}.colmap` AS
 SELECT
   `table`                    AS table_name,
   `column`                   AS source_column,
   secondary_source_concept_id,
   NULLIF(source_question_concept_id, '') AS current_source_question_concept_id,  -- NULL = standalone question
   question_concept_id,
-  COALESCE(SAFE_CAST(NULLIF(loop_number, '') AS INT64), 1) AS loop_instance,  -- default 1 when not looped
-  NULLIF(version_tag, '')     AS question_version
+  COALESCE(loop_number, 1)   AS loop_instance,                                   -- default 1 when not looped (INTEGER in table)
+  NULLIF(version_tag, '')    AS question_version
 FROM `{project}.{dataset}.survey_columns_clean_mapped`;
 """
 
@@ -138,10 +119,13 @@ def main():
     ap = argparse.ArgumentParser(description="Generate BigQuery unpivot SQL for the responses fact (from schemas).",
                                  formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
     ap.add_argument("tables", nargs="*", help="specific CleanConnect table stems (default: all survey tables)")
-    ap.add_argument("--schemas-dir", default="schemas/CleanConnect")
-    ap.add_argument("--mapping", default="output/survey_columns_clean_mapped.csv")
-    ap.add_argument("--out-dir", default="sql/unpivot")
-    ap.add_argument("--project", default="${PROJECT}")
+    ap.add_argument("--schemas-dir", default="schemas/stage/CleanConnect",
+                    help="CleanConnect schema dir (default: schemas/stage/CleanConnect; use schemas/prod/CleanConnect for prod)")
+    ap.add_argument("--mapping", default="output/survey_columns_stage_mapped.csv",
+                    help="column->placement mapping CSV (default: output/survey_columns_stage_mapped.csv)")
+    ap.add_argument("--out-dir", default="sql/unpivot_stage")
+    ap.add_argument("--project", default=STAGE_PROJECT,
+                    help=f"GCP project to hardcode in generated SQL (default: {STAGE_PROJECT}; use ${{PROJECT}} for a placeholder)")
     ap.add_argument("--dataset", default="relational")
     ap.add_argument("--batch", type=int, default=0,
                     help="split each table's UNPIVOT into chunks of this many columns (0 = one statement; "
@@ -157,7 +141,28 @@ def main():
 
     stems = args.tables or sorted(f.stem for f in schema_dir.glob("*.json") if f.stem not in NON_SURVEY)
     out = Path(args.out_dir); out.mkdir(parents=True, exist_ok=True)
-    (out / "00_responses_ddl.sql").write_text(DDL.format(project=args.project, dataset=args.dataset))
+
+    ddl_table = f"""-- Target responses fact table + colmap view for the responses unpivot.
+-- Schema source of truth: schemas/relational/responses.json (used by scripts/setup_relational.py).
+-- NOT run against production. Run scripts/setup_relational.py to create these objects.
+CREATE TABLE IF NOT EXISTS `{args.project}.{args.dataset}.responses` (
+  connect_id STRING,
+  secondary_source_concept_id STRING,           -- the SURVEY (stamped from the table via colmap)
+  current_source_question_concept_id STRING,    -- grid / select-all parent; NULL if standalone
+  question_concept_id STRING,
+  loop_instance INT64,                          -- the _N loop suffix (1 if not looped)
+  question_version STRING,                      -- the _v2 question/concept revision tag
+  response_value_as_string STRING,              -- verbatim raw cell — always populated
+  response_value_as_number FLOAT64,             -- numeric answers (Num/Year/count)
+  response_value_as_concept_id STRING,          -- coded answer (single/multi-select)
+  source_table STRING,
+  source_column STRING
+);
+
+"""
+    (out / "00_responses_ddl.sql").write_text(
+        ddl_table + DDL_COLMAP_VIEW.format(project=args.project, dataset=args.dataset)
+    )
 
     total = 0
     for t in stems:

@@ -13,7 +13,8 @@ Output: <output-dir>/<dataset>/<table>.<json|csv>      (default output-dir: sche
     - JSON: the standard BigQuery schema array, identical to `bq show --schema --format=prettyjson`.
     - CSV : one row per column (nested RECORD/STRUCT fields flattened with dotted names).
 
-Defaults (tuned for this repo): output under schemas/<dataset>/ (matches the existing layout),
+Defaults (tuned for this repo): output under schemas/prod/<dataset>/ for the prod project and
+schemas/stage/<dataset>/ for stage (pass --output-dir schemas/stage to fetch stage schemas).
 JSON format, and --project defaults to the Connect prod project (override with --project).
 
 TARGET grammar (project for the 1- and 2-part forms comes from --project / the client default):
@@ -89,7 +90,7 @@ def main():
     ap.add_argument("--project", default=DEFAULT_PROJECT,
                     help=f"GCP project (default: {DEFAULT_PROJECT}; the Connect prod project)")
     ap.add_argument("--format", choices=["json", "csv"], default="json", help="output format (default: json)")
-    ap.add_argument("-o", "--output-dir", default="schemas", help="base output directory (default: schemas)")
+    ap.add_argument("-o", "--output-dir", default="schemas/prod", help="base output directory (default: schemas/prod; use schemas/stage for the stage project)")
     ap.add_argument("--location", default=None, help="BigQuery location, e.g. US (optional)")
     ap.add_argument("--tables-only", action="store_true", help="skip VIEW / MATERIALIZED_VIEW / EXTERNAL")
     args = ap.parse_args()
