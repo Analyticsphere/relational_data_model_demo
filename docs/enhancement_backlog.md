@@ -24,6 +24,24 @@ fact stays immutable; enhancements are overlays, attributes, or downstream layer
 
 ## The backlog (ordered roughly by value-to-cost)
 
+### 0. Clustering (and future partitioning) for the `responses` table  *(pre-production must-do)*
+- **What:** at 200k participants the `responses` table is ~55M rows (~110M at full cohort). Without
+  clustering every query scans the full table. Recommended clustering key:
+  `(secondary_source_concept_id, question_concept_id, connect_id)`.
+  - `secondary_source_concept_id` first — most queries filter by survey; 10 surveys → ~10% initial pruning.
+  - `question_concept_id` second — within a survey queries are almost always question-specific; ~3,240
+    unique concepts, highly selective.
+  - `connect_id` third — participant and cohort lookups benefit from the remaining sort.
+  - **Estimated benefit:** 70–85% scan reduction for typical question-level and survey-level queries.
+- **Implementation:** add `OPTIONS(clustering_fields=["secondary_source_concept_id","question_concept_id","connect_id"])`
+  to the `CREATE TABLE` in `sql/unpivot_stage/00_responses_ddl.sql` (and update `scripts/setup_relational.py`
+  + `schemas/relational/responses.json`). Recreate the table and re-run the unpivot SQL.
+- **Future — partitioning:** once `response_sessions` timestamps are pulled from the `participants` table
+  (#5 below), add a `survey_completed_at DATE` partition column. Use DATE partition + retain the clustering
+  — BigQuery's recommended pattern for large observation/event tables.
+- **Cost:** very low to implement. Must be done before the table is loaded at production scale (clustering
+  cannot be added retroactively without recreating the table).
+
 ### 1. Normalized question-type view  *(smallest, highest bang-for-buck)*
 - **What:** one derived view `question_type_norm` mapping the dictionary's messy `question_type` (partial
   coverage, casing/typos, compound strings) to a clean `base_type` + flags (`is_multi`, `has_loop`, …),

@@ -1,4 +1,24 @@
 -- Target fact + colmap for the responses unpivot. NOT run against production.
+--
+-- CLUSTERING STRATEGY (for production scale — ~55M rows at 200k participants, ~110M at full cohort):
+--
+--   Recommended: CLUSTER BY (secondary_source_concept_id, question_concept_id, connect_id)
+--   Rationale:
+--     1. secondary_source_concept_id first — most queries filter by survey; 10 surveys means
+--        each cluster block covers ~10% of the table (good initial pruning).
+--     2. question_concept_id second — within a survey, analyses are almost always
+--        question-specific ("distribution of answers to Q"); high cardinality (~3,240 concepts)
+--        makes this highly selective.
+--     3. connect_id third — participant lookups and cohort-level queries benefit from the
+--        remaining sort order.
+--   Benefit: estimated 70–85% scan reduction for typical question-level and survey-level queries.
+--
+--   To enable: add OPTIONS(clustering_fields=["secondary_source_concept_id","question_concept_id","connect_id"])
+--   to the CREATE TABLE statement before the first load. Recreate the table + re-run unpivot SQL.
+--
+--   FUTURE — partition by survey_completed_at DATE once response_sessions timestamps are pulled
+--   from the participants table (#5 in docs/enhancement_backlog.md). Partition by DATE +
+--   retain the clustering — BigQuery's recommended pattern for large event/observation tables.
 
 CREATE TABLE IF NOT EXISTS `nih-nci-dceg-connect-stg-5519.relational.responses` (
   connect_id STRING,

@@ -117,6 +117,10 @@ public dictionary only.
   about cost/uncertainty; don't invent mappings — flag best-guesses (as the crosswalk does).
 - **`schemas/relational/*.json` are the BQ type source of truth.** Always pass these to `bq load` via
   `setup_relational.py`; never rely on autodetect (it casts 9-digit concept IDs as INTEGER).
+- **`responses` must be clustered before production load.** Cluster on
+  `(secondary_source_concept_id, question_concept_id, connect_id)`. See `docs/enhancement_backlog.md` §0
+  and the DDL comment in `sql/unpivot_stage/00_responses_ddl.sql` for the full rationale and future
+  partitioning plan.
 - **Never query production data directly** (project `nih-nci-dceg-connect-prod-6d04`) — not even for spot
   checks. Schema metadata via `fetch_bq_schemas.py` is the only permitted prod access. All data work runs
   against stage (`nih-nci-dceg-connect-stg-5519`).
