@@ -1,5 +1,8 @@
 -- Unpivot CleanConnect.bioSurvey -> relational.responses  (GENERATED from schemas/CleanConnect/bioSurvey.json)
 -- NOT run against production. Validate later: bq query --dry_run < this file.  322 columns unpivoted.
+-- Idempotent: clears this table's rows first, so the file can be re-run without duplicating.
+DELETE FROM `${PROJECT}.relational.responses` WHERE source_table = 'CleanConnect.bioSurvey';
+
 INSERT INTO `${PROJECT}.relational.responses`
   (connect_id, secondary_source_concept_id, current_source_question_concept_id, question_concept_id,
    loop_instance, question_version, response_value_as_string, response_value_as_number,
@@ -9,7 +12,7 @@ SELECT
   m.secondary_source_concept_id,
   m.current_source_question_concept_id,
   m.question_concept_id,
-  m.loop_instance,
+  m.loop_instance,                                                      -- 1 when not looped (colmap COALESCEs)
   m.question_version,
   u.value                                            AS response_value_as_string,   -- verbatim raw cell (always)
   CAST(NULL AS FLOAT64)                              AS response_value_as_number,    -- typed later by question_type

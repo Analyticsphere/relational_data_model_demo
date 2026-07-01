@@ -46,7 +46,7 @@ def main():
         SELECT "column" AS source_column, secondary_source_concept_id,
                NULLIF(source_question_concept_id,'') AS current_source_question_concept_id,
                question_concept_id,
-               TRY_CAST(NULLIF(loop_number,'') AS INTEGER) AS loop_instance,
+               COALESCE(TRY_CAST(NULLIF(loop_number,'') AS INTEGER), 1) AS loop_instance,
                NULLIF(version_tag,'')          AS question_version
         FROM read_csv('{MAPPING}', header=true, all_varchar=true)
         WHERE "table" = '{args.table}'

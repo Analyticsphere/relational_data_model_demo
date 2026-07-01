@@ -25,7 +25,18 @@ carried) — the pattern, not the data.
 | File | What |
 |---|---|
 | `00_responses_ddl.sql` | `CREATE TABLE responses` + the `colmap` view over the loaded mapping. Run once. |
-| `unpivot_<table>.sql`  | one `INSERT … SELECT` per survey table (`UNPIVOT` + colmap join). |
+| `unpivot_<table>.sql`  | per survey table: a `DELETE` (idempotent) then `INSERT … SELECT` (`UNPIVOT` + colmap join). |
+| `validate_responses.sql` | post-run checks (volume, grain uniqueness, referential integrity, loop sanity, tooth-loss spot-check). |
+
+**Idempotent:** each `unpivot_<table>.sql` clears that table's rows (`DELETE … WHERE source_table = …`)
+before inserting, so it can be re-run without duplicating.
+
+**Very wide tables:** `module1` has ~2,359 columns in one `UNPIVOT`. If that hits a BigQuery
+compile/complexity limit, regenerate with chunking — one `DELETE` + several smaller `INSERT`s:
+
+```bash
+python scripts/generate_unpivot_sql.py module1 --batch 500
+```
 
 ## Value typing (OMOP observation-style; extras deferred)
 

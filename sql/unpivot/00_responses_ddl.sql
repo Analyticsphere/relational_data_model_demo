@@ -27,6 +27,6 @@ SELECT
   secondary_source_concept_id,
   NULLIF(source_question_concept_id, '') AS current_source_question_concept_id,  -- NULL = standalone question
   question_concept_id,
-  SAFE_CAST(NULLIF(loop_number, '') AS INT64) AS loop_instance,
+  COALESCE(SAFE_CAST(NULLIF(loop_number, '') AS INT64), 1) AS loop_instance,  -- default 1 when not looped
   NULLIF(version_tag, '')     AS question_version
 FROM `${PROJECT}.relational.survey_columns_clean_mapped`;

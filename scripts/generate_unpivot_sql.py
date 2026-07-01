@@ -44,24 +44,15 @@ def bq(name):
     return f"`{name}`"
 
 
-def gen_table_sql(table, schema, mapped_cols, project, dataset):
-    types = {f["name"]: f["type"] for f in schema}
-    cols = [c for c in sorted(mapped_cols) if c in types]     # mapped data columns present in the schema
-    unmapped_skipped = len(mapped_cols) - len(cols)
-    if not cols:
-        return None, 0, unmapped_skipped
-
-    # inner SELECT: Connect_ID + each data column, casting non-STRING to STRING (UNPIVOT needs one type)
+def _insert_stmt(table, cols, types, project, dataset):
+    """One idempotent INSERT … SELECT … UNPIVOT over a subset of columns."""
     inner = ["  SELECT Connect_ID,"]
     for c in cols:
         inner.append(f"    {'CAST('+bq(c)+' AS STRING) AS '+bq(c) if types[c] != 'STRING' else bq(c)},")
     inner[-1] = inner[-1].rstrip(",")
     inner.append(f"  FROM `{project}.CleanConnect.{table}`")
     in_list = ", ".join(bq(c) for c in cols)
-
-    sql = f"""-- Unpivot CleanConnect.{table} -> {dataset}.responses  (GENERATED from schemas/CleanConnect/{table}.json)
--- NOT run against production. Validate later: bq query --dry_run < this file.  {len(cols)} columns unpivoted.
-INSERT INTO `{project}.{dataset}.responses`
+    return f"""INSERT INTO `{project}.{dataset}.responses`
   (connect_id, secondary_source_concept_id, current_source_question_concept_id, question_concept_id,
    loop_instance, question_version, response_value_as_string, response_value_as_number,
    response_value_as_concept_id, source_table, source_column)
@@ -70,7 +61,7 @@ SELECT
   m.secondary_source_concept_id,
   m.current_source_question_concept_id,
   m.question_concept_id,
-  m.loop_instance,
+  m.loop_instance,                                                      -- 1 when not looped (colmap COALESCEs)
   m.question_version,
   u.value                                            AS response_value_as_string,   -- verbatim raw cell (always)
   CAST(NULL AS FLOAT64)                              AS response_value_as_number,    -- typed later by question_type
@@ -82,7 +73,28 @@ FROM (
 ) t
 UNPIVOT(value FOR source_column IN ({in_list})) u    -- BigQuery UNPIVOT drops NULL cells => unanswered = no row
 JOIN `{project}.{dataset}.colmap` m
-  ON m.table_name = '{table}' AND m.source_column = u.source_column;
+  ON m.table_name = '{table}' AND m.source_column = u.source_column;"""
+
+
+def gen_table_sql(table, schema, mapped_cols, project, dataset, batch=0):
+    types = {f["name"]: f["type"] for f in schema}
+    cols = [c for c in sorted(mapped_cols) if c in types]     # mapped data columns present in the schema
+    unmapped_skipped = len(mapped_cols) - len(cols)
+    if not cols:
+        return None, 0, unmapped_skipped
+
+    # batching: a very wide table (module1 ~2,359 cols) can exceed BigQuery's UNPIVOT/compile limits;
+    # split into chunks, each its own INSERT. Idempotent: DELETE this table's rows first so re-runs are safe.
+    chunks = [cols[i:i + batch] for i in range(0, len(cols), batch)] if batch else [cols]
+    stmts = [_insert_stmt(table, ch, types, project, dataset) for ch in chunks]
+    body = "\n\n".join(stmts)
+    note = f"  ({len(chunks)} batches of <= {batch})" if batch else ""
+    sql = f"""-- Unpivot CleanConnect.{table} -> {dataset}.responses  (GENERATED from schemas/CleanConnect/{table}.json)
+-- NOT run against production. Validate later: bq query --dry_run < this file.  {len(cols)} columns unpivoted.{note}
+-- Idempotent: clears this table's rows first, so the file can be re-run without duplicating.
+DELETE FROM `{project}.{dataset}.responses` WHERE source_table = 'CleanConnect.{table}';
+
+{body}
 """
     return sql, len(cols), unmapped_skipped
 
@@ -116,7 +128,7 @@ SELECT
   secondary_source_concept_id,
   NULLIF(source_question_concept_id, '') AS current_source_question_concept_id,  -- NULL = standalone question
   question_concept_id,
-  SAFE_CAST(NULLIF(loop_number, '') AS INT64) AS loop_instance,
+  COALESCE(SAFE_CAST(NULLIF(loop_number, '') AS INT64), 1) AS loop_instance,  -- default 1 when not looped
   NULLIF(version_tag, '')     AS question_version
 FROM `{project}.{dataset}.survey_columns_clean_mapped`;
 """
@@ -131,6 +143,9 @@ def main():
     ap.add_argument("--out-dir", default="sql/unpivot")
     ap.add_argument("--project", default="${PROJECT}")
     ap.add_argument("--dataset", default="relational")
+    ap.add_argument("--batch", type=int, default=0,
+                    help="split each table's UNPIVOT into chunks of this many columns (0 = one statement; "
+                         "try 500 if a very wide table like module1 hits BigQuery limits)")
     args = ap.parse_args()
 
     schema_dir = Path(args.schemas_dir)
@@ -149,7 +164,8 @@ def main():
         sf = schema_dir / f"{t}.json"
         if not sf.exists():
             print(f"  ! no schema: {sf}", file=sys.stderr); continue
-        sql, n, skipped = gen_table_sql(t, json.loads(sf.read_text()), colmap.get(t, set()), args.project, args.dataset)
+        sql, n, skipped = gen_table_sql(t, json.loads(sf.read_text()), colmap.get(t, set()),
+                                        args.project, args.dataset, args.batch)
         if sql is None:
             print(f"  ! {t}: no mapped columns, skipped", file=sys.stderr); continue
         (out / f"unpivot_{t}.sql").write_text(sql)
