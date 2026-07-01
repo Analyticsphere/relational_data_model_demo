@@ -1,0 +1,29 @@
+-- Target fact + colmap for the responses unpivot. NOT run against production.
+
+CREATE TABLE IF NOT EXISTS `${PROJECT}.relational.responses` (
+  connect_id STRING,
+  secondary_source_concept_id STRING,           -- the SURVEY (stamped from the table via colmap)
+  current_source_question_concept_id STRING,    -- grid / select-all parent; NULL if standalone
+  question_concept_id STRING,
+  loop_instance INT64,                          -- the _N loop suffix (1 if not looped)
+  question_version STRING,                      -- the _v2 question/concept revision tag
+  response_value_as_string STRING,              -- raw cell: a response concept id (coded) or a literal
+  response_value_as_number FLOAT64,             -- typed numeric answer (populated by the later typing step)
+  source_table STRING,
+  source_column STRING
+);
+
+-- colmap: a clean-named view over the loaded column->placement mapping. Load the mapping first, e.g.
+--   bq load --autodetect --source_format=CSV relational.survey_columns_clean_mapped \
+--           gs://<bucket>/survey_columns_clean_mapped.csv
+-- (`table`/`column` are reserved words -> backticked and aliased below.)
+CREATE OR REPLACE VIEW `${PROJECT}.relational.colmap` AS
+SELECT
+  `table`                    AS table_name,
+  `column`                   AS source_column,
+  secondary_source_concept_id,
+  NULLIF(source_question_concept_id, '') AS current_source_question_concept_id,  -- NULL = standalone question
+  question_concept_id,
+  SAFE_CAST(NULLIF(loop_number, '') AS INT64) AS loop_instance,
+  NULLIF(version_tag, '')     AS question_version
+FROM `${PROJECT}.relational.survey_columns_clean_mapped`;
