@@ -27,12 +27,23 @@ carried) — the pattern, not the data.
 | `00_responses_ddl.sql` | `CREATE TABLE responses` + the `colmap` view over the loaded mapping. Run once. |
 | `unpivot_<table>.sql`  | one `INSERT … SELECT` per survey table (`UNPIVOT` + colmap join). |
 
-## Value typing (deliberately deferred)
+## Value typing (OMOP observation-style; extras deferred)
 
-The unpivot fills `response_value_as_string` with the raw cell. `response_value_as_number` (and a future
-coded `response_concept_id`) are left for a **separate downstream step keyed on `question_type`** — a
-9-digit coded answer and a numeric answer are both strings in CleanConnect, so splitting them needs the
-question type, not the value alone. Hence those columns may be unpopulated for now, by design.
+Three value columns, mirroring OMOP `observation` (`value_as_number` / `value_as_string` /
+`value_as_concept_id`):
+
+- `response_value_as_string` — **always** the verbatim raw cell (lossless source of truth + safety net).
+- `response_value_as_number` — numeric answers (Num/Year/count), for direct `AVG`/`SUM`.
+- `response_value_as_concept_id` — the coded answer (single/multi-select), joins to `response` /
+  `response_options` / `concept_relationship` (the column that makes this raw-ish layer *derivable*).
+
+The unpivot fills only `as_string`; the two typed extracts are populated by a **separate step keyed on
+`question_type`** (a 9-digit coded answer and a numeric answer are both strings in CleanConnect, so
+routing needs the question type, not the value alone). They are intentionally unpopulated for now.
+
+**Deferred: a date/datetime column.** The dictionary's `Variable Type` is 62% blank and dirty; only ~270
+rows are ISO/date and many "dates" are really `Year`/`Month` (numbers). Instrument timestamps live typed
+on `response_sessions`. Add `response_value_as_datetime` only if date-valued *answers* prove needed.
 
 ## Regenerate
 

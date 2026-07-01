@@ -7,8 +7,11 @@ CREATE TABLE IF NOT EXISTS `${PROJECT}.relational.responses` (
   question_concept_id STRING,
   loop_instance INT64,                          -- the _N loop suffix (1 if not looped)
   question_version STRING,                      -- the _v2 question/concept revision tag
-  response_value_as_string STRING,              -- raw cell: a response concept id (coded) or a literal
-  response_value_as_number FLOAT64,             -- typed numeric answer (populated by the later typing step)
+  -- value columns (OMOP observation-style). as_string is ALWAYS the verbatim cell (lossless source of
+  -- truth); as_number / as_concept_id are typed extracts filled by a later step keyed on question_type.
+  response_value_as_string STRING,              -- verbatim raw cell — always populated
+  response_value_as_number FLOAT64,             -- numeric answers (Num/Year/count) for direct AVG/SUM
+  response_value_as_concept_id STRING,          -- coded answer (single/multi-select) -> joins response / response_options / concept_relationship
   source_table STRING,
   source_column STRING
 );
