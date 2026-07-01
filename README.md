@@ -67,7 +67,7 @@ The current wide-table approach has several limitations:
 
 Beyond fixing these, the model must also serve PR2's broader goals: **governed access** by sensitivity (PHI/PII) and **transparent lineage** for curated/derived variables, so researchers can reproduce and critique what they receive.
 
-The **Proposed Data Model** below addresses each of these directly — long/narrow responses, a concept-ID spine, explicit structure/skip-logic/loops/versions, governance, and lineage.
+The **data model** below addresses each of these directly — long/narrow responses, a concept-ID spine, explicit structure/skip-logic/loops/versions, governance, and lineage.
 
 ### What this costs us today
 
@@ -81,19 +81,21 @@ The model makes that structure first-class, so most of this work becomes *genera
 
 ---
 
-## Proposed Data Model
+## The Data Model
 
-We propose a **two-phase path**: a modest **Phase 1** that lands a fast, low-risk win, then a comprehensive **Phase 2** that realizes the full value. Both share the same long-format thesis — Phase 1 proves it cheaply, Phase 2 builds it out — so Phase 1 is a down payment on Phase 2, not throwaway work.
+**Decision (accepted):** the Connect Data Model is the **Dictionary-Direct** model — the [CIDTool](#cidtool-and-the-conceptvariable-dictionary) data dictionary adopted **as the source of truth**, plus **one** long-format `responses` fact that joins to it. It keeps the dictionary the team already maintains as the single source of truth, and fixes the wide-table pain with a single new table.
 
-> See **[docs/example_queries.md](docs/example_queries.md)** for standard analyst queries written three ways — challenging on the wide tables, easier in Phase 1, breezy in Phase 2.
+A larger, redesigned "researcher warehouse" (cleaned/relabeled dimensions, a mandatory placement bridge, a layered rearchitecture) was explored but is **not** being pursued as a wholesale transformation — it would move the source of truth off the dictionary. Several of its capabilities are valuable, though, and are tracked as **potential incremental extensions** on top of this model — see **[Incremental enhancements](#incremental-enhancements)** and **[docs/enhancement_backlog.md](docs/enhancement_backlog.md)**.
 
-### Phase 1 — Dictionary-Direct (start here)
+> See **[docs/example_queries.md](docs/example_queries.md)** for standard analyst queries written two ways — challenging on the wide tables, straightforward on the model.
 
-The minimal transformation: **adopt the [CIDTool](#cidtool-and-the-conceptvariable-dictionary) data dictionary exactly as it is emitted** (no redesign, no relabeling) and add **one** long-format `responses` table that joins to it. The familiar dictionary you already maintain, plus answers as rows.
+### Dictionary-Direct: the dictionary as-is + one `responses` fact
+
+The transformation: **adopt the [CIDTool](#cidtool-and-the-conceptvariable-dictionary) data dictionary exactly as it is emitted** (no redesign, no relabeling) and add **one** long-format `responses` table that joins to it. The familiar dictionary you already maintain, plus answers as rows.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/connect_model_a_overview_dark.svg">
-  <img alt="Model A: the CIDTool dictionary tables (primary_source, secondary_source, source_question, question, response, variable_metadata) with one added long-format responses table joining to question, source_question, secondary_source, and response." src="docs/connect_model_a_overview.svg">
+  <img alt="The model: the CIDTool dictionary tables (primary_source, secondary_source, source_question, question, response, variable_metadata) with one added long-format responses table joining to question, source_question, secondary_source, and response." src="docs/connect_model_a_overview.svg">
 </picture>
 
 > The dictionary tables are arranged to mirror the CIDTool ERD; `responses` is the only new table. [Full diagram with columns](docs/connect_model_a.svg).
@@ -101,13 +103,13 @@ The minimal transformation: **adopt the [CIDTool](#cidtool-and-the-conceptvariab
 - **Dimensions = CIDTool ERD, verbatim:** `primary_source`, `secondary_source`, `source_question`, `question`, `response`, `question_response` (the question→response list), `variable_metadata`. Loaded from CIDTool's output — we model nothing new.
 - **Fact = `responses`** (the one new table): one row per answered cell, keyed on `(connect_id, current_source_question_concept_id, question_concept_id, loop_instance)`, with `response_concept_id` / `value` and `source_table` / `source_column` provenance. It joins to the dictionary for every label, type, and flag. It carries two **placement coordinates** so a row resolves to its position in the dictionary's hierarchy even when concepts are reused: the source-question path (`current_source_question_concept_id`) and the **survey** (`secondary_source_concept_id`). The survey is required because concept reuse is deliberate — the same question concept is shared across instruments (≈9% of survey questions; e.g. "Survey Language" appears in 15), so the survey is *not* recoverable from the rest of the row and is stamped by the unpivot transform; the domain then follows by FK.
 
-**Why start here:** it adopts existing CIDTool work with no new ontology to defend, kills the dancing-schema pain with a single table, and is a small, low-risk build that demonstrates the long-format value immediately. It is **forward-compatible** with Phase 2: the same `responses` fact is reached by progressively cleaning the dimensions.
+**Why this model:** it adopts existing CIDTool work with no new ontology to defend, kills the dancing-schema pain with a single table, and keeps the dictionary as the source of truth. It is also **forward-compatible**: every candidate in the [enhancement backlog](#incremental-enhancements) attaches to this same `responses` fact without rebuilding it.
 
-**What Phase 1 leaves for Phase 2:** governance/release tiers, sessions and the missingness signal, a placement bridge for clean reused-concept integrity, version/option-set validity, curated marts with lineage, the question-type view library, and researcher-facing naming. (Multi-select/grids also stay as the dictionary's binary sub-question rows rather than one row per selected option.)
+**What it does not yet do (candidate enhancements):** governance/release tiers, sessions and the missingness signal, structured skip logic, improved version/option-set validity, curated dbt marts with lineage, and a normalized question-type view — each a bounded add-on in [Incremental enhancements](#incremental-enhancements). (Multi-select/grids stay as the dictionary's binary sub-question rows rather than one row per selected option.)
 
 #### Optional enhancement: a normalized question-type view
 
-Phase 1 already carries `question_type` from the dictionary — so the "common abstraction" hook exists. But the dictionary's values are inconsistent (partial coverage, casing/spelling variants, typos, and compound strings like `Optional Select All that Apply, Loops`), so they can't reliably drive *templated, per-type SQL*. A cheap fix that stays within Phase 1: add **one derived view**, `question_type_norm`, mapping the messy strings to a clean `base_type` (+ flags such as `is_multi`, `has_loop`), backfilled from the Quest markup where the dictionary is blank. The verbatim dictionary stays untouched underneath.
+The model already carries `question_type` from the dictionary — so the "common abstraction" hook exists. But the dictionary's values are inconsistent (partial coverage, casing/spelling variants, typos, and compound strings like `Optional Select All that Apply, Loops`), so they can't reliably drive *templated, per-type SQL*. A cheap, bounded fix: add **one derived view**, `question_type_norm`, mapping the messy strings to a clean `base_type` (+ flags such as `is_multi`, `has_loop`), backfilled from the Quest markup where the dictionary is blank. The verbatim dictionary stays untouched underneath.
 
 With it, one query works across *every* question of a type:
 ```sql
@@ -118,143 +120,51 @@ JOIN response resp        USING (response_concept_id)
 WHERE t.base_type = 'single_select'
 GROUP BY r.question_concept_id, answer;
 ```
-This is the highest-value add-on to Phase 1. Keep it bounded to *just* type normalization — that boundary is the seam where Phase 1 would otherwise drift into Phase 2. (Typed value parsing — e.g. numeric answers into a numeric column for generic `AVG()` — is the other half of the abstraction and is left to Phase 2.)
+This is the highest-value enhancement. Keep it bounded to *just* type normalization. (Typed value parsing — numeric answers into a numeric column for generic `AVG()` — is the other half; see enhancement #2.)
 
-#### Phase 1 vs. the current wide model
+#### The model vs. the current wide tables
 
-Phase 1 wins decisively on the two highest-value axes — schema stability and generic queryability — but leaves the harder analytics and governance work to Phase 2. It is a real step change, not a cosmetic reshape, and it is no worse than the wide tables on anything.
+The model wins decisively on the two highest-value axes — schema stability and generic queryability — while the harder analytics and governance work is tracked as [enhancements](#incremental-enhancements). It is a real step change, not a cosmetic reshape, and it is no worse than the wide tables on anything.
 
-| Concern | Wide tables (today) | Phase 1 (Dictionary-Direct) |
+| Concern | Wide tables (today) | The model (Dictionary-Direct) |
 |---|---|---|
 | Schema stability | "dancing" — new answers / options / loops add columns | **stable** — they become rows; downstream stops breaking |
 | Generic, reusable SQL | impractical — every column is bespoke | **yes** — query by `concept_id` / `question_type` across surveys |
 | Human-readable labels | manual; column names encode multi-concept paths | **one join** to the dictionary |
 | Multi-select / grids | binary indicator columns | binary 0/1 rows — better, but not "one row per selected option" |
-| Version coexistence (V1/V2) | parallel columns, reconciled by hand | still separate (documented, not unified) |
-| Missingness (not-selected vs not-asked vs not-taken) | ambiguous | still ambiguous (no sessions yet) |
-| **Governance — per-sensitivity (PHI/PII) access** | **none** | **none** — must be added (Phase 2) |
+| Version coexistence (V1/V2) | parallel columns, reconciled by hand | still separate (unify via enhancement #3) |
+| Missingness (not-selected vs not-asked vs not-taken) | ambiguous | ambiguous until sessions land (enhancement #5) |
+| **Governance — per-sensitivity (PHI/PII) access** | **none** | **none** — must be added (enhancement #7) |
 
-**On governance specifically:** Phase 1 does not add access control, and PR2 shares data with external researchers, where per-sensitivity (PHI/PII) gating is effectively a hard requirement — so Phase 1 alone is **not** an external-release-ready surface. Two implications: (1) treat Phase 1 as an internal/analyst layer (or apply coarse dataset-level BigQuery IAM as a stopgap) until Phase 2 governance lands; (2) the long format actually *changes how governance is enforced* — sensitivity becomes a **row-level** property of `responses` (handled by row-access policies) rather than a column-level one, which Phase 2's design anticipates. So Phase 1 doesn't regress governance, but it also doesn't deliver it; plan Phase 2 before opening the data to the community.
+**On governance specifically:** the model as-is does not add access control, and PR2 shares data with external researchers, where per-sensitivity (PHI/PII) gating is effectively a hard requirement — so the base model alone is **not** an external-release-ready surface. Two implications: (1) treat it as an internal/analyst layer (or apply coarse dataset-level BigQuery IAM as a stopgap) until the governance enhancement (#7) lands; (2) the long format *changes how governance is enforced* — sensitivity becomes a **row-level** property of `responses` (row-access policies) rather than column-level. So the base model doesn't regress governance, but it doesn't deliver it either; the governance enhancement is the piece to prioritize before opening data to the community.
 
-### Phase 2 — Functional model (the full vision)
+## Incremental enhancements
 
-A **relational star schema on BigQuery**, organized in three layers and grounded in two authoritative sources — the **Connect data dictionary** (concept IDs, labels, types) and the **Quest survey markup** (structure, skip logic, loops, grids).
+The model is **open to adopting capabilities incrementally** — each a bounded add-on that keeps the
+dictionary as the source of truth and never rewrites `responses`. These are *candidates*, picked up one at
+a time when a concrete need pulls them in; none is committed. Full write-ups (value, sketch, cost) live in
+**[docs/enhancement_backlog.md](docs/enhancement_backlog.md)**.
 
-#### Architecture: three layers, one direction
+| # | Enhancement | What it adds | Value |
+|---|---|---|---|
+| 1 | **Normalized question-type view** | `question_type_norm` (clean `base_type` + flags) over `question` | templated per-type SQL across surveys (highest bang-for-buck) |
+| 2 | **Typed value columns** *(partly in place)* | `response_value_as_number` / `_as_concept_id` populated by a typing step | direct numeric analysis; coded answers join labels/option-sets |
+| 3 | **Improved version handling** | `_V2` revision as an attribute + version-scoped option sets | unify V1/V2 with `GROUP BY`; "offered vs. not-selected" is answerable |
+| 4 | **`skip_logic`** | structured branching rules parsed from Quest (+ raw fallback) | skip logic becomes queryable; most QA/QC rules generatable |
+| 5 | **`response_sessions`** | administration grain (status/timing/wave), derived from participant metadata | separates not-administered vs. not-answered vs. skipped (missingness) |
+| 6 | **Concept equivalence** *(demo built)* | `concept_relationship` synonym links | harmonize reused fields (addresses) once, as data — not a `case_when` |
+| 7 | **Governance** | `sensitivity_tier` on `responses` + release tiers, enforced in IAM | **external-release readiness** (PHI/PII gating) for PR2 |
+| 8 | **Analytics marts (dbt)** | curated derived variables downstream, with lineage | reusable, reproducible risk factors — never a black box |
+| 9 | **Event plane** | follow-up events as long tables with concept IDs (with DevOps) | the long-format win for operational/biospecimen data |
 
-```
-Core                  →   Analytic                 →   Marts
-normalized source of      pre-joined fact + dims +      curated, pre-derived
-truth; long/narrow        aggregates + question-type    variables / risk factors,
-responses (below)         view library                  lineage intact to source
-```
+**Analytics marts with dbt (#8) remain firmly on the table** as the downstream layer for curated,
+governed derived variables (risk factors, scored scales) — built *below* the model as dbt `source`s, each
+with lineage intact to source. See the backlog for the mart catalog and the dbt rationale.
 
-- **Core** — the normalized, immutable source of truth (tables below).
-- **Analytic** — denormalized, pre-joined `fact_response` + dimensions + aggregates + a parameterized **view library by question type**; what researchers and tools actually query.
-- **Marts** — curated pre-derived variables (risk factors, scored scales), each with **lineage intact to source** so results are reproducible and critiquable.
-
-Each layer reads only from the one above; Core is never mutated downstream. **dbt** is proposed to build and document the Analytic + Marts layers (automatic column-level lineage, tests, versioned SQL). The Core → downstream boundary is also the governance trust boundary (see *Governance*).
-
-#### Core tables
-
-```
-participants        — one enrolled participant
-surveys             — one survey instrument/section (the dictionary's Secondary Source)
-survey_versions     — one versioned instrument release (v1/v2)
-response_sessions   — one participant × survey administration (status + timing + wave),
-                      derived from participant metadata; carries the missingness signal
-question_types      — lookup: single_select, multi_select, grid, xor, text, … (+ flags)
-questions           — reusable concept bank: one question concept, with label & type
-response_options    — offered options per question-version (validity + harmonization hook)
-survey_questions    — placement bridge: a question concept placed in a version, under a parent,
-                      in order; responses key on this (resolves reused concepts + grids/select-all)
-skip_logic          — structured branching rules (trigger → action), from Quest
-responses           — long/narrow fact: one row per answer atom
-                      (session × placement × loop_instance × response value)
-biospecimen_events  — biospecimen collection/processing events (event-shaped, kept separate)
-```
-
-> **Design decision — typed response columns.** `responses` carries three OMOP `observation`-style value columns: **`response_value_as_string`** (always the verbatim cell — lossless source of truth), **`response_value_as_number`**, and **`response_value_as_concept_id`** (the coded answer — joins to labels, offered option sets, and concept equivalences; the dominant survey answer shape). A **`response_value_as_datetime`** column is **deferred**, not rejected: the dictionary's `Variable Type` is ~62% blank and inconsistent, date-valued *answers* are a small/messy minority (many "dates" are really `Year`/`Month`, i.e. numbers), and administration timestamps are already typed on `response_sessions` — add it only if date answers prove needed. Populating the typed extracts is a **cleaning/typing step keyed on `question_type`** (routing coded vs. numeric vs. free-text), corroborated by — not driven by — the dirty dictionary type; `as_string` stays verbatim so nothing is lost to a misroute.
-
-#### Entity Relationship
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/connect_data_model_overview_dark.svg">
-  <img alt="Connect data model overview: responses fact keyed on response_sessions and the survey_questions placement bridge, with surveys, survey_versions, questions, question_types, response_options, skip_logic, and biospecimen_events." src="docs/connect_data_model_overview.svg">
-</picture>
-
-<details><summary>ERD as text</summary>
-
-```
-participants ──< response_sessions ──< responses >── survey_questions(placement) >── questions ──< response_options
-                       │                  │ loop_instance      │  ├ parent (groups grids & select-all;        │
-                    surveys               │                    │  │  disambiguates reused concepts)   question_types
-                       └─< survey_versions ─────────────────────┴── skip_logic
-participants ──< biospecimen_events
-```
-
-</details>
-
-> Generated with [dbsketch](https://github.com/jacobmpeters/dbsketch) from the model definition. The overview above is the names-only shape; the **[full ERD with columns and types](docs/connect_data_model.svg)** and a **[clustered view](docs/connect_data_model_clustered.svg)** (dimensions vs. fact, for slides) are also in `docs/`.
-
-#### How it handles Connect's hard cases
-
-Each row is grounded in the real data (see `schemas/`, the data dictionary, and Quest markup).
-
-| Challenge in the wide tables | How the model resolves it |
-|---|---|
-| **Dancing schema** — new answers keep widening tables | answers are **rows** in `responses`, never new columns |
-| **Opaque identifiers** | concept IDs are the keys; human labels live in dimensions from the dictionary |
-| **Multi-select / select-all** explode into binary indicator columns | one `responses` row **per selected option**; the offered set lives in `response_options` |
-| **Grids** nest as `d_X_d_X_d_Y` | grid rows are sub-questions under a `parent`; no special tables (same shape as select-all) |
-| **Loops** emit `_N` suffix columns | `loop_instance` turns loop instances into rows |
-| **Reused concepts** (e.g. "age at diagnosis" appears under 153 parents) | responses key on the **placement** (`survey_questions`), which carries the parent path |
-| **Version drift** (`v1→v2`, concept `_V2`, label `_vNrM`, follow-up waves) | four explicit axes: `survey_versions`, `survey_questions.concept_version`, lineage, `response_sessions.wave` |
-| **Option-set changes** across revisions | `response_options` is version-scoped, with `status` and a deprecated→new mapping |
-| **Skip logic invisible** | first-class `skip_logic` rows derived from Quest `displayif` / `->` |
-| **Missingness ambiguity** | `response_sessions.status` × skip reachability separates not-administered / not-answered / skipped-by-design |
-
-#### Worked example — select-all, before and after
-
-`899251483` "Have you lost any permanent teeth?" — a select-all that was revised mid-study:
-
-- **Source / wide:** a `REPEATED` array the flattener explodes into binary indicator columns `d_899251483_d_<option>`, plus a parallel `…_v2` set after the revision. A researcher must hand-reconcile ~7 V1/V2 columns and **cannot distinguish "not selected" from "not offered."**
-- **This model:** one `responses` row per *selected* option, under one logical question (`899251483`), with `concept_version` separating V1/V2 and `response_options` recording which options each version offered. "What did people select?" becomes a single `GROUP BY`; version drift becomes one attribute.
-
-#### Governance & access (built in, not bolted on)
-
-PR2 grants access **per-data, per-sensitivity, per-business-need**, enforced with **BigQuery IAM**.
-
-- **Sensitivity is data:** every concept carries a `sensitivity_tier` (`non_sensitive` / `PII` / `PHI`, plus finer categories), denormalized onto `responses`. Because the model is long/narrow, sensitivity is **row-level** — enforced with **row-access policies**, not column policy tags.
-- **Three release tiers**, each a distinct governed data product:
-
-  | Tier | What a researcher gets |
-  |---|---|
-  | **Sensitive** | full PHI/PII — real dates, identifiers; highest clearance only |
-  | **Core** | de-identified: dates **date-shifted**, some fields masked |
-  | **Public** | **aggregate-only** with cell-size suppression |
-
-  > Naming note: the **Core release tier** (de-identified) is distinct from the **Core layer** (the normalized source of truth above). Final tier names are still to be settled.
-
-- Enforced via row-access policies, column policy tags (identifiers on dimensions), and **authorized views** — researchers reach only the Analytic/Marts layers, never the Core layer.
-
-#### Derived variables & lineage
-
-Connect will curate pre-derived variables (risk factors, scored scales) as **marts**. Each exposes its **inputs (source concept IDs), method, and version**, with lineage intact to source — so researchers can reproduce, audit, and improve it, never consume a black box. dbt's model/column lineage is the proposed mechanism.
-
-#### Naming: clarity over dictionary jargon
-
-The model uses researcher-facing names, keeps **concept IDs identical** (they are the join keys), and maintains a crosswalk to the dictionary / CIDTool:
-
-| Dictionary / CIDTool | This model |
-|---|---|
-| `PRIMARY_SOURCE` | `surveys.domain` (attribute — it is a domain, not an instrument) |
-| `SECONDARY_SOURCE` | `surveys` (the instrument/section) |
-| `SOURCE_QUESTION` / GridID | `survey_questions.parent_question_concept_id` (grid/select-all group parent) |
-| `QUESTION` | `questions` |
-| `RESPONSE` | `response_options` |
-
----
+> These map onto the classic separation of concerns: the model is the immutable, dictionary-grounded fact +
+> dimensions; enhancements are **attributes, lookups, or downstream layers** layered on top. Governance (#7)
+> is the one most likely to be *required* before opening data externally, and marts (#8) the one that
+> delivers the most researcher value — both are prioritized in the backlog.
 
 ## Repository Structure
 
@@ -331,7 +241,7 @@ Boundaries to settle when we pick this up: (1) this is the **Core** transform, s
 `pr2-transformation`, *not* dbt — dbt starts at Core as a `source` and owns only Analytic/Marts;
 (2) whether it's a new `core/relational/` subpackage or woven into the existing flow (which also does
 upstream API/Firestore work) is a maintainer's call. The real dependencies are the same ones flagged for
-Phase 2 — **CIDTool maturity** (for dims/colmap) and **ownership** — not the code.
+the enhancements — **CIDTool maturity** (for dims/colmap) and **ownership** — not the code.
 
 ---
 
@@ -389,26 +299,21 @@ Related Quest resources: [episphere/questionnaires](https://github.com/episphere
 
 ## Next Steps
 
-Both phases are grounded in the dictionary, Quest markup, and the BigQuery schemas, and stress-tested against the hardest `module1` structures.
+The model is grounded in the dictionary, Quest markup, and the BigQuery schemas, and stress-tested against the hardest `module1` structures.
 
-**Phase 1 — Dictionary-Direct (fast win):**
+**Stand up the model:**
 - [ ] Load the CIDTool dictionary tables into BigQuery as-is
 - [x] **Draft** the `responses` unpivot from CleanConnect — generated, metadata-driven SQL in `sql/unpivot/` (schema-derived, not yet run on data); shape verified prod-free via `scripts/smoke_test_unpivot.py`
 - [ ] First run against **stage** data + `sql/unpivot/validate_responses.sql`; join-validate against the dictionary
 - [ ] Validate against real participant data (a select-all, a grid, a loop, a versioned/revised question)
 
-**Phase 2 — Functional model (the vision):**
-- [ ] Write the DDL / dbt models for the Core tables; generate cleaned dimensions from the dictionary + Quest
-- [ ] Build the Analytic layer (`fact_response`, dimensions, aggregates) and a question-type view library
-- [ ] Implement governance: `sensitivity_tier` classification, row-access policies, and the three release tiers
-- [ ] Prototype one curated mart with full lineage to validate the derived-variable pattern
+**Then, incrementally (see [enhancement backlog](docs/enhancement_backlog.md)):** normalized question-type view → typed value columns → version handling → skip logic → sessions → concept equivalence → governance → **dbt analytics marts** → event plane. Picked up one at a time as need pulls them in.
 
 Open questions still being resolved (see design notes):
 
 - [ ] **Source-layer audit** — confirm CleanConnect's row-cleaning does not drop needed values
-- [ ] **Administration waves** — carry `wave` on `response_sessions` vs. treat each wave as a `survey_version`; how baseline vs. follow-up waves enumerate
-- [ ] **Select-all encoding** — sparse (one row per selected option) vs. dense (a row per offered option)
-- [ ] **Biospecimen scope** — model as response facts, event facts, or a hybrid
+- [ ] **First-run readiness** — stage schema/dataset names, one-row-per-participant per table, handling of the ~3% unmapped columns (see `sql/unpivot/`)
+- [ ] **Enhancement sequencing** — which extension is pulled first (governance is the long pole for external release; dbt marts deliver the most researcher value)
 
 ---
 

@@ -1,4 +1,4 @@
--- Long-format analytics demo (Model A) — tiny synthetic data for the kick-off.
+-- Long-format analytics demo (the Dictionary-Direct model) — tiny synthetic data for the kick-off.
 -- Runnable: duckdb :memory: < sql/demo_long_format.sql   (DuckDB ~ BigQuery SQL)
 -- Shows: (1) codes + labels side by side in long form, (2) pivot a subset back to wide,
 -- (3) counts as a simple GROUP BY. Data is fictional, for presentation only.

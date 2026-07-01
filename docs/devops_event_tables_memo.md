@@ -36,6 +36,6 @@ For the "everything that happened to a participant" use case, the right answer i
 
 - Treat these event tables as the concrete design of the model's event plane (currently a single `other_event_tables` placeholder).
 - Reconcile your `surveys` event table with our `response_sessions` (they're the same grain), using `Round` as the shared administration/wave key so survey responses and collection events link through one spine.
-- Phase 1: consume your tables as-is plus the concept_id companion columns. Phase 2: model the `rounds` hub + per-type event facts + the unified view, with sensitivity tiers for the PHI fields (locations, dates, names).
+- Now: consume your tables as-is plus the concept_id companion columns. Later (the event-plane enhancement): model the `rounds` hub + per-type event facts + the unified view, with sensitivity tiers for the PHI fields (locations, dates, names).
 
 Happy to pair on the column→concept and value→concept crosswalk, and on making `Round` the shared key — those two items unblock everything else.

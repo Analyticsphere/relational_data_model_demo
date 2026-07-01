@@ -1,4 +1,4 @@
-# Example queries: wide → Phase 1 → Phase 2
+# Example queries: wide tables → the model
 
 The same standard analyst questions, written against each model. Concept IDs are real (from the
 [data dictionary](https://raw.githubusercontent.com/episphere/conceptGithubActions/refs/heads/master/csv/masterFile.csv));
@@ -32,7 +32,7 @@ FROM (
 GROUP BY reason;
 ```
 
-### 🙂 Phase 1
+### 🙂 The model
 ```sql
 -- One table, no column enumeration. Labels via join. v1/v2 columns both unpivoted to the same
 -- question_concept_id, so the revision pools automatically (no COALESCE).
@@ -44,7 +44,7 @@ WHERE r.current_source_question_concept_id = 899251483   -- the select-all group
 GROUP BY reason;
 ```
 
-### 😎 Phase 2
+### 😎 With enhancements
 ```sql
 -- Multi-select = one row per selected option; just GROUP BY the option. No binary filter,
 -- no version thinking (it's an attribute), offered-set is known.
@@ -57,7 +57,7 @@ WHERE sq.question_concept_id = 899251483
 GROUP BY reason;
 -- …or simply:  SELECT label, n FROM v_select_all WHERE question = 'tooth_loss_reason';
 ```
-**Takeaway:** wide makes you hand-reshape and reconcile v1/v2; Phase 1 collapses that to a filtered group-by; Phase 2 makes it a plain distribution (or a one-line view).
+**Takeaway:** wide makes you hand-reshape and reconcile v1/v2; the model collapses that to a filtered group-by (versions pool automatically once the version-handling enhancement lands).
 
 ---
 
@@ -78,7 +78,7 @@ FROM `CleanConnect.mouthwash`
 GROUP BY answer;
 ```
 
-### 🙂 Phase 1
+### 🙂 The model
 ```sql
 -- Labels via join; swap the concept_id to run it for ANY question — one query, all questions.
 SELECT resp.current_format_value AS answer, COUNT(*) AS n
@@ -88,16 +88,16 @@ WHERE r.question_concept_id = 724589244
 GROUP BY answer;
 ```
 
-### 😎 Phase 2
+### 😎 With enhancements
 ```sql
 -- Same join is prebuilt in the analytic layer / view library.
 SELECT answer_label AS answer, n
 FROM agg_question_distribution
 WHERE question_concept_id = 724589244;
 ```
-**Takeaway:** wide needs a bespoke `CASE` per question and can't be generalized; Phase 1 parameterizes by `concept_id`; Phase 2 reads a precomputed distribution.
+**Takeaway:** wide needs a bespoke `CASE` per question and can't be generalized; the model parameterizes by `concept_id` (a precomputed aggregate is a downstream-mart enhancement).
 
-> **Phase 1 add-on — one query across *all* questions of a type.** `question_type` rides along from the
+> **With the normalized question-type view (enhancement #1) — one query across *all* questions of a type.** `question_type` rides along from the
 > dictionary, but its raw values are inconsistent (partial coverage, casing, typos, compound strings). A thin
 > derived `question_type_norm` view (messy string → clean `base_type` + flags, backfilled from Quest) lets a
 > single query span every question of a type — the "common abstraction" goal:
@@ -110,14 +110,14 @@ WHERE question_concept_id = 724589244;
 > GROUP BY t.base_type, r.question_concept_id, answer;
 > ```
 > Without normalization, `WHERE question_type = 'single_select'` silently drops questions whose type cell was
-> blank, miscased, or compound. Bounded to type only; typed-value parsing (generic `AVG()` etc.) is Phase 2.
+> blank, miscased, or compound. Bounded to type only; typed-value parsing (generic `AVG()` etc.) is the typed-value-columns enhancement (#2).
 
 ---
 
 ## Q3 — "Among people who completed the survey, who actually answered question X?" (completion & true missingness)
 
-The honest one: **Phase 1 does not fully solve this** — it has answers but no session/skip model, so a
-missing answer is still ambiguous (not-shown vs. shown-but-skipped). This is a Phase-2 capability.
+The honest one: **the base model does not fully solve this** — it has answers but no session/skip model, so a
+missing answer is still ambiguous (not-shown vs. shown-but-skipped). This needs the **sessions + skip_logic** enhancement.
 
 ### 😖 Wide
 ```sql
@@ -130,7 +130,7 @@ FROM `CleanConnect.participants` p
 LEFT JOIN `CleanConnect.module1` m USING (Connect_ID);
 ```
 
-### 🙂 Phase 1
+### 🙂 The model
 ```sql
 -- Better (answers are rows), but still no sessions/skip-logic → same ambiguity as wide:
 -- "no row" could mean not-asked, not-answered, or survey-not-taken.
@@ -139,7 +139,7 @@ FROM responses
 WHERE question_concept_id = /* X */ 0;     -- cannot classify the people WITHOUT a row
 ```
 
-### 😎 Phase 2
+### 😎 With enhancements
 ```sql
 -- Sessions give status + timing; skip_logic gives reachability. Missingness becomes classifiable.
 SELECT
@@ -154,13 +154,13 @@ WHERE s.survey_id = /* Module 1 */ 0 AND s.wave = 'baseline'
 GROUP BY s.status;
 -- + join skip_logic to separate "not shown by design" from "shown but skipped".
 ```
-**Takeaway:** wide and Phase 1 both leave missingness ambiguous; only Phase 2 (sessions + skip logic) answers "completed but didn't answer" correctly. A strong argument for funding Phase 2.
+**Takeaway:** wide and the base model both leave missingness ambiguous; only the **sessions + skip_logic** enhancement answers "completed but didn't answer" correctly — a strong reason to prioritize it.
 
 ---
 
 ## Q4 — "Give a researcher only non-PHI answers" (governance)
 
-Also Phase-2: neither wide nor Phase 1 carries sensitivity, so both rely on a hand-maintained allow-list.
+Neither wide nor the base model carries sensitivity, so both rely on a hand-maintained allow-list — this needs the **governance** enhancement (#7).
 
 ### 😖 Wide
 ```sql
@@ -170,14 +170,14 @@ SELECT Connect_ID, d_724589244 /* …only columns someone vetted as non-PHI… *
 FROM `CleanConnect.mouthwash`;
 ```
 
-### 🙂 Phase 1
+### 🙂 The model
 ```sql
 -- Still no classification; same manual allow-list, now over question_concept_ids.
 SELECT * FROM responses
 WHERE question_concept_id IN ( /* hand-maintained non-PHI concept list */ );
 ```
 
-### 😎 Phase 2
+### 😎 With enhancements
 ```sql
 -- Sensitivity is data on every row; a BigQuery row-access policy enforces it, so the researcher's
 -- query is unchanged and PHI simply isn't returned for their role.
@@ -185,7 +185,7 @@ SELECT * FROM responses WHERE sensitivity_tier = 'non_sensitive';
 -- For external sharing, the researcher queries the de-identified release tier (date-shifted/masked)
 -- and never sees Core; access is governed by IAM, not by remembering an allow-list.
 ```
-**Takeaway:** wide and Phase 1 make governance a manual convention; Phase 2 makes it data + enforced by IAM — the prerequisite for sharing externally through PR2.
+**Takeaway:** wide and the base model make governance a manual convention; the **governance** enhancement makes it data + enforced by IAM — the prerequisite for sharing externally through PR2.
 
 ---
 
@@ -202,7 +202,7 @@ The dictionary is a tree (`Primary → Secondary → Source Question → Questio
 SELECT d_899251483_d_812107266_v2 FROM `CleanConnect.mouthwash` WHERE Connect_ID = @id;
 ```
 
-### 🙂 Phase 1
+### 🙂 The model
 ```sql
 -- Every level is one join away. The survey (and therefore the domain) is read from the fact's
 -- STAMPED secondary_source_concept_id — NOT via question.secondary_source_concept_id, which would
@@ -222,7 +222,7 @@ LEFT JOIN response resp      USING (response_concept_id)            -- NULL for 
 WHERE r.response_row_id = @row;
 ```
 
-### 😎 Phase 2
+### 😎 With enhancements
 ```sql
 -- The placement (survey_questions) already encodes the whole path; the survey's domain is an attribute.
 SELECT
@@ -241,7 +241,7 @@ LEFT JOIN response_options o ON o.question_concept_id = sq.question_concept_id
                             AND o.response_concept_id = r.response_concept_id
 WHERE r.response_id = @row;
 ```
-**Takeaway:** wide hides the hierarchy in column names (a manual dictionary lookup); Phase 1 makes every level a join and reads the survey straight off the fact; Phase 2 reads it from the placement that already carries the path.
+**Takeaway:** wide hides the hierarchy in column names (a manual dictionary lookup); the model makes every level a join and reads the survey straight off the fact.
 
 ---
 
@@ -258,7 +258,7 @@ FROM `CleanConnect.mouthwash`
 WHERE d_899251483_d_812107266_v2 = '353358909';     -- and repeat, per table, for every other survey
 ```
 
-### 🙂 Phase 1
+### 🙂 The model
 ```sql
 -- One table; each coordinate is an optional WHERE knob. Drop a line to widen the slice.
 SELECT *
@@ -281,7 +281,7 @@ WHERE secondary_source_concept_id     = 390351864     -- survey      = Mouthwash
 
 The fourth row is the one the wide model and verbatim dictionary cannot do: isolating a deliberately-reused concept to a single survey is only possible because the survey is stamped on the fact.
 
-### 😎 Phase 2
+### 😎 With enhancements
 ```sql
 -- Same coordinates, resolved through the placement — or a named view.
 SELECT r.*
@@ -292,16 +292,16 @@ WHERE sq.question_concept_id = 812107266
   AND sv.survey_id = 390351864;        -- one survey
 -- or simply:  SELECT * FROM v_select_all WHERE survey = 'mouthwash' AND question = 'tooth_loss_reason';
 ```
-**Takeaway:** wide forces you to know columns and can't pool across surveys; Phase 1 turns each hierarchy level into a filter knob — including slicing a reused concept to one survey; Phase 2 wraps the same knobs in the placement and named views.
+**Takeaway:** wide forces you to know columns and can't pool across surveys; the model turns each hierarchy level into a filter knob — including slicing a reused concept to one survey (named views over these are a downstream convenience).
 
 ---
 
-## Phase 1 add-on — one convenience view, *zero* joins for the analyst
+## Convenience view — *zero* joins for the analyst
 
-The queries above show labels are "one join away." We can make it **zero joins** by shipping a denormalized view that pre-joins the dictionary onto `responses` — every answer row arrives self-describing. This is the most tangible day-one win for analysts (and the seed of Phase 2's `fact_response`).
+The queries above show labels are "one join away." We can make it **zero joins** by shipping a denormalized view that pre-joins the dictionary onto `responses` — every answer row arrives self-describing. This is the most tangible day-one win for analysts (a convenience view over the model).
 
 ```sql
--- Built once, over the verbatim Model A tables. Survey/domain come from the STAMPED
+-- Built once, over the verbatim dictionary tables. Survey/domain come from the STAMPED
 -- secondary_source_concept_id on the row (so reused concepts resolve to the right survey),
 -- not from the question. All LEFT JOINs so an answer never drops out.
 CREATE OR REPLACE VIEW v_responses_enriched AS
@@ -347,13 +347,13 @@ WHERE question_concept_id = 724589244          -- "How many teeth lost?"
 GROUP BY survey, question_text, response_label;
 ```
 
-**Notes:** grain stays one-row-per-answer (driven from `responses` outward → no fan-out — `opt` and `vm` are each ≤1 row per question/key); if the dictionary has dupes, dedupe `vm` in a CTE first. `response_option_set` shows the **offered menu** for the question (e.g. `"0 = No; 1 = Yes"`), independent of what the participant picked (`response_label`) — handy for select-all interpretation and for seeing valid values inline. Its caveats: it comes from the `question_response` allowed-answers bridge (imperfect — e.g. tooth-loss lists the "No" *value* concept as an option), and ordering is by `response_concept_id` since Model A has no `display_order` (that's a Phase 2 `response_options` feature). It's a convenience surface, not the contract — raw `responses` + the dictionary stay reachable.
+**Notes:** grain stays one-row-per-answer (driven from `responses` outward → no fan-out — `opt` and `vm` are each ≤1 row per question/key); if the dictionary has dupes, dedupe `vm` in a CTE first. `response_option_set` shows the **offered menu** for the question (e.g. `"0 = No; 1 = Yes"`), independent of what the participant picked (`response_label`) — handy for select-all interpretation and for seeing valid values inline. Its caveats: it comes from the `question_response` allowed-answers bridge (imperfect — e.g. tooth-loss lists the "No" *value* concept as an option), and ordering is by `response_concept_id` since the model has no `display_order` (a version-handling enhancement via `response_options`). It's a convenience surface, not the contract — raw `responses` + the dictionary stay reachable.
 
 ---
 
 ## Summary
 
-| Query | Wide | Phase 1 | Phase 2 |
+| Query | Wide (today) | The model | With enhancements |
 |---|---|---|---|
 | Multi-select distribution | 😖 unpivot + v1/v2 COALESCE + known columns | 🙂 filtered group-by, versions pool | 😎 plain group-by / view |
 | Distribution with labels, any question | 😖 bespoke `CASE`, no reuse | 🙂 parameterized by `concept_id` | 😎 precomputed aggregate |
@@ -362,8 +362,8 @@ GROUP BY survey, question_text, response_label;
 | Reconstruct full hierarchy for an answer | 😖 parse column name + manual dictionary lookup | 🙂 every level one join, survey off the fact | 😎 placement carries the path |
 | Filter to a slice (incl. reused concept in one survey) | 😖 know columns; can't pool across surveys | 🙂 hierarchy coordinates as filter knobs | 😎 same knobs via placement / views |
 
-Phase 1 turns "effectively unqueryable" into "queryable and labeled": it pools version drift, parameterizes
+The model turns "effectively unqueryable" into "queryable and labeled": it pools version drift, parameterizes
 by `concept_id`, reconstructs the full hierarchy by joins, and turns every hierarchy level into a filter knob
 — including the slice the wide tables simply can't do, isolating a deliberately-reused concept to one survey.
-Phase 2 is what makes missingness and governance possible at all — the capabilities that make PR2 a
+The sessions and governance enhancements are what make missingness and access-control possible at all — the capabilities that make PR2 a
 trustworthy, shareable research warehouse.

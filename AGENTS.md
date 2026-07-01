@@ -31,17 +31,18 @@ columns). Concretely:
 - **No shared abstractions / no self-description** — meaning lives in column names, sidecar files, and tribal
   knowledge, so every analysis re-derives it.
 
-## The proposed solution
+## The model (accepted) + incremental enhancements
 
-Store answers as **rows** in a long **`responses`** fact (one row per answer), joined to dimensions generated
-from the data dictionary and Quest markup. Pitched in two phases:
+**The accepted model is "Dictionary-Direct":** adopt the CIDTool dictionary tables *as emitted* (the
+dictionary stays the **source of truth**) + add **one** long **`responses`** fact (one row per answer) that
+joins to them. Kills the dancing schema; proves the long-format thesis; low-risk. Model source:
+`dbml/data_model_modest.dbml`; ERDs in `docs/connect_model_a*.svg`; the wide→long transform in `sql/unpivot/`.
 
-- **Phase 1 / Model A — "Dictionary-Direct":** adopt the CIDTool dictionary tables *as emitted* + add **one**
-  new `responses` table that joins to them. Low-risk, fast first win; kills the dancing schema; proves the
-  long-format thesis. (Model source: `dbml/data_model_modest.dbml`; ERDs in `docs/connect_model_a*.svg`.)
-- **Phase 2 / Model B:** cleaned researcher-facing dimensions, a `survey_questions` placement bridge,
-  `response_sessions`, structured `skip_logic`, governance (sensitivity tiers + BigQuery IAM), and curated
-  marts. (Model source: `dbml/data_model.dbml`.)
+A larger redesigned warehouse was explored but **not** adopted as a wholesale transformation. Its valuable
+capabilities are tracked as **potential incremental extensions** to the Dictionary-Direct model — normalized
+question-type view, typed value columns, version handling, `skip_logic`, `response_sessions`, concept
+equivalence, governance (sensitivity tiers + IAM), **dbt analytics marts**, and the event plane. See
+**`docs/enhancement_backlog.md`**. Each attaches to the same `responses` fact without rebuilding it.
 
 ## Data dictionary & CIDTool
 
@@ -51,8 +52,8 @@ from the data dictionary and Quest markup. Pitched in two phases:
 - **CIDTool** (`NCI-C4CP/CIDTool`) — transforms that flat dictionary into a **relational JSON** representation:
   the five concept tables `PRIMARY_SOURCE → SECONDARY_SOURCE → SOURCE_QUESTION → QUESTION → RESPONSE` plus
   `VARIABLE_METADATA`. It is the **intended authoritative input that generates the model's dimensions** (so
-  labels/types can't drift from the dictionary). **Model A adopts CIDTool's emitted tables verbatim**; Model B
-  cleans them into researcher-facing dimensions.
+  labels/types can't drift from the dictionary). **The model adopts CIDTool's emitted tables verbatim** — the
+  dictionary is the source of truth, not a re-cleaned copy.
 - **Quest markup** (`episphere/quest/questionnaires/*.txt`) is the complementary structural source — question
   order, skip logic (`displayif`/`->`), loops, grids — that the dictionary doesn't capture.
 
@@ -61,13 +62,13 @@ from the data dictionary and Quest markup. Pitched in two phases:
 | Path | What |
 |---|---|
 | `README.md` | public-facing summary of the model + motivation |
-| `docs/internal_pitch.md` | the kick-off pitch (OMOP framing, pain exhibits, two phases, value props) |
-| `docs/example_queries.md` | the same analyses written three ways: wide vs Phase 1 vs Phase 2 |
-| `docs/phase2_etl_sketch.md` | design sketch of the Phase 2 ETL (Quest parser, column→placement map, stages) |
+| `docs/internal_pitch.md` | the kick-off pitch (OMOP framing, pain exhibits, value props) |
+| `docs/example_queries.md` | the same analyses written two ways: wide tables vs the model |
+| `docs/enhancement_backlog.md` | the accepted-model decision + each candidate enhancement (value, sketch, cost) |
 | `docs/devops_event_tables_memo.md` | reconciliation memo for the DevOps long-format event tables |
 | `docs/source_crosswalk.csv` | dictionary Secondary Source ↔ concept_id ↔ domain ↔ `is_survey` ↔ BQ table ↔ questionnaire file |
 | `docs/*.svg` · `docs/Connect_Data_Model_Pitch.pptx` · `docs/build_deck.py` | ERDs + slide deck (regenerable) |
-| `dbml/` · `sql/*.sql` · `mermaid/` | model sources: dbsketch DBML, constraint-free DDL, and `erDiagram` twins (Model A / B / events) |
+| `dbml/` · `sql/*.sql` · `mermaid/` | model sources: dbsketch DBML, constraint-free DDL, and `erDiagram` twins (the model + event plane) |
 | `sql/unpivot/` | **generated** wide→long `responses` transform (UNPIVOT + colmap join) + `00_responses_ddl.sql` + `validate_responses.sql` |
 | `sql/build_dimension_tables.sql` · `sql/build_concept_relationship.sql` | DuckDB demo dimensions + concept-equivalence (`synonym`) plane — **CIDTool replaces these later** |
 | `output/` | regenerable derived artifacts: column→dictionary mapping, demo dim tables (CSV/Parquet), `concept_relationship` |

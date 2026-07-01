@@ -1,5 +1,5 @@
 -- ============================================================================
--- Connect Relational Data Model — Phase 1 "Dictionary-Direct" (Model A)
+-- Connect Relational Data Model — the accepted "Dictionary-Direct" model
 -- SQL DDL for ERD generation. Generated from data_model_modest.dbml.
 --
 -- Import into draw.io:  Insert "+" menu > Advanced > From SQL...  (then edit/export PNG)

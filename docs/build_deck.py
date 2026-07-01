@@ -76,9 +76,9 @@ s=slide()
 bg=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,0,0,SW,SH);bg.fill.solid();bg.fill.fore_color.rgb=NAVY;bg.line.fill.background();bg.shadow.inherit=False
 band=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,0,Inches(4.35),SW,Inches(0.08));band.fill.solid();band.fill.fore_color.rgb=TEAL;band.line.fill.background();band.shadow.inherit=False
 textbox(s,"Connect Relational Data Model",Inches(0.9),Inches(2.3),Inches(11.5),Inches(1.4),size=44,color=WHITE,bold=True)
-textbox(s,"Why a data model — and a two-phase path to the PR2 research warehouse",Inches(0.9),Inches(3.5),Inches(11.5),Inches(0.8),size=20,color=RGBColor(0xBB,0xD5,0xD7))
+textbox(s,"Why a data model — the accepted Dictionary-Direct model + its enhancement roadmap for PR2",Inches(0.9),Inches(3.5),Inches(11.5),Inches(0.8),size=20,color=RGBColor(0xBB,0xD5,0xD7))
 textbox(s,"Team walk-through  ·  detailed notes in internal_pitch.md",Inches(0.9),Inches(4.6),Inches(11.5),Inches(0.5),size=14,color=RGBColor(0x9A,0x9D,0xA3),italic=True)
-notes(s,"We already believe in this idea (OMOP) — we just never applied it to our own Connect data. Two phases: a fast Phase 1 win, then the governed PR2 warehouse. See internal_pitch.md — The ask.")
+notes(s,"We already believe in this idea (OMOP) — we just never applied it to our own Connect data. The accepted model is Dictionary-Direct; further capabilities are adopted as incremental enhancements. See internal_pitch.md — The ask.")
 
 # 1b WHY A DATA MODEL — the plain-English value props (opener)
 s=slide();titlebar(s,"Why a data model?","Make the data explain itself — so analysis doesn't depend on tribal knowledge or bespoke code")
@@ -164,13 +164,13 @@ bullets(s,["\"Street name of a residence\" = ~27 unrelated concept IDs (home ×1
  "No \"address\" or \"street_name\" concept generalizes → nothing reusable"],
  Inches(0.7),Inches(1.6),Inches(11.9),Inches(3.2),size=19,gap=13)
 textbox(s,"Fix: concept_relationship / question_equivalence — author \"these are the same field\" once, as data.",Inches(0.7),Inches(6.1),Inches(11.9),Inches(0.8),size=16,color=ACCENT,bold=True)
-notes(s,"Strongest case for the concept-equivalence plane; sits beyond Phase 2's first cut — argues to pull it forward. See internal_pitch.md — geocoding.")
+notes(s,"Strongest case for the concept-equivalence enhancement — argues to pull it forward. See internal_pitch.md — geocoding.")
 
-# 7 THE IDEA + full Phase 1 ERD
-s=slide();titlebar(s,"The idea — answers become rows","Phase 1: the dictionary as-is + one long responses table")
+# 7 THE IDEA + full model ERD
+s=slide();titlebar(s,"The idea — answers become rows","The model: the dictionary as-is + one long responses table")
 picture(s,A+"model_a_full.png",Inches(1.45),Inches(12.7),Inches(5.05))
-textbox(s,"New answers / options / loops are rows, never new columns. Full Phase 1 ERD (Dictionary-Direct).",Inches(0.5),Inches(6.85),Inches(12.3),Inches(0.5),size=12,color=GREY,italic=True,align=PP_ALIGN.CENTER)
-notes(s,"Phase 1 model: CIDTool dictionary as-is + one responses fact. Same thesis carries to Phase 2. See internal_pitch.md — The idea / Phase 1.")
+textbox(s,"New answers / options / loops are rows, never new columns. Full model ERD (Dictionary-Direct).",Inches(0.5),Inches(6.85),Inches(12.3),Inches(0.5),size=12,color=GREY,italic=True,align=PP_ALIGN.CENTER)
+notes(s,"The model: CIDTool dictionary as-is + one responses fact. See internal_pitch.md — The model.")
 
 # 7b A CLOSER LOOK: select-all (ease-in)
 s=slide();titlebar(s,"A closer look: select-all questions","Same data, a clearer shape — the dictionary stays the source of truth")
@@ -184,34 +184,21 @@ table(s,[["Example: \"Have you lost any permanent teeth?\"","Dictionary today","
 textbox(s,"Phased & low-risk: the dictionary tables are untouched; this is a view we layer on — adopt it where it helps, keep everything else as-is.",Inches(0.6),Inches(6.35),Inches(12.1),Inches(0.7),size=15,color=GREY,italic=True)
 notes(s,"EASE-IN framing for a skeptical audience. The current encoding isn't wrong — it faithfully mirrors physical storage (a multi-select really is N 0/1 columns). The model's improvement is logical: an option is an answer choice, not a question, so it belongs in response_options; 'selected' becomes the presence of a row instead of a synthetic Yes/No. Same tooth-loss example as the docs (899251483; options 812107266 accident / 452438775 decay / 886864375 other / 551489317 none; Yes/No = 353358909/104430631). Quest disambiguates select-all [ ] vs single-select ( ) vs grid |grid|. Nothing is thrown away; the dictionary remains the source of truth and this view sits on top. See CLAUDE.md — Source Question is overloaded.")
 
-# 8 TWO PHASES table
-s=slide();titlebar(s,"A two-phase path","Phase 1 proves it cheaply · Phase 2 builds the governed warehouse")
-table(s,[["","Phase 1 — Dictionary-Direct","Phase 2 — PR2 warehouse"],
- ["What","dictionary as-is + 1 responses table","cleaned dims, placement bridge, sessions, governance"],
- ["Buys","stable schema, generic SQL, labels, v1/v2 pool","true missingness, governed access, marts, view library"],
- ["Lift","low — reuses CleanConnect + dictionary","larger, phased — builds on Phase 1's fact"],
- ["Release-ready","internal / analyst only","yes — external PR2 sharing"]],
- Inches(0.6),Inches(1.7),Inches(12.1),Inches(3.4),col_widths=[Inches(1.7),Inches(5.2),Inches(5.2)],fs=14,hdr_fs=14)
-textbox(s,"Same responses fact both phases — Phase 1 is a down payment, not throwaway work.",Inches(0.6),Inches(5.6),Inches(12.1),Inches(0.6),size=15,color=GREY,italic=True)
-notes(s,"Phase 2 adds the placement bridge, sessions, version-scoped options, layers, governance. See internal_pitch.md — Phase 1 / Phase 2.")
-
-# 9 PHASE 2 full ERD
-s=slide();titlebar(s,"Phase 2 — the full model","The researcher-facing, governed warehouse for PR2")
-picture(s,A+"model_b_full.png",Inches(1.4),Inches(12.5),Inches(5.5))
-textbox(s,"Placement bridge · sessions · version-scoped options · governance · Core→Analytic→Marts.",Inches(0.5),Inches(7.0),Inches(12.3),Inches(0.4),size=11,color=GREY,italic=True,align=PP_ALIGN.CENTER)
-notes(s,"Full Phase 2 ERD. Dense by design — the SVG (docs/connect_data_model.svg) zooms cleanly. See internal_pitch.md — Phase 2.")
-
-# 9a IS PHASE 2 DOABLE? (feasibility / risks)
-s=slide();titlebar(s,"Is Phase 2 doable today?","Yes — technically achievable on our existing artifacts. The risks are dependencies, not the schema.")
-textbox(s,"De-risked already: builds on Phase 1's same fact · CleanConnect did the cleaning · sessions derivable · hardest structures need no new tables.",Inches(0.55),Inches(1.35),Inches(12.2),Inches(0.7),size=14,color=TEAL,bold=True)
-table(s,[["Honest risk","Why","How we de-risk"],
- ["CIDTool maturity","dimensions come from it; it's still an in-dev tool","audit its output now / be ready to build the transform"],
- ["Quest parser","skip logic, order, loops — no parser exists yet","prototype on module 1 first"],
- ["Governance","IRB / date-shift / suppression / IAM — org, not just code","start as a parallel workstream early"],
- ["Cross-team timing","couples to PR2 + CleanConnect + DevOps events","sequence around them; keep Phase 1 independent"]],
- Inches(0.6),Inches(2.25),Inches(12.1),Inches(2.95),col_widths=[Inches(2.7),Inches(5.0),Inches(4.4)],fs=12.5,hdr_fs=13)
-textbox(s,"So Phase 2 is a funded, multi-quarter, multi-stakeholder program — not a single sprint. Which is exactly why we start with Phase 1.",Inches(0.6),Inches(6.4),Inches(12.1),Inches(0.6),size=15,color=ACCENT,bold=True)
-notes(s,"Verdict: doable, nothing needs a capability Connect lacks — but it's dependencies + org/policy, not modeling. CIDTool verified 2026-06-22 as a small in-dev JS tool, not a production dimension emitter. Sequence: dims+placement+sessions first (mechanical); governance in parallel early (long pole, gates external release); concept plane/marts/OMOP deferred until pulled. BigQuery has no FK enforcement — relationships logical, enforced by transform + dbt tests. See CLAUDE.md — Phase 2 feasibility.")
+# 8 INCREMENTAL ENHANCEMENTS ROADMAP
+s=slide();titlebar(s,"Incremental enhancements — the roadmap","Each a bounded add-on to the accepted model — same responses fact, dictionary stays the source of truth")
+table(s,[["#","Enhancement","Value"],
+ ["1","Normalized question-type view","templated per-type SQL across surveys"],
+ ["2","Typed value columns","numeric analysis; coded answers join labels"],
+ ["3","Improved version handling","unify V1/V2; offered-vs-not-selected answerable"],
+ ["4","skip_logic (from Quest)","skip logic queryable; most QA/QC rules generated"],
+ ["5","response_sessions","true missingness (not-asked vs not-answered)"],
+ ["6","Concept equivalence (demo built)","harmonize reused fields once, as data"],
+ ["7","Governance (sensitivity + IAM)","external-release readiness (PHI/PII) for PR2"],
+ ["8","Analytics marts (dbt)","curated, reproducible derived variables + lineage"],
+ ["9","Event plane","long-format win for operational/biospecimen data"]],
+ Inches(0.6),Inches(1.45),Inches(12.1),Inches(4.7),col_widths=[Inches(0.55),Inches(4.55),Inches(7.0)],fs=12.5,hdr_fs=13)
+textbox(s,"Adopt one at a time as need pulls it in. Governance (#7) gates external sharing; dbt marts (#8) deliver the most researcher value. See enhancement_backlog.md.",Inches(0.6),Inches(6.4),Inches(12.1),Inches(0.7),size=14,color=ACCENT,bold=True)
+notes(s,"The larger redesign was not adopted wholesale; its features are these incremental enhancements on the accepted Dictionary-Direct model. Each attaches to the same responses fact and keeps the dictionary as the source of truth. Honest dependencies (from the backlog): CIDTool maturity for dims, a Quest parser for skip_logic, and governance as an org/IRB effort. See docs/enhancement_backlog.md.")
 
 # 9b EVENTS GO LONG TOO (DevOps proposal + compatibility ask)
 s=slide();titlebar(s,"New: events are going long-format too","DevOps is moving follow-ups from nested columns to per-type event tables")
@@ -241,18 +228,18 @@ table(s,[["Group","Example marts","Canonical derived variable"],
  Inches(0.6),Inches(2.25),Inches(12.1),Inches(2.8),col_widths=[Inches(2.3),Inches(5.6),Inches(4.2)],fs=12.5,hdr_fs=13)
 textbox(s,"Why dbt: model-level lineage to source · tests = contracts in CI · one-directional layer boundary · sensitivity tiers flow to marts (enforced in IAM).",Inches(0.6),Inches(6.25),Inches(12.1),Inches(0.55),size=13,color=ACCENT,bold=True)
 textbox(s,"Honest: derivation is real epi work (owner + sign-off per variable); marts are curated, not the only access — raw responses stay reachable.",Inches(0.6),Inches(6.8),Inches(12.1),Inches(0.5),size=11,color=GREY,italic=True)
-notes(s,"This is the Marts layer (Phase 2, downstream of Core via dbt). Pitch = highest-value case of the OMOP 'write analytics once' thesis: derived variables defined once, canonically, with lineage — vs. re-coded per study (the 3 pain repos). dbt features map to our principles: dbt docs DAG = lineage to source (#12); SQL is the definition (no black box, #12); source()/ref()+access enforce Core→Analytic→Marts (#8); tests move much of the 7,025-rule QC into CI; sensitivity_tier flows via meta, enforced in IAM (#11); model versions/exposures = a derived-variable catalog. Recommend one mart PER construct (grouped), not a wide mega-table. Grain: participant, or participant×wave for longitudinal. Examples map to established cancer-prevention exposure domains (WCRF/AICR). See CLAUDE.md — Derived variables, lineage & dbt / Mart catalog.")
+notes(s,"This is the analytics-marts enhancement (#8), downstream of the model via dbt. Pitch = highest-value case of the OMOP 'write analytics once' thesis: derived variables defined once, canonically, with lineage — vs. re-coded per study (the 3 pain repos). dbt features map to our principles: dbt docs DAG = lineage to source (#12); SQL is the definition (no black box, #12); source()/ref()+access enforce Core→Analytic→Marts (#8); tests move much of the 7,025-rule QC into CI; sensitivity_tier flows via meta, enforced in IAM (#11); model versions/exposures = a derived-variable catalog. Recommend one mart PER construct (grouped), not a wide mega-table. Grain: participant, or participant×wave for longitudinal. Examples map to established cancer-prevention exposure domains (WCRF/AICR). See CLAUDE.md — Derived variables, lineage & dbt / Mart catalog.")
 
 # 10 QUERIES
-s=slide();titlebar(s,"Same queries, three ways","From painful/impossible → routine → trivial")
-table(s,[["Standard query","Wide (today)","Phase 1","Phase 2"],
+s=slide();titlebar(s,"Same queries, two ways","From painful/impossible → routine")
+table(s,[["Standard query","Wide (today)","The model","With an enhancement"],
  ["Multi-select distribution","unpivot + v1/v2 COALESCE","filtered group-by; versions pool","plain group-by / view"],
- ["Labeled distribution, any question","bespoke CASE, no reuse","parameterized by concept_id","precomputed aggregate"],
- ["Completion & true missingness","ambiguous","still ambiguous","sessions + skip logic"],
- ["Non-PHI extract (governance)","manual allow-list","manual allow-list","sensitivity tier + IAM"],
- ["Harmonized field across surveys","rebuild crosswalk (3 repos)","pool a reused concept","equivalence plane (planned)"]],
+ ["Labeled distribution, any question","bespoke CASE, no reuse","parameterized by concept_id","precomputed mart aggregate"],
+ ["Completion & true missingness","ambiguous","still ambiguous","sessions + skip_logic (#5/#4)"],
+ ["Non-PHI extract (governance)","manual allow-list","manual allow-list","sensitivity tier + IAM (#7)"],
+ ["Harmonized field across surveys","rebuild crosswalk (3 repos)","pool a reused concept","concept equivalence (#6)"]],
  Inches(0.4),Inches(1.5),Inches(12.5),Inches(3.6),col_widths=[Inches(3.5),Inches(3.0),Inches(3.0),Inches(3.0)],fs=12.5,hdr_fs=13)
-textbox(s,"Phase 1 fixes the loud, everyday pains; Phase 2 unlocks missingness, governance & harmonization.",Inches(0.4),Inches(6.4),Inches(12.5),Inches(0.6),size=15,color=GREY,italic=True)
+textbox(s,"The model fixes the loud, everyday pains; enhancements unlock missingness, governance & harmonization.",Inches(0.4),Inches(6.4),Inches(12.5),Inches(0.6),size=15,color=GREY,italic=True)
 notes(s,"Worked SQL for each row is in internal_pitch.md — Value proposition (Q1–Q5).")
 
 # 10b ANALYZING LONG FORMAT — demo 1: codes + labels side by side
@@ -324,15 +311,15 @@ notes(s,"Counts are GROUP BY — often simpler than wide. Select-all is the stan
 
 # 11 RECOMMENDATION
 s=slide();titlebar(s,"Recommendation")
-bullets(s,["Approve Phase 1 now — low cost, low risk, immediately useful; its responses fact carries into Phase 2 unchanged",
- "Commit to Phase 2 — governance + lineage; non-negotiable for sharing data externally through PR2"],
+bullets(s,["The Dictionary-Direct model is accepted — stand it up (low cost, low risk, immediately useful)",
+ "Adopt enhancements incrementally — prioritize governance (#7, gates external sharing) and dbt analytics marts (#8, most researcher value)"],
  Inches(0.8),Inches(1.8),Inches(11.7),Inches(2.4),size=21,gap=18)
 box=s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,Inches(0.8),Inches(4.6),Inches(11.7),Inches(1.4))
 box.fill.solid();box.fill.fore_color.rgb=LIGHT;box.line.color.rgb=TEAL;box.shadow.inherit=False
 tf=box.text_frame;tf.word_wrap=True;tf.vertical_anchor=MSO_ANCHOR.MIDDLE;tf.margin_left=Inches(0.3)
-p=tf.paragraphs[0];r=p.add_run();r.text="Phase 1 = an internal quick win that proves the model.   Phase 2 = the governed, shareable product."
+p=tf.paragraphs[0];r=p.add_run();r.text="The model is the accepted foundation.   Enhancements make it the governed, shareable product PR2 needs."
 r.font.size=Pt(18);r.font.bold=True;r.font.color.rgb=NAVY;r.font.name="Calibri"
-notes(s,"Ask: approve Phase 1 now; commit Phase 2 (esp. governance); consider pulling the concept-equivalence plane forward (geocoding). See internal_pitch.md — Recommendation.")
+notes(s,"Ask: stand up the accepted model now; adopt enhancements incrementally (esp. governance #7 and dbt marts #8); consider pulling the concept-equivalence enhancement forward (geocoding). See internal_pitch.md — Recommendation.")
 
 out="docs/Connect_Data_Model_Pitch.pptx";prs.save(out)
 print("saved",out,"with",len(prs.slides._sldIdLst),"slides")

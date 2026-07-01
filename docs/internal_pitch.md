@@ -1,8 +1,9 @@
 # Connect Data Model — Internal Pitch
 
 **The ask:** build a relational layer over CleanConnect that stores survey answers in one long `responses`
-table joined to the dictionary — in two phases. **Phase 1** is a small, fast win we can ship now; **Phase 2**
-is the researcher-grade, governed warehouse PR2 needs.
+table joined to the dictionary — the **Dictionary-Direct** model (accepted). It keeps the dictionary as the
+source of truth and fixes the wide-table pain with one new table; further capabilities are adopted as
+**incremental enhancements** (see below).
 
 ---
 
@@ -66,8 +67,8 @@ Our flagship **"Merged Module 1 Summary Statistics"** (a scheduled Cloud Run pip
   sometimes `353358909`, sometimes `"353358909"`. In the model these are `skip_logic` + `loop_instance` data.
 - **Missingness is mislabeled** — every per-question summary ends with
   `replace_na(list(answer = "Skipped this Question"))`, lumping *not-shown*, *not-answered*, and
-  *survey-not-taken* into one "skipped" bucket. The reported "skipped" counts are inflated; Phase 2's
-  sessions + skip-logic make that number *correct*.
+  *survey-not-taken* into one "skipped" bucket. The reported "skipped" counts are inflated; the
+  **sessions + skip_logic** enhancement makes that number *correct*.
 
 <details><summary>Before / after — one of their own helpers (<code>one_logic_funct</code>)</summary>
 
@@ -86,7 +87,7 @@ one_logic_funct(D_338924834, D_323512813, "353358909", "PAIN2: Rank of Pain")
 ```
 
 ```sql
--- PHASE 1 — labels come from the dictionary (no hand-typed map, no collisions); the v1/v2 merge is gone
+-- THE MODEL — labels come from the dictionary (no hand-typed map, no collisions); the v1/v2 merge is gone
 -- (both versions already pool under the concept); the skip condition is data, not a per-call argument.
 SELECT resp.current_format_value AS answer, COUNT(*) AS n
 FROM responses r
@@ -98,7 +99,7 @@ WHERE r.question_concept_id = 338924834
 GROUP BY answer;
 ```
 
-In Phase 2, the four hand-written `*_funct` helpers collapse into **one** shared, tested question-type view,
+The normalized question-type view collapses the four hand-written `*_funct` helpers into **one** shared, tested view,
 and `replace_na(... "Skipped")` is replaced by a real status (`not_shown` / `not_answered` / `not_taken`)
 from sessions + skip-logic — so "skipped" finally means skipped.
 
@@ -173,7 +174,7 @@ re-derived (and can drift) per analysis — even leaning on label text, which we
 typos. The fix is the model's **concept-equivalence plane** (`concept_relationship` / `question_equivalence`):
 it records "these are the same field" **once, as data**, and `loop_instance` turns the 21 home/seasonal slots
 into rows — so the address schema is defined once, not rebuilt in three repos. This equivalence layer sits in
-the model's backlog *beyond* Phase 2's first cut; **geocoding is the strongest argument to pull it forward.**
+the enhancement backlog; **geocoding is the strongest argument to pull the concept-equivalence enhancement forward.**
 (Home vs. seasonal vs. work genuinely differ, so some harmonization is real work — the model just makes it
 reusable, not re-coded.)
 
@@ -189,18 +190,17 @@ relationships once (the way we already trust OMOP to), and the rebuilding stops.
 
 Stop encoding answers as columns; store them as **rows** in a long `responses` table, and let the
 **dictionary we already maintain** (`primary_source`, `secondary_source`, `question`, `response`,
-`variable_metadata`) be the joinable metadata. Same thesis both phases — Phase 1 proves it cheaply,
-Phase 2 builds it out.
+`variable_metadata`) be the joinable metadata. The same thesis carries through: the model proves it now; enhancements build it out.
 
 ---
 
-## Phase 1 — Dictionary-Direct (start here)
+## The model — Dictionary-Direct
 
-<picture><source media="(prefers-color-scheme: dark)" srcset="connect_model_a_overview_dark.svg"><img alt="Model A overview" src="connect_model_a_overview.svg"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="connect_model_a_overview_dark.svg"><img alt="The model overview" src="connect_model_a_overview.svg"></picture>
 
-<details><summary>Full Phase 1 model (all columns) — the dictionary as-is, arranged like the CIDTool ERD, plus <code>responses</code></summary>
+<details><summary>Full model (all columns) — the dictionary as-is, arranged like the CIDTool ERD, plus <code>responses</code></summary>
 
-<picture><source media="(prefers-color-scheme: dark)" srcset="connect_model_a_dark.svg"><img alt="Model A full ERD with all columns" src="connect_model_a.svg"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="connect_model_a_dark.svg"><img alt="The model — full ERD with all columns" src="connect_model_a.svg"></picture>
 
 </details>
 
@@ -210,29 +210,34 @@ Phase 2 builds it out.
   1. Load CIDTool output into BigQuery (we already produce it).
   2. One **metadata-driven UNPIVOT** from CleanConnect → `responses`, generated per survey from the dictionary's column→concept map.
   3. *(optional)* `question_type_norm` view: messy `question_type` → clean `base_type` + flags.
-  4. *(optional)* `v_responses_enriched` view: pre-joins the dictionary onto `responses` so every answer row is self-describing — **zero joins** for analysts (see [example_queries.md](docs/example_queries.md)). The friendly day-one surface and the seed of Phase 2's `fact_response`.
+  4. *(optional)* `v_responses_enriched` view: pre-joins the dictionary onto `responses` so every answer row is self-describing — **zero joins** for analysts (see [example_queries.md](docs/example_queries.md)). The friendly day-one surface — a convenience view over the model.
   - No new modeling, reuses CleanConnect + the dictionary verbatim, low risk.
 - **What it buys:** stable schema (dancing stops), **generic SQL by `concept_id`/type**, labels **zero joins away** via the convenience view, **v1/v2 pool automatically** (both unpivot to the same concept), one answers table across all surveys.
-- **What it does *not* buy (→ Phase 2):** governance, sessions/missingness, a placement bridge for grid/parent-path integrity, version/option-set unification, curated marts + lineage, researcher-facing naming. Multi-select/grids stay as the dictionary's binary 0/1 sub-question rows.
-- **Important:** with no access control, Phase 1 is **not externally release-ready** — it's an internal/analyst layer (or coarse dataset-level IAM) until Phase 2.
+- **What it does *not* buy yet (→ enhancements):** governance, sessions/missingness, version/option-set unification, curated dbt marts + lineage, a normalized question-type view. Multi-select/grids stay as the dictionary's binary 0/1 sub-question rows.
+- **Important:** with no access control, the model is **not externally release-ready** — it's an internal/analyst layer (or coarse dataset-level IAM) until the **governance** enhancement lands.
 
-## Phase 2 — Functional model (the PR2 warehouse)
+## Incremental enhancements (potential extensions)
 
-<picture><source media="(prefers-color-scheme: dark)" srcset="connect_data_model_overview_dark.svg"><img alt="Model B overview" src="connect_data_model_overview.svg"></picture>
+The model is **open to adopting capabilities incrementally** — each a bounded add-on that keeps the
+dictionary as the source of truth and never rewrites `responses`. These are *candidates*, picked up when a
+concrete need pulls them in; full write-ups (value, sketch, cost) are in
+**[enhancement_backlog.md](enhancement_backlog.md)**.
 
-<details><summary>Full Phase 2 model (all columns)</summary>
+| # | Enhancement | Value |
+|---|---|---|
+| 1 | Normalized question-type view | templated per-type SQL across surveys |
+| 2 | Typed value columns | numeric analysis; coded answers join labels/option-sets |
+| 3 | Improved version handling | unify V1/V2; "offered vs. not-selected" answerable |
+| 4 | `skip_logic` (from Quest) | skip logic queryable; most QA/QC rules generatable |
+| 5 | `response_sessions` | separates not-administered / not-answered / skipped (missingness) |
+| 6 | Concept equivalence *(demo built)* | harmonize reused fields (addresses) once, as data |
+| 7 | Governance (`sensitivity_tier` + IAM) | **external-release readiness** (PHI/PII) for PR2 |
+| 8 | **Analytics marts (dbt)** | curated, reproducible derived variables with lineage |
+| 9 | Event plane | the long-format win for operational/biospecimen data |
 
-<picture><source media="(prefers-color-scheme: dark)" srcset="connect_data_model_dark.svg"><img alt="Model B full ERD with all columns" src="connect_data_model.svg"></picture>
-
-</details>
-
-- **What it adds:** cleaned researcher-facing dimensions; a **placement bridge** (`survey_questions`) so reused concepts and grids/select-all resolve cleanly; **sessions** (`response_sessions`, derived from participant status/timing) for completion + missingness; **version-scoped `response_options`**; layered **Core → Analytic → Marts**; governance built in.
-- **The lift — larger, but incremental on Phase 1's `responses` fact, and phaseable:**
-  - dimension cleanup + type normalization + placement/session derivation;
-  - **governance**: `sensitivity_tier` classification → BigQuery **row-access policies** → three **release tiers** (Sensitive / Core / Public) with date-shift, masking, and cell-size suppression;
-  - **analytic layer**: `fact_response`, dimensions, aggregates, a question-type **view library**;
-  - **curated marts** with full lineage (dbt proposed).
-- **What it buys:** tidy multi-select, version/option validity, **true missingness**, **governed per-sensitivity access**, reproducible derived variables with lineage, and a shareable query/view library — the trustworthy contract PR2 needs to share with the research community.
+Each attaches to the same `responses` fact. **Governance (#7)** is the piece most likely *required* before
+sharing externally; **dbt analytics marts (#8)** deliver the most researcher value — both are prioritized.
+(The dbt-marts approach is detailed next.)
 
 ## Curated derived variables — governable dbt marts
 
@@ -263,9 +268,9 @@ The highest-value case of "write analytics once": define each research variable 
 
 ---
 
-## Value proposition — the same queries, three ways
+## Value proposition — the same queries, two ways
 
-| Standard query | Wide (today) | Phase 1 | Phase 2 |
+| Standard query | Wide (today) | The model | With enhancements |
 |---|---|---|---|
 | Multi-select distribution | unpivot + v1/v2 COALESCE + known columns | filtered group-by; versions pool | plain group-by / view |
 | Labeled distribution, *any* question | bespoke `CASE`, no reuse | parameterized by `concept_id` (+ type view) | precomputed aggregate |
@@ -273,8 +278,8 @@ The highest-value case of "write analytics once": define each research variable 
 | Non-PHI extract (**governance**) | manual allow-list | manual allow-list | sensitivity tier + IAM |
 | Harmonized field across surveys/variants | rebuild the crosswalk by hand (3 repos) | reused concept pools by `concept_id` (survey via stamped coord) | full variant-equivalence via `question_equivalence` *(planned)* |
 
-Phase 1 flips schema-stability and generic querying from *painful/impossible* to *routine* and lets a reused
-concept pool across surveys; Phase 2 makes true missingness and governance possible at all, and the
+The model flips schema-stability and generic querying from *painful/impossible* to *routine* and lets a reused
+concept pool across surveys; the sessions and governance enhancements make true missingness and access control possible at all, and the
 field-harmonization row is fully realized once the equivalence plane lands. Worked SQL below (example concept
 IDs: the tooth-loss select-all `899251483` / follow-up `724589244`, and the reused "Survey Language" concept
 `784119588`).
@@ -287,13 +292,13 @@ FROM `CleanConnect.mouthwash`
 UNION ALL SELECT 'tooth decay', COUNTIF(COALESCE(d_899251483_d_452438775_v2, d_899251483_d_452438775)='353358909')
 FROM `CleanConnect.mouthwash`;   -- …and you must know every option column + the v2-only ones
 
--- PHASE 1: one table, labels via join, v1/v2 pool automatically
+-- THE MODEL: one table, labels via join, v1/v2 pool automatically
 SELECT q.current_question_text AS reason, COUNT(*) n
 FROM responses r JOIN question q USING (question_concept_id)
 WHERE r.current_source_question_concept_id = 899251483 AND r.response_concept_id = 353358909
 GROUP BY reason;
 
--- PHASE 2: one row per selected option — a plain group-by
+-- WITH ENHANCEMENTS: one row per selected option — a plain group-by
 SELECT o.label AS reason, COUNT(*) n
 FROM responses r
 JOIN survey_questions sq ON sq.survey_question_id = r.survey_question_id
@@ -307,20 +312,20 @@ WHERE sq.question_concept_id = 899251483 GROUP BY reason;
 SELECT CASE d_724589244 WHEN '349122068' THEN '1' WHEN '194129782' THEN '2 to 4' /* … */ END AS answer, COUNT(*) n
 FROM `CleanConnect.mouthwash` GROUP BY answer;
 
--- PHASE 1: labels via join; swap the concept_id to run it for ANY question
+-- THE MODEL: labels via join; swap the concept_id to run it for ANY question
 SELECT resp.current_format_value AS answer, COUNT(*) n
 FROM responses r JOIN response resp USING (response_concept_id)
 WHERE r.question_concept_id = 724589244 GROUP BY answer;
 
--- PHASE 2: read a precomputed aggregate
+-- WITH A MART: read a precomputed aggregate
 SELECT answer_label AS answer, n FROM agg_question_distribution WHERE question_concept_id = 724589244;
 ```
 
-### Q3 — completion & **true** missingness (Phase 2 only)
+### Q3 — completion & **true** missingness (needs the sessions enhancement)
 ```sql
--- WIDE & PHASE 1: a blank/absent answer can't distinguish not-shown vs not-answered vs survey-not-taken.
+-- WIDE & THE MODEL: a blank/absent answer can't distinguish not-shown vs not-answered vs survey-not-taken.
 
--- PHASE 2: sessions give status; skip_logic gives reachability
+-- WITH SESSIONS: sessions give status; skip_logic gives reachability
 SELECT s.status, COUNT(DISTINCT s.connect_id) participants,
        COUNT(DISTINCT IF(r.response_id IS NOT NULL, s.connect_id, NULL)) answered_x
 FROM response_sessions s
@@ -330,11 +335,11 @@ WHERE s.survey_id = /* Module 1 */ 0 AND s.wave = 'baseline'
 GROUP BY s.status;
 ```
 
-### Q4 — non-PHI extract / **governance** (Phase 2 only)
+### Q4 — non-PHI extract / **governance** (needs the governance enhancement)
 ```sql
--- WIDE & PHASE 1: no sensitivity in the schema — a manual, unenforced allow-list of "safe" fields.
+-- WIDE & THE MODEL: no sensitivity in the schema — a manual, unenforced allow-list of "safe" fields.
 
--- PHASE 2: sensitivity is data + enforced by a BigQuery row-access policy; the researcher's query is unchanged
+-- WITH GOVERNANCE: sensitivity is data + enforced by a BigQuery row-access policy; the researcher's query is unchanged
 SELECT * FROM responses WHERE sensitivity_tier = 'non_sensitive';
 ```
 
@@ -344,37 +349,38 @@ SELECT * FROM responses WHERE sensitivity_tier = 'non_sensitive';
 SELECT 'module1' AS survey, d_784119588 AS lang FROM `CleanConnect.module1`
 UNION ALL SELECT 'covid_19', d_784119588 FROM `CleanConnect.covid_19`;   -- …repeat for all 15 surveys
 
--- PHASE 1: one reused concept, one query across every survey it appears in (survey via the stamped coordinate)
+-- THE MODEL: one reused concept, one query across every survey it appears in (survey via the stamped coordinate)
 SELECT secondary_source_concept_id AS survey, response_concept_id, COUNT(*) n
 FROM responses WHERE question_concept_id = 784119588          -- "Survey Language", appears in 15 surveys
 GROUP BY survey, response_concept_id;
 
--- PHASE 2 (+ equivalence plane): unify DIFFERENT concepts that mean the same field (e.g. 27 address fields)
+-- WITH THE EQUIVALENCE ENHANCEMENT: unify DIFFERENT concepts that mean the same field (e.g. 27 address fields)
 SELECT q.label, COUNT(*) n
 FROM responses r JOIN dim_question q USING (question_concept_id)
 WHERE q.equivalence_group_id = /* residence_street_name */ 0  -- one group, authored once
 GROUP BY q.label;
 ```
-**Takeaway:** wide rebuilds the crosswalk by hand in every repo; Phase 1 already pools a *reused* concept across surveys with one query; Phase 2's equivalence plane extends that to *different* concepts that mean the same thing (the geocoding case).
+**Takeaway:** wide rebuilds the crosswalk by hand in every repo; the model already pools a *reused* concept across surveys with one query; the concept-equivalence enhancement extends that to *different* concepts that mean the same thing (the geocoding case).
 
 ## Transformation lift at a glance
 
-| | **Phase 1** | **Phase 2** |
+| | **The model** | **Each enhancement** |
 |---|---|---|
-| New objects we build | 1 table (`responses`) [+ 1 view] | ~10 dims/facts + analytic + marts |
-| Reuses | CleanConnect + CIDTool verbatim | Phase 1's `responses` fact |
-| New modeling | none | dimensions, sessions, governance, marts |
-| Risk | low | moderate, phased |
-| Governance | none (bolt-on later) | built in (row-access + release tiers) |
-| Externally release-ready | no | yes |
+| New objects we build | 1 table (`responses`) [+ 1 view] | one add-on at a time (a column, a lookup, or a downstream layer) |
+| Reuses | CleanConnect + CIDTool verbatim | the same `responses` fact |
+| New modeling | none | only the enhancement being adopted |
+| Risk | low | bounded per enhancement |
+| Governance | none (enhancement #7) | row-access + release tiers when #7 lands |
+| Externally release-ready | not until governance (#7) | yes, once #7 lands |
 
 ---
 
 ## Recommendation
 
-1. **Approve Phase 1 now.** Low cost, low risk, immediately useful, and a genuine down payment — its
-   `responses` fact carries into Phase 2 unchanged.
-2. **Commit to Phase 2** as the funded path to the PR2 research warehouse — especially **governance** and
-   **lineage**, which Phase 1 deliberately defers and which are non-negotiable for sharing data externally.
+1. **The Dictionary-Direct model is accepted** — stand it up: load CIDTool output, run the metadata-driven
+   UNPIVOT into `responses`, add the two convenience views. Low cost, low risk, immediately useful.
+2. **Adopt enhancements incrementally** as need pulls them in (`enhancement_backlog.md`). Prioritize
+   **governance (#7)** — non-negotiable before sharing data externally through PR2 — and the **dbt analytics
+   marts (#8)**, which deliver the most researcher value. Each attaches to the same `responses` fact.
 
-Net: Phase 1 = an internal quick win that proves the model; Phase 2 = the governed, shareable product.
+Net: the model is the accepted foundation; enhancements make it the governed, shareable product PR2 needs.

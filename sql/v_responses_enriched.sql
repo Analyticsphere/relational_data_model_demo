@@ -1,9 +1,9 @@
 -- ============================================================================
--- v_responses_enriched — Phase 1 analyst convenience view (Model A)
+-- v_responses_enriched — analyst convenience view over the Dictionary-Direct model
 -- Pre-joins the CIDTool dictionary onto the long-format `responses` fact so every
--- answer row is self-describing: zero joins for analysts. Seed of Phase 2 `fact_response`.
+-- answer row is self-describing: zero joins for analysts. A convenience view over the model.
 --
--- Built over the verbatim Model A tables (see sql/data_model_modest.sql).
+-- Built over the verbatim dictionary tables (see sql/data_model_modest.sql).
 -- Survey/domain come from the STAMPED secondary_source_concept_id on the row (so a reused
 -- question concept resolves to the survey it was actually answered in, not its "home" survey).
 -- All LEFT JOINs, so an answer never drops out when metadata is missing/dirty.
@@ -44,8 +44,8 @@ LEFT JOIN variable_metadata vm   ON vm.question_concept_id         = r.question_
                                 AND vm.response_concept_id         = r.response_concept_id
 -- offered option set per question: aggregate the allowed-answers bridge into one string.
 -- NOTE: source is the dictionary's question_response list (imperfect — e.g. tooth-loss lists the
--- "No" value concept as an option); ordered by response_concept_id since Model A has no display_order
--- (that arrives with Phase 2 response_options).
+-- "No" value concept as an option); ordered by response_concept_id since the model has no display_order
+-- (that arrives with the version-handling enhancement's response_options).
 LEFT JOIN (
   SELECT qr.question_concept_id,
          STRING_AGG(o.current_format_value, '; ' ORDER BY qr.response_concept_id) AS response_option_set
