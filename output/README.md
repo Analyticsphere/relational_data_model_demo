@@ -2,7 +2,7 @@
 
 Point-in-time, **regenerable** artifacts from the column→dictionary mapping pipeline. Committed during the
 exploratory phase so collaborators can review them without running the pipeline. Snapshot built from the
-**CleanConnect** schema dumps in `schemas/` + the data dictionary (`masterFile.csv`), 2026-06.
+**CleanConnect** schema dumps in `schemas/prod/` + the data dictionary (`masterFile.csv`), 2026-06.
 
 | File | What |
 |---|---|
@@ -19,7 +19,7 @@ exploratory phase so collaborators can review them without running the pipeline.
 
 ```bash
 python scripts/fetch_data_dict.py                                                   # data_dictionary/masterFile.csv
-python scripts/fetch_bq_schemas.py CleanConnect                                     # schemas/CleanConnect/*.json (metadata only)
+python scripts/fetch_bq_schemas.py CleanConnect                                     # schemas/prod/CleanConnect/*.json (metadata only)
 python scripts/parse_survey_columns.py --layer CleanConnect -o output/survey_columns_clean.csv
 python scripts/map_survey_columns.py    output/survey_columns_clean.csv  -o output/survey_columns_clean_mapped.csv
 python scripts/review_unmapped_columns.py output/survey_columns_clean_mapped.csv -o output/columns_needs_review.csv

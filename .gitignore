@@ -1,0 +1,20 @@
+# Fetched data that drifts upstream and should be re-fetched, not committed
+data_dictionary/
+
+# Intermediate pipeline file (reviewed snapshot is survey_columns_*_mapped.csv)
+output/survey_columns_stage_clean.csv
+output/survey_columns_clean.csv
+
+# DuckDB binary + Parquet exports (regenerable)
+*.duckdb
+output/dim/*.parquet
+
+# Temp Office files
+docs/~$*
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# macOS
+.DS_Store

@@ -2,7 +2,7 @@
 
 **Generated** BigQuery SQL that melts each wide CleanConnect survey table into the long/narrow
 `responses` fact. Produced by `scripts/generate_unpivot_sql.py` from the **schemas only**
-(`schemas/CleanConnect/*.json`) + the column→placement mapping
+(`schemas/prod/CleanConnect/*.json` or `schemas/stage/CleanConnect/*.json`) + the column→placement mapping
 (`output/survey_columns_clean_mapped.csv`). **Not run against production** — validate later with
 `bq query --dry_run` (reads 0 bytes) and against test data.
 
@@ -59,7 +59,9 @@ on `response_sessions`. Add `response_value_as_datetime` only if date-valued *an
 ## Regenerate
 
 ```bash
-python scripts/fetch_bq_schemas.py CleanConnect        # schemas/CleanConnect/*.json (metadata only)
+python scripts/fetch_bq_schemas.py CleanConnect                                     # schemas/prod/CleanConnect/*.json (metadata only)
+python scripts/fetch_bq_schemas.py CleanConnect \
+  --project nih-nci-dceg-connect-stg-5519 --output-dir schemas/stage               # schemas/stage/CleanConnect/*.json
 python scripts/parse_survey_columns.py --layer CleanConnect -o output/survey_columns_clean.csv
 python scripts/map_survey_columns.py    output/survey_columns_clean.csv -o output/survey_columns_clean_mapped.csv
 python scripts/generate_unpivot_sql.py                 # -> sql/unpivot/*.sql

@@ -22,13 +22,14 @@ The transform's job is *reshaping* (wide → long), not *cleaning*. CleanConnect
 
 One guardrail: audit PR2's row-cleaning step to confirm it does not drop values researchers need; where it does, cherry-pick those fields from `Connect`. Every row stays traceable to its concept IDs regardless.
 
-The `schemas/` folder in this repository captures the BigQuery schemas at all three existing stages:
+The `schemas/` folder in this repository captures the BigQuery schemas at all three existing stages,
+stored per environment under `schemas/prod/` (production) and `schemas/stage/` (staging):
 
 | Dataset | Description |
 |---|---|
-| `schemas/Connect/` | Raw hierarchical BigQuery dataset as exported from Firestore. Field names are opaque concept identifiers (e.g. `D_224791140`). Nested `RECORD` types reflect Firestore document structure. Some survey versions are empty stubs pending population. (Each JSON file represents a table in this dataset.) |
-| `schemas/FlatConnect/` | Flattened BigQuery dataset produced by the flattener pipeline. Wide tables where nested paths become underscore-delimited column names (e.g. `parent_child_grandchild`) and array fields become binary indicator columns. (Each JSON file represents a table in this dataset.) |
-| `schemas/CleanConnect/` | Cleaned and standardized BigQuery dataset produced by the PR2 pipeline. Further processing of FlatConnect: column names standardized, binary values converted to concept IDs, multi-version tables merged. (Each JSON file represents a table in this dataset.) |
+| `schemas/<env>/Connect/` | Raw hierarchical BigQuery dataset as exported from Firestore. Field names are opaque concept identifiers (e.g. `D_224791140`). Nested `RECORD` types reflect Firestore document structure. Some survey versions are empty stubs pending population. (Each JSON file represents a table in this dataset.) |
+| `schemas/<env>/FlatConnect/` | Flattened BigQuery dataset produced by the flattener pipeline. Wide tables where nested paths become underscore-delimited column names (e.g. `parent_child_grandchild`) and array fields become binary indicator columns. (Each JSON file represents a table in this dataset.) |
+| `schemas/<env>/CleanConnect/` | Cleaned and standardized BigQuery dataset produced by the PR2 pipeline. Further processing of FlatConnect: column names standardized, binary values converted to concept IDs, multi-version tables merged. (Each JSON file represents a table in this dataset.) |
 
 ### Surveys and Schema Sizes
 
@@ -171,22 +172,25 @@ with lineage intact to source. See the backlog for the mart catalog and the dbt 
 ```
 connect_data_model/
 ├── README.md · AGENTS.md   # public summary + collaborator guide
-├── scripts/                # fetch + column→dictionary→responses pipeline (see "Source-extraction scripts")
+├── scripts/                # fetch + column→dictionary→responses pipeline + setup_relational.py
 ├── sql/                    # model DDL twins (data_model*.sql), DuckDB dim/equivalence builds, and:
-│   └── unpivot/            #   generated wide→long `responses` transform + DDL + validate_responses.sql
+│   ├── unpivot/            #   generated wide→long SQL with ${PROJECT} placeholder
+│   └── unpivot_stage/      #   same SQL hardcoded to stage project — safe to run directly
 ├── output/                 # regenerable derived artifacts: column mapping, demo dim tables, concept_relationship
 ├── docs/                   # ERDs (SVG), pitch, example queries, source crosswalk, slide deck
 └── schemas/
-    ├── Connect/            # BigQuery dataset: raw Firestore export
-    ├── FlatConnect/        # BigQuery dataset: flattened by flattener pipeline
-    ├── CleanConnect/       # BigQuery dataset: cleaned by PR2 pipeline (the build source)
-    │   └── *.json          # Each file = table schema (e.g., module1.json → table `CleanConnect.module1`)
-    └── relational/         # (future) BigQuery dataset: proposed normalized model
+    ├── prod/                   # schemas fetched from the prod project
+    │   ├── Connect/            # BigQuery dataset: raw Firestore export
+    │   ├── FlatConnect/        # BigQuery dataset: flattened by flattener pipeline
+    │   └── CleanConnect/       # BigQuery dataset: cleaned by PR2 pipeline (the build source)
+    │       └── *.json          # Each file = table schema (e.g., module1.json → table `CleanConnect.module1`)
+    ├── stage/                  # schemas fetched from the stage project (nih-nci-dceg-connect-stg-5519)
+    │   └── CleanConnect/       # (may differ subtly from prod — see schema diff comparison in session notes)
+    └── relational/             # explicit BQ schemas for the relational dataset tables (concept IDs as STRING)
+        └── *.json              # source of truth for setup_relational.py loads; prevents INTEGER autodetect
 ```
 
-> `dbml/` and `mermaid/` (model-source twins) and `data_dictionary/` are git-ignored (regenerable /
-> drift upstream). The `responses` unpivot and demo dimensions are generated from the schemas + dictionary,
-> never from production data.
+> `dbml/` and `mermaid/` (model-source twins), `data_dictionary/`, and `output/dim/*.parquet` are git-ignored (regenerable / drift upstream). The `responses` unpivot and demo dimensions are generated from the schemas + dictionary, never from production data.
 
 ---
 
