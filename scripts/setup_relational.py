@@ -222,7 +222,8 @@ def main():
         print("5. Loading dimension tables...")
         load_dim_tables(client, bq, args.project, args.dims_dir)
 
-    print("\ndone. Run sql/unpivot_stage/unpivot_*.sql to populate responses.")
+    print("\ndone. Run sql/unpivot_stage/unpivot_*.sql to populate responses,")
+    print("      then sql/unpivot_stage/type_response_values.sql to populate typed value columns.")
 
 
 if __name__ == "__main__":

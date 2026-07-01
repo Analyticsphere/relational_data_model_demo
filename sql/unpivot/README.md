@@ -26,6 +26,7 @@ carried) — the pattern, not the data.
 |---|---|
 | `00_responses_ddl.sql` | `CREATE TABLE responses` + the `colmap` view over the loaded mapping. Run once. |
 | `unpivot_<table>.sql`  | per survey table: a `DELETE` (idempotent) then `INSERT … SELECT` (`UNPIVOT` + colmap join). |
+| `type_response_values.sql` | post-load typing step: routes 9-digit strings → `response_value_as_concept_id`, numeric strings → `response_value_as_number`. Run once after all unpivot files. |
 | `validate_responses.sql` | post-run checks (volume, grain uniqueness, referential integrity, loop sanity, tooth-loss spot-check). |
 
 **Idempotent:** each `unpivot_<table>.sql` clears that table's rows (`DELETE … WHERE source_table = …`)

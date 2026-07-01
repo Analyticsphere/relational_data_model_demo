@@ -96,6 +96,9 @@ python scripts/smoke_test_unpivot.py              # prod-free shape check of the
 
 # set up (or refresh) the relational dataset in BigQuery stage:
 python scripts/setup_relational.py --dims --yes   # dataset + colmap + responses table + colmap view + all dim tables
+# populate responses and type the value columns:
+for f in sql/unpivot_stage/unpivot_*.sql; do bq --project_id=nih-nci-dceg-connect-stg-5519 query --use_legacy_sql=false < "$f"; done
+bq --project_id=nih-nci-dceg-connect-stg-5519 query --use_legacy_sql=false < sql/unpivot_stage/type_response_values.sql
 ```
 
 Each documents its usage/defaults at the top. `fetch_bq_schemas.py` and `setup_relational.py` need
