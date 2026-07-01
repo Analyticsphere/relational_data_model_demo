@@ -54,6 +54,17 @@ python scripts/map_survey_columns.py    output/survey_columns_clean.csv -o outpu
 python scripts/generate_unpivot_sql.py                 # -> sql/unpivot/*.sql
 ```
 
+## Smoke test (no production data)
+
+Exercise the transform *shape* end-to-end without any Connect data — builds a synthetic wide table from
+the real schema column names, loads the real colmap, and runs the same `UNPIVOT` + join (DuckDB), checking
+that NULL cells drop and the placement is stamped:
+
+```bash
+python scripts/smoke_test_unpivot.py            # mouthwash (default); prints responses + PASS/FAIL
+python scripts/smoke_test_unpivot.py module4    # any CleanConnect survey table
+```
+
 ## Run later (once test data + colmap are loaded)
 
 ```bash
