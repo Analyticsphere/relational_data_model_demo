@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS `nih-nci-dceg-connect-stg-5519.relational.responses` 
   response_value_as_string STRING,              -- verbatim raw cell — always populated
   response_value_as_number FLOAT64,             -- numeric answers (Num/Year/count) for direct AVG/SUM
   response_value_as_concept_id STRING,          -- coded answer (single/multi-select) -> joins response / response_options / concept_relationship
+  response_value_as_date DATE,                  -- date answer (ISO YYYY-MM-DD); populated by type step
   source_table STRING,
   source_column STRING
 );

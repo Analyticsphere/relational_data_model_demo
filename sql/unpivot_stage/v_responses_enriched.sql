@@ -34,6 +34,7 @@ SELECT
   r.response_value_as_string,
   r.response_value_as_number,
   r.response_value_as_concept_id,
+  r.response_value_as_date,
   resp.current_format_value                           AS response_label,  -- human label for coded answers
 
   -- offered option set for this question (all allowed responses, semicolon-joined)

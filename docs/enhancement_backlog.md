@@ -51,14 +51,14 @@ fact stays immutable; enhancements are overlays, attributes, or downstream layer
 - **Attaches as:** a view over `question`; dictionary untouched underneath.
 - **Cost:** low. Already scoped in the README as the recommended first add-on.
 
-### 2. Typed value columns on `responses`  *(partly in place)*
-- **What:** `response_value_as_string` (verbatim, always), `response_value_as_number`, and
-  `response_value_as_concept_id` — OMOP `observation`-style — populated by a cleaning/typing step keyed on
-  the normalized question type. (A `response_value_as_datetime` is deferred; see the README decision note.)
-- **Value:** direct `AVG()`/`SUM()` on numerics; the coded answer joins labels/option-sets/equivalences —
-  the layer researchers derive their own variables from.
-- **Attaches as:** columns on `responses` (already in the DDL); needs the typing step to populate them.
-- **Cost:** low–medium (the typing step + `question_type_norm` dependency).
+### 2. Typed value columns on `responses`  *(in place)*
+- **What:** `response_value_as_string` (verbatim, always), `response_value_as_number`,
+  `response_value_as_concept_id`, and `response_value_as_date` — OMOP `observation`-style —
+  populated by `sql/unpivot_stage/type_response_values.sql` keyed on value patterns.
+- **Value:** direct `AVG()`/`SUM()` on numerics; the coded answer joins labels/option-sets/equivalences;
+  date answers are properly typed for date arithmetic.
+- **Attaches as:** columns on `responses` (already in the DDL + schema JSON); populated by the type step.
+- **Cost:** complete. See `docs/value_typing.md` for routing logic and a full account of limitations.
 
 ### 3. Improved version handling (concept `_V2` revisions + option-set validity)
 - **What:** treat the `_V2` concept revision as an **attribute** so `GROUP BY question_concept_id` unifies
