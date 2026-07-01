@@ -174,6 +174,8 @@ responses           — long/narrow fact: one row per answer atom
 biospecimen_events  — biospecimen collection/processing events (event-shaped, kept separate)
 ```
 
+> **Design decision — typed response columns.** `responses` carries three OMOP `observation`-style value columns: **`response_value_as_string`** (always the verbatim cell — lossless source of truth), **`response_value_as_number`**, and **`response_value_as_concept_id`** (the coded answer — joins to labels, offered option sets, and concept equivalences; the dominant survey answer shape). A **`response_value_as_datetime`** column is **deferred**, not rejected: the dictionary's `Variable Type` is ~62% blank and inconsistent, date-valued *answers* are a small/messy minority (many "dates" are really `Year`/`Month`, i.e. numbers), and administration timestamps are already typed on `response_sessions` — add it only if date answers prove needed. Populating the typed extracts is a **cleaning/typing step keyed on `question_type`** (routing coded vs. numeric vs. free-text), corroborated by — not driven by — the dirty dictionary type; `as_string` stays verbatim so nothing is lost to a misroute.
+
 #### Entity Relationship
 
 <picture>
