@@ -260,23 +260,23 @@ The model uses researcher-facing names, keeps **concept IDs identical** (they ar
 
 ```
 connect_data_model/
-├── README.md
-├── scripts/             # source-fetch + column-parsing scripts (see "Source-extraction scripts" below)
+├── README.md · AGENTS.md   # public summary + collaborator guide
+├── scripts/                # fetch + column→dictionary→responses pipeline (see "Source-extraction scripts")
+├── sql/                    # model DDL twins (data_model*.sql), DuckDB dim/equivalence builds, and:
+│   └── unpivot/            #   generated wide→long `responses` transform + DDL + validate_responses.sql
+├── output/                 # regenerable derived artifacts: column mapping, demo dim tables, concept_relationship
+├── docs/                   # ERDs (SVG), pitch, example queries, source crosswalk, slide deck
 └── schemas/
-    ├── Connect/          # BigQuery dataset: raw Firestore export
-    ├── FlatConnect/      # BigQuery dataset: flattened by flattener pipeline
-    ├── CleanConnect/     # BigQuery dataset: cleaned by PR2 pipeline
-    │   └── *.json        # Each file = table schema in the dataset (e.g., module1.json → table `CleanConnect.module1`)
-    └── relational/       # (future) BigQuery dataset: proposed normalized model
+    ├── Connect/            # BigQuery dataset: raw Firestore export
+    ├── FlatConnect/        # BigQuery dataset: flattened by flattener pipeline
+    ├── CleanConnect/       # BigQuery dataset: cleaned by PR2 pipeline (the build source)
+    │   └── *.json          # Each file = table schema (e.g., module1.json → table `CleanConnect.module1`)
+    └── relational/         # (future) BigQuery dataset: proposed normalized model
 ```
 
-As the model develops, this repository is expected to grow to include:
-
-```
-├── model/                # Schema definition (DDL / dbt models) for the relational layers
-├── sql/                  # Reusable query library organized by question type
-└── docs/                 # ERDs, data-dictionary crosswalk, design notes
-```
+> `dbml/` and `mermaid/` (model-source twins) and `data_dictionary/` are git-ignored (regenerable /
+> drift upstream). The `responses` unpivot and demo dimensions are generated from the schemas + dictionary,
+> never from production data.
 
 ---
 
@@ -393,7 +393,8 @@ Both phases are grounded in the dictionary, Quest markup, and the BigQuery schem
 
 **Phase 1 — Dictionary-Direct (fast win):**
 - [ ] Load the CIDTool dictionary tables into BigQuery as-is
-- [ ] Build the `responses` unpivot from CleanConnect; join-validate against the dictionary
+- [x] **Draft** the `responses` unpivot from CleanConnect — generated, metadata-driven SQL in `sql/unpivot/` (schema-derived, not yet run on data); shape verified prod-free via `scripts/smoke_test_unpivot.py`
+- [ ] First run against **stage** data + `sql/unpivot/validate_responses.sql`; join-validate against the dictionary
 - [ ] Validate against real participant data (a select-all, a grid, a loop, a versioned/revised question)
 
 **Phase 2 — Functional model (the vision):**

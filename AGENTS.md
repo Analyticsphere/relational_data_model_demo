@@ -67,20 +67,33 @@ from the data dictionary and Quest markup. Pitched in two phases:
 | `docs/devops_event_tables_memo.md` | reconciliation memo for the DevOps long-format event tables |
 | `docs/source_crosswalk.csv` | dictionary Secondary Source ↔ concept_id ↔ domain ↔ `is_survey` ↔ BQ table ↔ questionnaire file |
 | `docs/*.svg` · `docs/Connect_Data_Model_Pitch.pptx` · `docs/build_deck.py` | ERDs + slide deck (regenerable) |
-| `dbml/` · `sql/` · `mermaid/` | model sources: dbsketch DBML, DDL, and `erDiagram` twins (+ convenience view, DuckDB demo) |
+| `dbml/` · `sql/*.sql` · `mermaid/` | model sources: dbsketch DBML, constraint-free DDL, and `erDiagram` twins (Model A / B / events) |
+| `sql/unpivot/` | **generated** wide→long `responses` transform (UNPIVOT + colmap join) + `00_responses_ddl.sql` + `validate_responses.sql` |
+| `sql/build_dimension_tables.sql` · `sql/build_concept_relationship.sql` | DuckDB demo dimensions + concept-equivalence (`synonym`) plane — **CIDTool replaces these later** |
+| `output/` | regenerable derived artifacts: column→dictionary mapping, demo dim tables (CSV/Parquet), `concept_relationship` |
 | `schemas/<layer>/<table>.json` | BigQuery schema dumps (Connect / FlatConnect / CleanConnect) — field-shape ground truth |
-| `scripts/` | source-fetch scripts (BQ schemas, data dictionary, surveys) |
+| `scripts/` | fetch scripts **+ the column→dictionary→`responses` pipeline** (see below) |
 
-## Fetch scripts (`scripts/`, stdlib-only except the BQ one)
+## Scripts (`scripts/`, stdlib-only except `fetch_bq_schemas.py` + `smoke_test_unpivot.py`)
 
 ```bash
+# fetch source artifacts:
 python scripts/fetch_bq_schemas.py CleanConnect   # BQ schemas -> schemas/<dataset>/  (--project defaults to Connect prod)
 python scripts/fetch_data_dict.py                 # masterFile.csv -> data_dictionary/  (--json for JSON too)
 python scripts/fetch_surveys.py                   # real Quest modules -> surveys/  (--all for everything, --list to see)
+
+# column -> dictionary path -> responses transform (never queries production; uses schemas + dictionary):
+python scripts/parse_survey_columns.py --layer CleanConnect -o output/survey_columns_clean.csv
+python scripts/map_survey_columns.py    output/survey_columns_clean.csv -o output/survey_columns_clean_mapped.csv
+python scripts/review_unmapped_columns.py output/survey_columns_clean_mapped.csv -o output/columns_needs_review.csv
+python scripts/generate_unpivot_sql.py            # generated BigQuery unpivot SQL -> sql/unpivot/  (--batch N for wide tables)
+python scripts/smoke_test_unpivot.py              # prod-free shape check of the unpivot (PASS/FAIL; needs duckdb)
 ```
 
 Each documents its usage/defaults at the top. `fetch_bq_schemas.py` needs
-`pip install google-cloud-bigquery` and `gcloud auth application-default login`.
+`pip install google-cloud-bigquery` and `gcloud auth application-default login`; `smoke_test_unpivot.py`
+needs `pip install duckdb`. **Never query production data** — the pipeline runs on committed schemas + the
+public dictionary only.
 
 ## Conventions
 
