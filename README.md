@@ -302,6 +302,37 @@ The column-parsing helpers (`extract_ordered_concept_ids`, `extract_version_suff
 
 A reproducible review step (`scripts/review_unmapped_columns.py`) buckets the columns that don't map cleanly (~3% on CleanConnect) into actionable categories (concept absent from the dictionary, survey mapping needing DevOps confirmation, etc.). **Once this exploratory phase settles, this pipeline is intended to be re-integrated into `pr2-transformation`** rather than maintained separately here.
 
+### Path to production: fold into `pr2-transformation` (deferred)
+
+These scripts are exploratory/demo quality. When we formalize them, the intended home is
+[pr2-transformation](https://github.com/Analyticsphere/pr2-transformation) — already a Python package
+(`core/`) that composes/renders SQL transforms (`transform_renderer.py`, `transformations.py`, a
+`test_query_composition.py`) and normalizes survey variables (`variable_normalizer.py`, which our column
+parser was adapted from). The logic is largely done and validated; the work is packaging, not a rewrite.
+**This is a deferred decision — recorded here, to be acted on later.**
+
+Intended mapping (script → production home):
+
+| Exploratory artifact | Production home in `pr2-transformation` |
+|---|---|
+| `parse_survey_columns.py` | fold the fork diff back into `core/variable_normalizer.py` (single `_N`, 2-digit loop indices, source-question-as-leaf) so there is one copy |
+| `generate_unpivot_sql.py` | a rendered transform alongside `core/transform_renderer.py` / `transformations.py` |
+| `map_survey_columns.py` (column → dictionary path) | a new `core/` module; its dimension source becomes **CIDTool**, not the `masterFile` stopgap |
+| `smoke_test_unpivot.py`, `sql/unpivot/validate_responses.sql` | `test/` (pytest) + data-quality checks |
+| `sql/build_dimension_tables.sql`, `sql/build_concept_relationship.sql` (DuckDB) | mostly **do not move** — stopgaps replaced by CIDTool output; keep as dev fixtures |
+
+What "production quality" adds (the gap): parameterized project/dataset config (no `${PROJECT}`
+placeholders) via `core/constants.py`; the colmap sourced from **CIDTool** rather than the dirty
+forward-filled `masterFile`; real pytest/CI coverage of the normalizer edge cases; and wiring into the
+runner/DAG (idempotency is already handled by the per-table `DELETE`+`INSERT`). DuckDB stays a *dev*
+execution harness; production executes the same rendered SQL in BigQuery.
+
+Boundaries to settle when we pick this up: (1) this is the **Core** transform, so it lives in
+`pr2-transformation`, *not* dbt — dbt starts at Core as a `source` and owns only Analytic/Marts;
+(2) whether it's a new `core/relational/` subpackage or woven into the existing flow (which also does
+upstream API/Firestore work) is a maintainer's call. The real dependencies are the same ones flagged for
+Phase 2 — **CIDTool maturity** (for dims/colmap) and **ownership** — not the code.
+
 ---
 
 ## CIDTool and the Concept/Variable Dictionary
