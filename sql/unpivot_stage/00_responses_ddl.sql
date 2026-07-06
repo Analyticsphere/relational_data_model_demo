@@ -1,9 +1,9 @@
 -- Target fact + colmap for the responses unpivot. NOT run against production.
 --
--- CLUSTERING STRATEGY (for production scale — ~55M rows at 200k participants, ~110M at full cohort):
+-- CLUSTERING DECISION:
+--   CLUSTER BY (secondary_source_concept_id, question_concept_id, connect_id)
 --
---   Recommended: CLUSTER BY (secondary_source_concept_id, question_concept_id, connect_id)
---   Rationale:
+--   Key order rationale:
 --     1. secondary_source_concept_id first — most queries filter by survey; 10 surveys means
 --        each cluster block covers ~10% of the table (good initial pruning).
 --     2. question_concept_id second — within a survey, analyses are almost always
@@ -11,14 +11,22 @@
 --        makes this highly selective.
 --     3. connect_id third — participant lookups and cohort-level queries benefit from the
 --        remaining sort order.
---   Benefit: estimated 70–85% scan reduction for typical question-level and survey-level queries.
+--   Estimated benefit: 70–85% scan reduction for typical question-level and survey-level queries.
 --
---   To enable: add OPTIONS(clustering_fields=["secondary_source_concept_id","question_concept_id","connect_id"])
---   to the CREATE TABLE statement before the first load. Recreate the table + re-run unpivot SQL.
+-- PARTITIONING DECISION: deferred.
+--   No suitable partition column exists — response_value_as_date covers <0.1% of rows (sparse
+--   Special Functions questions only); ingestion-time _PARTITIONTIME forces unnatural query
+--   filters. Estimated compressed table size at 200k participants: ~2–3 GB. BigQuery
+--   partitioning yields its biggest gains above ~1 TB; clustering alone is sufficient now.
 --
---   FUTURE — partition by survey_completed_at DATE once response_sessions timestamps are pulled
---   from the participants table (#5 in docs/enhancement_backlog.md). Partition by DATE +
---   retain the clustering — BigQuery's recommended pattern for large event/observation tables.
+-- FUTURE: once survey_completed_at DATE is available from the participants table (backlog §5),
+--   add DATE partitioning and retain the clustering:
+--   PARTITION BY survey_completed_at
+--   CLUSTER BY (secondary_source_concept_id, question_concept_id, connect_id)
+--   This requires a one-time table recreate at that point.
+--
+-- NOTE: clustering must be applied before the first production load (cannot be added
+--   retroactively). Add OPTIONS(...) to the CREATE TABLE before that load.
 
 CREATE TABLE IF NOT EXISTS `nih-nci-dceg-connect-stg-5519.relational.responses` (
   connect_id STRING,

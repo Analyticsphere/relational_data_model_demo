@@ -24,23 +24,39 @@ fact stays immutable; enhancements are overlays, attributes, or downstream layer
 
 ## The backlog (ordered roughly by value-to-cost)
 
-### 0. Clustering (and future partitioning) for the `responses` table  *(pre-production must-do)*
-- **What:** at 200k participants the `responses` table is ~55M rows (~110M at full cohort). Without
-  clustering every query scans the full table. Recommended clustering key:
-  `(secondary_source_concept_id, question_concept_id, connect_id)`.
-  - `secondary_source_concept_id` first — most queries filter by survey; 10 surveys → ~10% initial pruning.
-  - `question_concept_id` second — within a survey queries are almost always question-specific; ~3,240
-    unique concepts, highly selective.
-  - `connect_id` third — participant and cohort lookups benefit from the remaining sort.
-  - **Estimated benefit:** 70–85% scan reduction for typical question-level and survey-level queries.
-- **Implementation:** add `OPTIONS(clustering_fields=["secondary_source_concept_id","question_concept_id","connect_id"])`
-  to the `CREATE TABLE` in `sql/unpivot_stage/00_responses_ddl.sql` (and update `scripts/setup_relational.py`
-  + `schemas/relational/responses.json`). Recreate the table and re-run the unpivot SQL.
-- **Future — partitioning:** once `response_sessions` timestamps are pulled from the `participants` table
-  (#5 below), add a `survey_completed_at DATE` partition column. Use DATE partition + retain the clustering
-  — BigQuery's recommended pattern for large observation/event tables.
-- **Cost:** very low to implement. Must be done before the table is loaded at production scale (clustering
-  cannot be added retroactively without recreating the table).
+### 0. Clustering for the `responses` table  *(decided; must apply before production load)*
+
+**Decision:** cluster by `(secondary_source_concept_id, question_concept_id, connect_id)`.
+**Partitioning:** deferred — no suitable partition column exists yet; clustering alone is sufficient
+at current and near-term projected scale (see rationale below).
+
+**Key order rationale:**
+- `secondary_source_concept_id` first — the dominant filter in analytical queries is survey scope;
+  10 surveys → ~10% initial pruning per cluster block.
+- `question_concept_id` second — within a survey, analyses are almost always question-specific
+  ("distribution of answers to Q"); ~3,240 unique concepts, highly selective.
+- `connect_id` third — participant lookups and cohort-level self-joins benefit from the remaining sort.
+- **Estimated benefit:** 70–85% scan reduction for typical question-level and survey-level queries.
+
+**Why not partition now:**
+- No suitable partition column exists. `response_value_as_date` covers only 0.09% of rows (sparse
+  Special Functions questions). Ingestion-time `_PARTITIONTIME` would work but forces unnatural
+  `WHERE _PARTITIONTIME BETWEEN...` filters on every analytical query.
+- Estimated compressed table size at 200k participants: ~2–3 GB. BigQuery partitioning yields its
+  biggest gains above ~1 TB; below that, clustering alone provides comparable scan reduction with
+  less operational overhead.
+- Clustering cannot be added retroactively without recreating the table — it must be applied before
+  the first production load.
+
+**Future — partitioning:** once `response_sessions` timestamps are available from the participants
+table (backlog §5), add `survey_completed_at DATE` as a partition column and retain the clustering.
+`PARTITION BY survey_completed_at CLUSTER BY (secondary_source_concept_id, question_concept_id, connect_id)`
+is BigQuery's recommended pattern for large observation/event tables. This requires a one-time
+table recreate at that point.
+
+**Implementation:** add `OPTIONS(clustering_fields=["secondary_source_concept_id","question_concept_id","connect_id"])`
+to the `CREATE TABLE` in `sql/unpivot_stage/00_responses_ddl.sql` (and `scripts/setup_relational.py`
++ `schemas/relational/responses.json`) before the production load.
 
 ### 1. Normalized question-type view  *(smallest, highest bang-for-buck)*
 - **What:** one derived view `question_type_norm` mapping the dictionary's messy `question_type` (partial
