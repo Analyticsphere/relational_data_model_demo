@@ -78,9 +78,14 @@ table (backlog §5), add `survey_completed_at DATE` as a partition column and re
 is BigQuery's recommended pattern for large observation/event tables. This requires a one-time
 table recreate at that point.
 
-**Implementation:** add `OPTIONS(clustering_fields=["secondary_source_concept_id","question_concept_id","connect_id"])`
-to the `CREATE TABLE` in `sql/unpivot_stage/00_responses_ddl.sql` (and `scripts/setup_relational.py`
-+ `schemas/relational/responses.json`) before the production load.
+**Implementation:** clustering is already applied in `sql/unpivot_stage/00_responses_ddl.sql` and
+`scripts/setup_relational.py` — the production load uses these same scripts.
+
+**Benchmark:** `sql/benchmark/clustering_benchmark.sql` contains five representative query shapes
+run against a paired clustered vs. non-clustered copy of the responses table, with an
+`INFORMATION_SCHEMA.JOBS` analysis query to compute per-shape scan reduction ratios. Run this
+at the first production load to validate the estimated 70–85% reduction. Not meaningful to run
+in stage (82k rows fits in one cluster block regardless of clustering).
 
 ### 1. Normalized question-type view  *(smallest, highest bang-for-buck)*
 - **What:** one derived view `question_type_norm` mapping the dictionary's messy `question_type` (partial
