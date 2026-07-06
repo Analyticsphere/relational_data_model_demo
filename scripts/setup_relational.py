@@ -112,12 +112,13 @@ def create_responses_table(client, bq, project):
     table_ref = f"{project}.{DATASET}.responses"
     schema = load_schema_json("responses")
     table = bq.Table(table_ref, schema=schema)
+    table.clustering_fields = ["secondary_source_concept_id", "question_concept_id", "connect_id"]
     try:
         client.get_table(table_ref)
         print(f"  responses table already exists — skipping creation")
     except Exception:
         client.create_table(table)
-        print(f"  created table {table_ref}")
+        print(f"  created table {table_ref} (clustered by secondary_source_concept_id, question_concept_id, connect_id)")
 
 
 def create_colmap_view(client, bq, project):

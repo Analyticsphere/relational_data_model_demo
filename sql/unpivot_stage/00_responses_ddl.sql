@@ -43,7 +43,8 @@ CREATE TABLE IF NOT EXISTS `nih-nci-dceg-connect-stg-5519.relational.responses` 
   response_value_as_date DATE,                  -- date answer (ISO YYYY-MM-DD); populated by type step
   source_table STRING,
   source_column STRING
-);
+)
+CLUSTER BY secondary_source_concept_id, question_concept_id, connect_id;
 
 -- colmap: a clean-named view over the loaded column->placement mapping. Load the mapping first, e.g.
 --   bq load --autodetect --source_format=CSV relational.survey_columns_clean_mapped \
