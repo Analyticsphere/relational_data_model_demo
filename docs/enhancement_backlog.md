@@ -26,6 +26,28 @@ fact stays immutable; enhancements are overlays, attributes, or downstream layer
 
 ### 0. Clustering for the `responses` table  *(decided; must apply before production load)*
 
+**Background — partitioning vs. clustering:**
+
+*Partitioning* divides a table into physically separate segments based on the values of one column
+(typically a date). When a query filters on that column, BigQuery reads only the matching segments
+and skips the rest entirely — it never touches the other partitions. This is the most powerful form
+of scan reduction, but it requires a high-quality partition column: ideally a date that is both
+present on most rows and commonly used as a query filter.
+
+*Clustering* sorts the data within the table (or within each partition) by up to four columns.
+BigQuery records the min/max value range for each cluster block and uses those ranges to skip blocks
+that cannot match a query's WHERE clause — similar in spirit to a database index. Unlike
+partitioning, clustering works on any column type and doesn't require a restructure of the physical
+storage into separate segments; it's an ordering hint that BigQuery maintains automatically as data
+is loaded. The trade-off is that skipping is probabilistic and proportional — clustering gives
+70–85% scan reduction for selective queries, whereas a partition filter can eliminate 90%+ in one
+step.
+
+For the `responses` table, clustering is the right current tool because no reliable, commonly-filtered
+date column exists yet. The cluster key `(secondary_source_concept_id, question_concept_id, connect_id)`
+mirrors the most common query shape — "give me the distribution of answers to question Q in survey S"
+— so BigQuery can skip the vast majority of cluster blocks before reading a single row.
+
 **Decision:** cluster by `(secondary_source_concept_id, question_concept_id, connect_id)`.
 **Partitioning:** deferred — no suitable partition column exists yet; clustering alone is sufficient
 at current and near-term projected scale (see rationale below).
