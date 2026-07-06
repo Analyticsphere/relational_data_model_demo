@@ -170,6 +170,14 @@ in stage (82k rows fits in one cluster block regardless of clustering).
 - **Attaches as:** separate event tables + a unified event view, coordinated with DevOps.
 - **Cost:** medium; depends on DevOps re-attaching concept IDs (see `docs/devops_event_tables_memo.md`).
   Event-plane sketch artifacts: `sql/data_model_events.sql`, `docs/connect_event_plane*.svg`.
+- **Note — operational nesting keys in `source_question`:** the `source_question` dimension is
+  populated from the full dictionary, which covers all Connect instruments including Study Manager
+  and Help Desk. Structural nesting keys for Participants Table operational variables (e.g.,
+  `292282660` = `"3 = Payment 3"`, identifying variables nested under the 3rd payment round) are
+  valid dictionary entries but look unusual because they use response-option-style labels as keys
+  (`"1 = Payment 1"`, `"2 = Payment 2"`, `"3 = Payment 3"`). These are inert in the current model
+  (zero `responses` rows reference them) but would become meaningful source questions if the event
+  plane is extended to cover Participants Table payment/incentive variables.
 
 ---
 
