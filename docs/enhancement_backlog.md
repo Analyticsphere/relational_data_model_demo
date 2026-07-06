@@ -27,6 +27,8 @@ fact stays immutable; enhancements are overlays, attributes, or downstream layer
 ### 0. Clustering for the `responses` table  *(decided; must apply before production load)*
 
 **Background — partitioning vs. clustering:**
+([BQ partitioned tables docs](https://cloud.google.com/bigquery/docs/partitioned-tables) |
+[BQ clustered tables docs](https://cloud.google.com/bigquery/docs/clustered-tables))
 
 *Partitioning* divides a table into physically separate segments based on the values of one column
 (typically a date). When a query filters on that column, BigQuery reads only the matching segments
