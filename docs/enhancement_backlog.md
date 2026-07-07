@@ -1,4 +1,4 @@
-# Incremental enhancements to the Connect Data Model
+Ca# Incremental enhancements to the Connect Data Model
 
 ## Decision (accepted)
 
@@ -95,6 +95,10 @@ in stage (82k rows fits in one cluster block regardless of clustering).
   abstraction" that makes analyses reusable across surveys.
 - **Attaches as:** a view over `question`; dictionary untouched underneath.
 - **Cost:** low. Already scoped in the README as the recommended first add-on.
+- **Analysis:** see [`docs/question_types_survey.md`](question_types_survey.md) for a full survey of all
+  raw `Question Type` values in the dictionary, Quest markup examples for each structural type, and a
+  proposed 8-value canonical enum with recommended modifier flags (`is_required`, `has_loop`,
+  `has_displayif`, `has_inline_text_box`).
 
 ### 2. Typed value columns on `responses`  *(in place)*
 - **What:** `response_value_as_string` (verbatim, always), `response_value_as_number`,
