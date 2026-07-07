@@ -126,6 +126,11 @@ in stage (82k rows fits in one cluster block regardless of clustering).
 - **Attaches as:** a `skip_logic` lookup keyed on the dictionary's concept IDs; needs a **Quest parser**
   (net-new; prototype on module1).
 - **Cost:** medium–high (the parser is real engineering; the complex tail needs the raw fallback).
+- **Analysis:** see [`docs/skip_logic_survey.md`](skip_logic_survey.md) for a full survey of all skip-logic
+  mechanisms in module1 (8 distinct mechanisms; 64% of questions have some form of skip logic), expression
+  complexity breakdown (97% parseable as structured rules), key trigger variables, and the critical
+  blocker: a Quest variable-name → concept-ID mapping table is required before rules can join the
+  `responses` fact.
 
 ### 5. `response_sessions` (survey administration + the missingness signal)
 - **What:** one row per participant × survey administration (status / start / complete / wave), **derived**
