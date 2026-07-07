@@ -117,6 +117,12 @@ in stage (82k rows fits in one cluster block regardless of clustering).
 - **Attaches as:** a `question_version` attribute (already on `responses`) + a version-scoped
   `response_options` lookup / status flags; optionally a lightweight deprecated→new response mapping.
 - **Cost:** medium. Needs the dictionary's V1/V2 columns + Quest to reconcile the offered sets.
+- **Analysis:** see [`docs/version_handling_survey.md`](version_handling_survey.md) for a full survey of
+  all versioning patterns. Key findings: 81% of survey variables are untouched `v1r0`; the remaining 19%
+  fall into four patterns — repeat administration (17 dancing pairs in stage requiring a wave index),
+  transparent minor revisions (351 `r`-increment variables), same-CID option-set changes (Pattern 3),
+  and new-CID concept replacements (Pattern 4, including the entire COVID-19 module). The biggest lift
+  is authoring `successor_cid` links for deprecated→replaced pairs — curation work, not schema work.
 
 ### 4. `skip_logic` (structured branching from Quest)
 - **What:** first-class rules `(trigger, operator, value, action, enable_behavior, trigger_default)` parsed
