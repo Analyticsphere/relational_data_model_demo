@@ -20,6 +20,24 @@ honest cost. Nothing here is committed; they are picked up one at a time when a 
 the dictionary + `responses` — it never replaces the dictionary, and it never rewrites `responses` (the
 fact stays immutable; enhancements are overlays, attributes, or downstream layers).
 
+## Shared dependencies (the critical path)
+
+A few building blocks are prerequisites for **several** enhancements — sequencing them first unblocks the
+most downstream value:
+
+- **Quest variable-name → concept-ID map** — Quest expresses structure with short names (`SEX`, `NUMSIB`);
+  the model keys on 9-digit concept IDs. Required to operationalize `skip_logic` (§4), and useful for
+  backfilling question types from Quest (§1) and reconciling version option-sets (§3). *This is the named
+  blocker for §4* (see `docs/skip_logic_survey.md` → "The Quest-name → concept-ID gap").
+- **`response_sessions` / wave index (§5)** — needed to disambiguate repeat administrations (§3 Pattern 1),
+  to reconstruct loop iterations and classify missingness (§4), and as the eventual source of a partition
+  column (§0). Foundational, and directly derivable from the participant status/timing triad.
+- **`concept_relationship` successor links (§6)** — needed to pool data across deprecated→replaced concepts
+  (§3 Pattern 4). The table is trivial; authoring authoritative links is the real work.
+
+A natural order, then: **sessions (§5) and the Quest-name map early** (they unblock §3/§4), then the
+**equivalence links (§6)** as curation capacity allows.
+
 ---
 
 ## The backlog (ordered roughly by value-to-cost)
@@ -116,6 +134,10 @@ in stage (82k rows fits in one cluster block regardless of clustering).
 - **Value:** removes the hand-`COALESCE` of parallel V1/V2 columns; makes pooled V1+V2 analysis correct.
 - **Attaches as:** a `question_version` attribute (already on `responses`) + a version-scoped
   `response_options` lookup / status flags; optionally a lightweight deprecated→new response mapping.
+- **Proposed `question`-dimension schema** (from the survey doc → "Proposed question dimension additions"):
+  `max_version`, `max_revision`, `status`, `deprecated_at`, `successor_cid` (FK → `question` for Pattern-4
+  replaced concepts), and `is_repeat_admin`; plus a `v_responses_current` view that routes deprecated
+  concepts to their successors via `successor_cid`. Tracked here so the schema change lives in one place.
 - **Cost:** medium. Needs the dictionary's V1/V2 columns + Quest to reconcile the offered sets.
 - **Analysis:** see [`docs/version_handling_survey.md`](version_handling_survey.md) for a full survey of
   all versioning patterns. Key findings: 81% of survey variables are untouched `v1r0`; the remaining 19%
