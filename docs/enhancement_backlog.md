@@ -169,6 +169,14 @@ in stage (82k rows fits in one cluster block regardless of clustering).
 - **Attaches as:** a `response_sessions` dimension keyed to `connect_id` + survey; `responses` can carry a
   `session_id` (optional) or join on `(connect_id, survey, wave)`.
 - **Cost:** medium. Directly derivable; pairs with #4 for full missingness classification.
+- **Feasibility & value:** see [`docs/session_derivation_survey.md`](session_derivation_survey.md). The
+  status/timing triad is present and uniform (**15/16 real surveys** have status + start + submit; the status
+  value set `0/1/2` is global) and derivable by a wide→long pivot of `participants`. **But this is the one
+  enhancement that deviates from the dictionary-driven grain** — so the doc recommends the *minimal* form
+  first: unpivot the status/timing concepts (they are themselves dictionary concepts) into `responses` for
+  **zero deviation**, and defer a standalone `response_sessions` dimension until `skip_logic` (§4) exists to
+  realize the missingness win. The **`wave` axis is weak for surveys** — follow-up rounds live in the event
+  plane (§9), not surveys.
 
 ### 6. Concept equivalence plane (`concept_relationship`)  *(demo already built)*
 - **What:** OMOP-style `concept_id_1, concept_id_2, relationship` links (e.g. `synonym`) so reused fields —
