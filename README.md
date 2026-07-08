@@ -149,7 +149,7 @@ a time when a concrete need pulls them in; none is committed. Full write-ups (va
 | # | Enhancement | What it adds | Value |
 |---|---|---|---|
 | 1 | **Normalized question-type view** | `question_type_norm` (clean `base_type` + flags) over `question` | templated per-type SQL across surveys (highest bang-for-buck) |
-| 2 | **Typed value columns** *(partly in place)* | `response_value_as_number` / `_as_concept_id` populated by a typing step | direct numeric analysis; coded answers join labels/option-sets |
+| 2 | **Typed value columns** *(in place)* | `response_value_as_number` / `_as_concept_id` / `_as_date`, routed from the verbatim string by value pattern | direct numeric/date analysis; coded answers join labels/option-sets |
 | 3 | **Improved version handling** | `_V2` revision as an attribute + version-scoped option sets | unify V1/V2 with `GROUP BY`; "offered vs. not-selected" is answerable |
 | 4 | **`skip_logic`** | structured branching rules parsed from Quest (+ raw fallback) | skip logic becomes queryable; most QA/QC rules generatable |
 | 5 | **`response_sessions`** | administration grain (status/timing/wave), derived from participant metadata | separates not-administered vs. not-answered vs. skipped (missingness) |

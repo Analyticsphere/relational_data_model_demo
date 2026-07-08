@@ -39,7 +39,7 @@ Nearly two-thirds of questions have conditional behaviour. Skip logic is not a s
 
 ---
 
-## The Five Skip-Logic Mechanisms
+## The Eight Skip-Logic Mechanisms
 
 ### 1. `displayif=` on a question (whole-question gating)
 

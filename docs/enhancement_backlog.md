@@ -1,4 +1,4 @@
-Ca# Incremental enhancements to the Connect Data Model
+# Incremental enhancements to the Connect Data Model
 
 ## Decision (accepted)
 
