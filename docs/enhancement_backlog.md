@@ -194,10 +194,19 @@ in stage (82k rows fits in one cluster block regardless of clustering).
 - **Value:** **external-release readiness** — per-sensitivity (PHI/PII) gating is effectively required before
   PR2 opens data to the research community. The Dictionary-Direct model alone is **not** externally
   release-ready without this.
-- **Attaches as:** a `sensitivity_tier` column (seeded from the dictionary `PII` flag with question→response
-  inheritance) + downstream tier products; enforcement stays in **BigQuery IAM**, not the tables.
+- **Attaches as:** a `sensitivity_tier` column (from a curated `sensitivity_taxonomy`, **not** the raw `PII`
+  flag) + downstream tier products; enforcement stays in **BigQuery IAM**, not the tables.
 - **Cost:** high — mostly **org/policy** (classification, date-shift design, cell-suppression thresholds,
   IRB sign-off), not schema. Start early; it's the long pole for external sharing.
+- **Feasibility & value:** see [`docs/governance_survey.md`](governance_survey.md). Findings: the `PII` flag
+  is **unmaintained** (447 `Yes`, 62% blank; misses **547/844** objective HIPAA direct identifiers), so
+  classify **objectively** — ~844 direct-identifier concepts (26%; **654 geo/address**), plus **655 free-text**
+  concepts as a cross-cutting risk, plus genetic/geospatial that live in *other* domains. **The long-format
+  model is highly amenable to enforcement:** sensitivity is a **row** property, so **~844 sensitive concepts
+  collapse to one denormalized `sensitivity_tier` + ~3 row-access policies**, versus **3,867 wide columns** to
+  policy-tag. Column-level security is reserved for the free-text value column; physical dataset isolation for
+  the top tier only; **policy tags for the wide marts (§8)**. The residual work is a curated
+  `sensitivity_taxonomy` + the org/policy pole (date-shift, cell-suppression, IRB).
 
 ### 8. Curated derived-variable marts (with dbt + lineage)
 - **What:** curated risk-factor variables (pack-years, BMI, MET-hours, screening-up-to-date, ADI, …) built
