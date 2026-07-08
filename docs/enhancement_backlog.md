@@ -28,7 +28,10 @@ most downstream value:
 - **Quest variable-name → concept-ID map** — Quest expresses structure with short names (`SEX`, `NUMSIB`);
   the model keys on 9-digit concept IDs. Required to operationalize `skip_logic` (§4), and useful for
   backfilling question types from Quest (§1) and reconciling version option-sets (§3). *This is the named
-  blocker for §4* (see `docs/skip_logic_survey.md` → "The Quest-name → concept-ID gap").
+  blocker for §4* — **investigated in [`docs/quest_concept_linkage_survey.md`](quest_concept_linkage_survey.md)**:
+  no stored short-name crosswalk exists, but the **compiled/deployed Quest markup is already concept-ID-based**,
+  so the fix is to parse that form (not the short-name authoring `.txt`) — reframing the blocker as *sourcing
+  the compiled markup*, not authoring a crosswalk.
 - **`response_sessions` / wave index (§5)** — needed to disambiguate repeat administrations (§3 Pattern 1),
   to reconstruct loop iterations and classify missingness (§4), and as the eventual source of a partition
   column (§0). Foundational, and directly derivable from the participant status/timing triad.
@@ -159,6 +162,13 @@ in stage (82k rows fits in one cluster block regardless of clustering).
   complexity breakdown (97% parseable as structured rules), key trigger variables, and the critical
   blocker: a Quest variable-name → concept-ID mapping table is required before rules can join the
   `responses` fact.
+- **The linkage blocker — investigated:** see [`docs/quest_concept_linkage_survey.md`](quest_concept_linkage_survey.md).
+  The Quest short-name (`MARITAL`, `SEX`) is a stored join key **nowhere** (not in `masterFile`'s 37 columns,
+  not in the per-concept JSONs); concept IDs are assigned by `Variable Name` + question text in
+  `episphere/conceptGithubActions`, and the **deployed markup is concept-ID-based** (`[D_<cid>]`). Heuristics
+  from the authoring `.txt` are weak (mnemonic 13%, text-match ~41%). **Resolution: parse the compiled
+  concept-ID-form markup** (triggers are already concept IDs → no name resolution needed), not the short-name
+  authoring source. This reframes the blocker from "author a crosswalk" to "source the compiled markup."
 
 ### 5. `response_sessions` (survey administration + the missingness signal)
 - **What:** one row per participant × survey administration (status / start / complete / wave), **derived**
