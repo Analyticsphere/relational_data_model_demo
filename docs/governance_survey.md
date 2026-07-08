@@ -41,6 +41,15 @@ objective HIPAA direct-identifier scan (§2):
 - **140** concepts are flagged `Yes` but are not obvious direct identifiers (health-sensitive, indirect, or
   over-flagged)
 
+**Question-level vs. response-level.** The CIDTool ERD allows the `PII` flag at **either the question or the
+response level** (a response with no own flag inherits its parent question's). In the data, though,
+response-level flagging is **almost unused**: PII varies across a question's response rows in only **2
+questions**, and just **6 response concepts** carry their own `Yes`. So the one mechanism that would capture
+"the coded answer is safe but *this option's* free text isn't" (§5) exists in the schema but is **not
+populated** — meaning sensitivity must be **authored at both the question and the response/companion grain**,
+and the model must resolve the **effective tier per response row** as `max(question_tier, response_tier)`,
+never inheriting "safe" from a benign parent.
+
 **Conclusion:** the flag is a useful *seed* but cannot be the control input. A maintained
 `sensitivity_taxonomy` (concept → tier) must be authored; the flag is one input to it, not the answer.
 
@@ -124,7 +133,20 @@ the mechanism that fits its shape.
 
 `response_value_as_string` is the audit-of-truth column and holds **every free-text answer**. A free-text
 value can contain an identifier regardless of how its *question* is classified — so it is not fully covered by
-row-level (question-based) classification. Options, in order of bluntness:
+row-level (question-based) classification.
+
+**The "Other — please describe" trap.** Much of the risk is *not* whole questions but the free-text companion
+of an otherwise-benign coded question: a select-all / multiple-choice item (non-PII) with an *"Other: please
+describe ___"* option whose text box can contain anything — a name, an address, a diagnosis. There are **142**
+such companion concepts (**118** free-text `Char`; e.g. the race/ethnicity *"None of these … please describe"*
+boxes). Two consequences: (1) **you cannot classify by the parent question** — the coded parent is
+`non_sensitive` while its companion is `free_text` (this is exactly the response-level granularity §1 shows the
+flag doesn't populate); and (2) **the long format helps here** — the companion is a *distinct
+`question_concept_id`*, i.e. a **separate row** in `responses` (the coded selection is one row; the free-text
+describe is another). So **row-level security drops the companion independently** while keeping the coded
+answer — *provided* the 142 companions are classified `free_text`. A concrete, enumerable classification task.
+
+Options for the free-text columns generally, in order of bluntness:
 
 1. **Classify all 655 free-text concepts as `free_text` sensitive** → RLS drops them below Sensitive tier
    (blunt, safe, loses usable free text).
@@ -176,6 +198,8 @@ column-classification decisions into one row attribute and a handful of policies
 | Direct identifiers the `PII` flag **misses** | 547 |
 | `PII=Yes` that aren't obvious direct identifiers | 140 |
 | Free-text (`Char`) concepts (cross-cutting risk) | 655 |
+| — of which "Other-specify" companions of benign coded questions | 142 (118 `Char`) |
+| Questions using response-level PII granularity (mechanism exists, ~unused) | 2 |
 | Age-related concepts (>89 HIPAA rule) | 321 |
 | Wide survey columns to classify (the RLS-vs-policy-tag contrast) | 3,867 → **1 tier column + ~3 policies** in long format |
 
