@@ -69,7 +69,7 @@ def codebox(s,code,left,top,width,height,size=12):
         r.font.color.rgb=CODECM if line.strip().startswith(("--","#")) else CODEFG
     return box
 
-A="docs/slide_assets/"
+A="docs/archive/slide_assets/"
 
 # 1 TITLE
 s=slide()
@@ -321,5 +321,5 @@ p=tf.paragraphs[0];r=p.add_run();r.text="The model is the accepted foundation.  
 r.font.size=Pt(18);r.font.bold=True;r.font.color.rgb=NAVY;r.font.name="Calibri"
 notes(s,"Ask: stand up the accepted model now; adopt enhancements incrementally (esp. governance #7 and dbt marts #8); consider pulling the concept-equivalence enhancement forward (geocoding). See internal_pitch.md — Recommendation.")
 
-out="docs/Connect_Data_Model_Pitch.pptx";prs.save(out)
+out="docs/archive/Connect_Data_Model_Pitch.pptx";prs.save(out)
 print("saved",out,"with",len(prs.slides._sldIdLst),"slides")

@@ -196,11 +196,11 @@ Stop encoding answers as columns; store them as **rows** in a long `responses` t
 
 ## The model — Dictionary-Direct
 
-<picture><source media="(prefers-color-scheme: dark)" srcset="connect_model_a_overview_dark.svg"><img alt="The model overview" src="connect_model_a_overview.svg"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../connect_model_a_overview_dark.svg"><img alt="The model overview" src="../connect_model_a_overview.svg"></picture>
 
 <details><summary>Full model (all columns) — the dictionary as-is, arranged like the CIDTool ERD, plus <code>responses</code></summary>
 
-<picture><source media="(prefers-color-scheme: dark)" srcset="connect_model_a_dark.svg"><img alt="The model — full ERD with all columns" src="connect_model_a.svg"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="../connect_model_a_dark.svg"><img alt="The model — full ERD with all columns" src="../connect_model_a.svg"></picture>
 
 </details>
 
