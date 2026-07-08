@@ -20,7 +20,7 @@ The relational model can be built from raw `Connect` or from `CleanConnect`. **C
 
 The transform's job is *reshaping* (wide → long), not *cleaning*. CleanConnect has already done the three things that make the reshape tractable and that we would otherwise re-implement from raw: (1) **merged survey versions** (`module1_v1` + `v2` → `module1`), (2) **converted binary 0/1 to concept IDs** on multi-selects, and (3) **standardized column names**. Building on it avoids duplicating that logic in two places.
 
-One guardrail: audit PR2's row-cleaning step to confirm it does not drop values researchers need; where it does, cherry-pick those fields from `Connect`. Every row stays traceable to its concept IDs regardless.
+Every fact row retains its `concept_id` + source table/column, so building on CleanConnect keeps full lineage back to raw `Connect`.
 
 The `schemas/` folder in this repository captures the BigQuery schemas at all three existing stages,
 stored per environment under `schemas/prod/` (production) and `schemas/stage/` (staging):
@@ -315,7 +315,6 @@ The model is grounded in the dictionary, Quest markup, and the BigQuery schemas,
 
 Open questions still being resolved (see design notes):
 
-- [ ] **Source-layer audit** — confirm CleanConnect's row-cleaning does not drop needed values
 - [ ] **First-run readiness** — stage schema/dataset names, one-row-per-participant per table, handling of the ~3% unmapped columns (see `sql/unpivot/`)
 - [ ] **Enhancement sequencing** — which extension is pulled first (governance is the long pole for external release; dbt marts deliver the most researcher value)
 
