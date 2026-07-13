@@ -15,8 +15,17 @@ DuckDB, never against prod.
 |---|---|---|
 | `mart_demographics.sql` | demographics | `education_cat`, `marital_status_cat`, `income_cat` (+ coded IDs) |
 | `mart_anthropometry.sql` | anthropometry | `height_*`, `weight`, `bmi_derived`, `bmi_category` |
+| `mart_smoking.sql` | smoking | base recodes (`smoker_status`, `cigs_lifetime`, `smoke_cigs_now`, `cigs_lasttime`) + derived `ever_smoker_override`, `cigarette_cats` (Never/Current/Former) |
 
-*(smoking, alcohol, and the multi-select race/ethnicity variables follow the same patterns and are TODO.)*
+**Complexity gradient (increasing):** demographics/anthropometry (clean recodes + one formula) → smoking
+(recodes + a multi-condition Never/Current/Former collapse, done on concept IDs) → **alcohol** (the hard one).
+
+*(TODO — `mart_alcohol`* and the multi-select *race/ethnicity* variables.)* Alcohol is qualitatively harder and
+needs the colleague's per-variable sign-off before transcription: it combines (a) a **multi-select** "types of
+alcohol" question → long-fact aggregation (`alc_beer/liquor/wine/other`, `alc_type_any`); (b) **quantification
+lookups** that map coded frequency/quantity answers to *numbers* (e.g. "2-3×/week" → 2.5) — these are **analyst
+decisions, not dictionary labels**, so they belong in an explicit lookup (an ideal **dbt seed** later, with its
+own lineage); (c) **computed** `beer_dwk`/`wine_dwk`/drinks-per-week + a multi-condition `alc_derived` status.
 
 ## Design: dictionary labels vs. hand-coded `CASE`
 
