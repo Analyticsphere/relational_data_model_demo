@@ -226,8 +226,16 @@ in stage (82k rows fits in one cluster block regardless of clustering).
 - **Attaches as:** dbt models reading the model as a `source` (one mart per construct); the model itself is
   never mutated.
 - **Cost:** high and ongoing — each mart is real epidemiological work + an owner + tests (not automatic).
-
-### 9. Event plane (DevOps long-format follow-up events)
+- **Feasibility & reference implementation:** see [`docs/marts_dbt_feasibility.md`](marts_dbt_feasibility.md).
+  `Analyticsphere/PR2-analyses` (`PR2_FinalDerivationsCode.rmd`) is the concrete seed — the finalized v0.1
+  derivations for Connect's first design paper: **28 variables** (demographics 11, alcohol 7, smoking 6,
+  anthropometry 3), all **row-level participant-grain recodes** (no aggregation) reading `FlatConnect`.
+  **Feasibility is high** — the work is `case_when`/`recode` (the dbt sweet spot), and the model *removes*
+  the hardest R plumbing (the hand-rolled v1/v2 merge, type coercion, `rowSums` indicator math, code→label
+  recodes → `response_options` joins). It's a **re-expression against `responses`, not a lift-and-shift**,
+  and the epi definitions need per-variable sign-off. Recommended: build dbt marts **in parallel**, reconcile
+  row-for-row against the `.rmd` as the oracle (so the paper isn't blocked); start with `mart_anthropometry`
+  (BMI) to prove model→typed-values→mart→tests→`dbt docs` lineage.
 - **What:** biospecimen/collection/kit/incentive/refusal events as **per-type long tables** keyed on
   `(connect_id, round)`, with **concept IDs re-attached** so events join the dictionary like surveys.
 - **Value:** the same long-format win for operational/follow-up data; a shared `round` ≈ survey session.
