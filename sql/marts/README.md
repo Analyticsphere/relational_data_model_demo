@@ -42,6 +42,27 @@ A recode falls into one of three shapes — only the third is hand-typed:
 Multi-select variables (e.g. race "select all") aren't a pivot-and-recode — they aggregate on the long fact
 (`COUNT(...) GROUP BY connect_id`); deferred to their own mart.
 
+### Note — multi-select complexity is a dictionary artifact (SATA-as-binary)
+
+A chunk of the `.rmd`'s complexity for **alcohol types and race** comes *not* from the analysis but from the
+dictionary quirk where a select-all-that-apply (SATA) question is **catalogued as N binary sub-"questions"**
+with synthetic Yes/No answers. E.g. "which types of alcohol?" (`447720598`) is exploded into
+`D_447720598_D_549079588` (beer), `..._896953195` (liquor), … — so the `.rmd` must read N indicator columns,
+`recode` each Yes/No, then recombine (`alc_type_any = any Yes`; `rowSums(race_cols)` to count checked races).
+
+- **The single-select / numeric marts here (demographics, anthropometry, most of smoking) are unaffected** —
+  they store one value, so they're clean `value → label`/formula recodes.
+- **The model is designed to erase this** (the "Source Question is overloaded" fix): a select-all becomes
+  **one `multi_select` question, options demoted to `response_options`, one `responses` row per *selected*
+  option** — so `alc_type_any` = `EXISTS(a row for question 447720598)`, `alc_beer` = `EXISTS(question
+  447720598, option 549079588)`, race count = `COUNT(DISTINCT response_value_as_concept_id) GROUP BY
+  connect_id`. No indicator columns, no `rowSums`.
+- **Caveat:** the current unpivot still *preserves* the binary representation (it faithfully unpivots
+  CleanConnect's columns), so a SATA option lands as its own `responses` row today. Realizing the
+  simplification needs the **select-all reclassification** applied first — in the unpivot or as a view over
+  `responses`. So `mart_alcohol` and the race mart should be written **model-native** (`EXISTS`/`COUNT` on the
+  long fact after that reclassification), **not** ported from the `.rmd`'s binary-column logic.
+
 Each view carries a **table description and per-column descriptions** (BigQuery `OPTIONS(description=…)`), so
 they surface in the BQ console (and later in `dbt docs`). The relational tables they read are likewise
 described in `schemas/relational/*.json` (applied by `scripts/setup_relational.py`).
