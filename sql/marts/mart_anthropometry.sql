@@ -7,7 +7,18 @@
 -- (feet + inches) nested under D_114314839; weight is standalone D_746012894. Zero values -> NULL,
 -- then BMI = weight_lb / height_in^2 * 703 (imperial), binned into the .rmd's 6 categories.
 
-CREATE OR REPLACE VIEW `${PROJECT}.marts.mart_anthropometry` AS
+CREATE OR REPLACE VIEW `${PROJECT}.marts.mart_anthropometry`(
+  connect_id               OPTIONS(description="Participant Connect ID"),
+  height_ft                OPTIONS(description="Reported height, feet component (D_114314839_D_340854069)"),
+  height_in                OPTIONS(description="Reported height, inches component (D_114314839_D_600462977)"),
+  weight                   OPTIONS(description="Reported weight in pounds (D_746012894)"),
+  height_combined_nozeroes OPTIONS(description="Total height in inches (feet*12 + inches); NULL if not > 0"),
+  weight_nozeroes          OPTIONS(description="Weight in pounds; NULL if not > 0"),
+  bmi_derived              OPTIONS(description="Derived BMI = weight_lb / height_in^2 * 703 (imperial)"),
+  bmi_category             OPTIONS(description="BMI category bin (Underweight / Normal / Overweight / Obesity I-III / Missing)")
+)
+OPTIONS(description="Participant-grain anthropometry (height, weight, BMI, BMI category) derived from the responses fact. First-pass BigQuery view (pre-dbt); BMI is a derived formula/bin, not a dictionary label. Transcribed from Analyticsphere/PR2-analyses — validate row-for-row before reporting use.")
+AS
 WITH pivoted AS (
   SELECT
     connect_id,

@@ -1,14 +1,18 @@
-[
-  {"name": "connect_id",                       "type": "STRING",  "mode": "NULLABLE", "description": "Participant Connect ID (10-digit integer stored as STRING to match CleanConnect source schema and avoid cast friction on joins)"},
-  {"name": "secondary_source_concept_id",      "type": "STRING",  "mode": "NULLABLE", "description": "Survey concept ID (stamped from the table via colmap)"},
-  {"name": "current_source_question_concept_id","type": "STRING", "mode": "NULLABLE", "description": "Grid / select-all parent concept ID; NULL if standalone question"},
-  {"name": "question_concept_id",              "type": "STRING",  "mode": "NULLABLE", "description": "Leaf question concept ID"},
-  {"name": "loop_instance",                    "type": "INTEGER", "mode": "NULLABLE", "description": "Loop instance index (_N suffix); 1 if not looped"},
-  {"name": "question_version",                 "type": "STRING",  "mode": "NULLABLE", "description": "Question/concept revision tag e.g. _v2; NULL if none"},
-  {"name": "response_value_as_string",         "type": "STRING",  "mode": "NULLABLE", "description": "Verbatim raw cell value — always populated (lossless source of truth)"},
-  {"name": "response_value_as_number",         "type": "FLOAT",   "mode": "NULLABLE", "description": "Numeric answer (Num/Year/count); populated by downstream type step"},
-  {"name": "response_value_as_concept_id",     "type": "STRING",  "mode": "NULLABLE", "description": "Coded answer concept ID (single/multi-select); populated by downstream type step"},
-  {"name": "response_value_as_date",           "type": "DATE",    "mode": "NULLABLE", "description": "Date answer (ISO YYYY-MM-DD); populated by downstream type step for Special Functions questions"},
-  {"name": "source_table",                     "type": "STRING",  "mode": "NULLABLE", "description": "Fully qualified source table e.g. CleanConnect.module1"},
-  {"name": "source_column",                    "type": "STRING",  "mode": "NULLABLE", "description": "Source column name in the CleanConnect table"}
-]
+{
+  "description": "Long/narrow fact - one row per answered survey cell (participant x question x loop instance x value), unpivoted from CleanConnect. The core of the Dictionary-Direct model; every row traces back to its source concept IDs and CleanConnect column.",
+  "fields":
+  [
+    {"name": "connect_id",                       "type": "STRING",  "mode": "NULLABLE", "description": "Participant Connect ID (10-digit integer stored as STRING to match CleanConnect source schema and avoid cast friction on joins)"},
+    {"name": "secondary_source_concept_id",      "type": "STRING",  "mode": "NULLABLE", "description": "Survey concept ID (stamped from the table via colmap)"},
+    {"name": "current_source_question_concept_id","type": "STRING", "mode": "NULLABLE", "description": "Grid / select-all parent concept ID; NULL if standalone question"},
+    {"name": "question_concept_id",              "type": "STRING",  "mode": "NULLABLE", "description": "Leaf question concept ID"},
+    {"name": "loop_instance",                    "type": "INTEGER", "mode": "NULLABLE", "description": "Loop instance index (_N suffix); 1 if not looped"},
+    {"name": "question_version",                 "type": "STRING",  "mode": "NULLABLE", "description": "Question/concept revision tag e.g. _v2; NULL if none"},
+    {"name": "response_value_as_string",         "type": "STRING",  "mode": "NULLABLE", "description": "Verbatim raw cell value — always populated (lossless source of truth)"},
+    {"name": "response_value_as_number",         "type": "FLOAT",   "mode": "NULLABLE", "description": "Numeric answer (Num/Year/count); populated by downstream type step"},
+    {"name": "response_value_as_concept_id",     "type": "STRING",  "mode": "NULLABLE", "description": "Coded answer concept ID (single/multi-select); populated by downstream type step"},
+    {"name": "response_value_as_date",           "type": "DATE",    "mode": "NULLABLE", "description": "Date answer (ISO YYYY-MM-DD); populated by downstream type step for Special Functions questions"},
+    {"name": "source_table",                     "type": "STRING",  "mode": "NULLABLE", "description": "Fully qualified source table e.g. CleanConnect.module1"},
+    {"name": "source_column",                    "type": "STRING",  "mode": "NULLABLE", "description": "Source column name in the CleanConnect table"}
+  ]
+}

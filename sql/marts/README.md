@@ -42,6 +42,10 @@ A recode falls into one of three shapes — only the third is hand-typed:
 Multi-select variables (e.g. race "select all") aren't a pivot-and-recode — they aggregate on the long fact
 (`COUNT(...) GROUP BY connect_id`); deferred to their own mart.
 
+Each view carries a **table description and per-column descriptions** (BigQuery `OPTIONS(description=…)`), so
+they surface in the BQ console (and later in `dbt docs`). The relational tables they read are likewise
+described in `schemas/relational/*.json` (applied by `scripts/setup_relational.py`).
+
 ## Run / rework
 
 - Substitute `${PROJECT}` and ensure `relational.responses` + the `relational.response` dictionary dim are

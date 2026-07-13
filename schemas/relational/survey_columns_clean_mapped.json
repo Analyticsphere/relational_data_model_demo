@@ -1,18 +1,22 @@
-[
-  {"name": "layer",                       "type": "STRING",  "mode": "NULLABLE", "description": "Source layer (e.g. CleanConnect)"},
-  {"name": "table",                       "type": "STRING",  "mode": "NULLABLE", "description": "Survey table name (e.g. module1)"},
-  {"name": "column",                      "type": "STRING",  "mode": "NULLABLE", "description": "Source column name in CleanConnect"},
-  {"name": "n_concepts",                  "type": "INTEGER", "mode": "NULLABLE", "description": "Number of concept IDs in the column name path"},
-  {"name": "concept_ids",                 "type": "STRING",  "mode": "NULLABLE", "description": "Ordered 9-digit concept IDs, semicolon-joined"},
-  {"name": "loop_number",                 "type": "INTEGER", "mode": "NULLABLE", "description": "Loop instance index (NULL if not looped)"},
-  {"name": "version_tag",                 "type": "STRING",  "mode": "NULLABLE", "description": "Version suffix e.g. _v2 (NULL if none)"},
-  {"name": "nonconforming_tokens",        "type": "STRING",  "mode": "NULLABLE", "description": "Tokens not matching CID/loop/version conventions"},
-  {"name": "primary_source_concept_id",   "type": "STRING",  "mode": "NULLABLE", "description": "9-digit concept ID for the Primary Source (Survey / Biospecimen / ...)"},
-  {"name": "secondary_source_concept_id", "type": "STRING",  "mode": "NULLABLE", "description": "9-digit concept ID for the Secondary Source (the specific survey)"},
-  {"name": "source_question_concept_id",  "type": "STRING",  "mode": "NULLABLE", "description": "9-digit concept ID for the Source Question (grid/select-all parent; NULL if standalone)"},
-  {"name": "question_concept_id",         "type": "STRING",  "mode": "NULLABLE", "description": "9-digit concept ID for the leaf Question"},
-  {"name": "response_concept_id",         "type": "STRING",  "mode": "NULLABLE", "description": "9-digit concept ID for the Response option (NULL for free-text/numeric)"},
-  {"name": "leaf_role",                   "type": "STRING",  "mode": "NULLABLE", "description": "Role of the leaf concept in the dictionary (question / response / ...)"},
-  {"name": "question_in_dict",            "type": "BOOLEAN", "mode": "NULLABLE", "description": "True if the leaf question concept ID appears in the data dictionary"},
-  {"name": "secondary_source_match",      "type": "BOOLEAN", "mode": "NULLABLE", "description": "True if the stamped secondary source matches the dictionary entry"}
-]
+{
+  "description": "Column->dictionary placement mapping (the colmap source): each CleanConnect survey column parsed to its concept path (survey, source-question, question, loop, version). Drives the responses unpivot.",
+  "fields":
+  [
+    {"name": "layer",                       "type": "STRING",  "mode": "NULLABLE", "description": "Source layer (e.g. CleanConnect)"},
+    {"name": "table",                       "type": "STRING",  "mode": "NULLABLE", "description": "Survey table name (e.g. module1)"},
+    {"name": "column",                      "type": "STRING",  "mode": "NULLABLE", "description": "Source column name in CleanConnect"},
+    {"name": "n_concepts",                  "type": "INTEGER", "mode": "NULLABLE", "description": "Number of concept IDs in the column name path"},
+    {"name": "concept_ids",                 "type": "STRING",  "mode": "NULLABLE", "description": "Ordered 9-digit concept IDs, semicolon-joined"},
+    {"name": "loop_number",                 "type": "INTEGER", "mode": "NULLABLE", "description": "Loop instance index (NULL if not looped)"},
+    {"name": "version_tag",                 "type": "STRING",  "mode": "NULLABLE", "description": "Version suffix e.g. _v2 (NULL if none)"},
+    {"name": "nonconforming_tokens",        "type": "STRING",  "mode": "NULLABLE", "description": "Tokens not matching CID/loop/version conventions"},
+    {"name": "primary_source_concept_id",   "type": "STRING",  "mode": "NULLABLE", "description": "9-digit concept ID for the Primary Source (Survey / Biospecimen / ...)"},
+    {"name": "secondary_source_concept_id", "type": "STRING",  "mode": "NULLABLE", "description": "9-digit concept ID for the Secondary Source (the specific survey)"},
+    {"name": "source_question_concept_id",  "type": "STRING",  "mode": "NULLABLE", "description": "9-digit concept ID for the Source Question (grid/select-all parent; NULL if standalone)"},
+    {"name": "question_concept_id",         "type": "STRING",  "mode": "NULLABLE", "description": "9-digit concept ID for the leaf Question"},
+    {"name": "response_concept_id",         "type": "STRING",  "mode": "NULLABLE", "description": "9-digit concept ID for the Response option (NULL for free-text/numeric)"},
+    {"name": "leaf_role",                   "type": "STRING",  "mode": "NULLABLE", "description": "Role of the leaf concept in the dictionary (question / response / ...)"},
+    {"name": "question_in_dict",            "type": "BOOLEAN", "mode": "NULLABLE", "description": "True if the leaf question concept ID appears in the data dictionary"},
+    {"name": "secondary_source_match",      "type": "BOOLEAN", "mode": "NULLABLE", "description": "True if the stamped secondary source matches the dictionary entry"}
+  ]
+}

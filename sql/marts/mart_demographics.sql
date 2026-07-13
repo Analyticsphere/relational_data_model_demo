@@ -11,7 +11,17 @@
 -- The dictionary `current_format_value` is "N = Label" (e.g. "0 = Never married"); we expose both the raw
 -- value and a stripped label. Coded answers are read from `response_value_as_string` (always populated).
 
-CREATE OR REPLACE VIEW `${PROJECT}.marts.mart_demographics` AS
+CREATE OR REPLACE VIEW `${PROJECT}.marts.mart_demographics`(
+  connect_id         OPTIONS(description="Participant Connect ID"),
+  education_cid      OPTIONS(description="Education answer concept ID (coded; D_367803647_D_367803647)"),
+  marital_cid        OPTIONS(description="Marital status answer concept ID (coded; D_783167257)"),
+  income_cid         OPTIONS(description="Household income answer concept ID (coded; D_759004335)"),
+  education_cat      OPTIONS(description="Education category label from the dictionary response dim ('Missing' if unanswered)"),
+  marital_status_cat OPTIONS(description="Marital status category label from the dictionary response dim ('Missing' if unanswered)"),
+  income_cat         OPTIONS(description="Household income category label from the dictionary response dim ('Missing' if unanswered)")
+)
+OPTIONS(description="Participant-grain demographics (education, marital status, income) derived from the responses fact. First-pass BigQuery view (pre-dbt); labels sourced from the dictionary. Transcribed from Analyticsphere/PR2-analyses — validate row-for-row before reporting use.")
+AS
 WITH pivoted AS (
   SELECT
     connect_id,

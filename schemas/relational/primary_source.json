@@ -1,4 +1,8 @@
-[
-  {"name": "primary_source_concept_id", "type": "STRING", "mode": "NULLABLE", "description": "9-digit concept ID for the Primary Source (e.g. Survey, Biospecimen)"},
-  {"name": "primary_source",            "type": "STRING", "mode": "NULLABLE", "description": "Human-readable Primary Source label"}
-]
+{
+  "description": "Dictionary Primary Source (domain) dimension - one row per domain concept (Survey, Recruitment, Biospecimen, ...). Generated from the data dictionary / CIDTool.",
+  "fields":
+  [
+    {"name": "primary_source_concept_id", "type": "STRING", "mode": "NULLABLE", "description": "9-digit concept ID for the Primary Source (e.g. Survey, Biospecimen)"},
+    {"name": "primary_source",            "type": "STRING", "mode": "NULLABLE", "description": "Human-readable Primary Source label"}
+  ]
+}

@@ -14,7 +14,21 @@
 --   smoke_cigs_now No 419415087 · rarely 299561721 · some-days 716761013 · everyday 804785430   [D_639684251]
 --   cigs_lasttime  past-month 317567178 · <1yr 484055234 · >1yr 802197176        [D_798549704]
 
-CREATE OR REPLACE VIEW `${PROJECT}.marts.mart_smoking` AS
+CREATE OR REPLACE VIEW `${PROJECT}.marts.mart_smoking`(
+  connect_id           OPTIONS(description="Participant Connect ID"),
+  smoker_status_cid    OPTIONS(description="Ever-smoked binary answer concept ID (D_947205597_D_712653855)"),
+  cigs_lifetime_cid    OPTIONS(description="Lifetime cigarettes answer concept ID (D_763164658)"),
+  smoke_cigs_now_cid   OPTIONS(description="Smokes cigarettes now answer concept ID (D_639684251)"),
+  cigs_lasttime_cid    OPTIONS(description="Last time smoked answer concept ID (D_798549704)"),
+  smoker_status        OPTIONS(description="Ever-smoked label from the dictionary response dim"),
+  cigs_lifetime        OPTIONS(description="Lifetime cigarettes label from the dictionary response dim"),
+  smoke_cigs_now       OPTIONS(description="Smokes now label from the dictionary response dim"),
+  cigs_lasttime        OPTIONS(description="Last time smoked label from the dictionary response dim"),
+  ever_smoker_override OPTIONS(description="Derived: 1 if lifetime >=100 cigs, 0 if <100, NULL otherwise"),
+  cigarette_cats       OPTIONS(description="Derived smoking status collapse: Never / Current / Former Smoker (evaluated on concept IDs)")
+)
+OPTIONS(description="Participant-grain smoking variables derived from the responses fact: base recodes (labels from the dictionary) plus derived ever_smoker_override and the Never/Current/Former cigarette_cats collapse. First-pass BigQuery view (pre-dbt). Transcribed from Analyticsphere/PR2-analyses — validate row-for-row before reporting use.")
+AS
 WITH pivoted AS (
   SELECT
     connect_id,

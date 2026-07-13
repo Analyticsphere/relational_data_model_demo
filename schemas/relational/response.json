@@ -1,4 +1,8 @@
-[
-  {"name": "response_concept_id",   "type": "STRING", "mode": "NULLABLE", "description": "9-digit concept ID for the Response option"},
-  {"name": "current_format_value",  "type": "STRING", "mode": "NULLABLE", "description": "Human-readable response label / format value from the dictionary"}
-]
+{
+  "description": "Response option dimension - response concept ID -> current format/value label (the dictionary's coded-answer labels). Generated from the data dictionary / CIDTool.",
+  "fields":
+  [
+    {"name": "response_concept_id",   "type": "STRING", "mode": "NULLABLE", "description": "9-digit concept ID for the Response option"},
+    {"name": "current_format_value",  "type": "STRING", "mode": "NULLABLE", "description": "Human-readable response label / format value from the dictionary"}
+  ]
+}

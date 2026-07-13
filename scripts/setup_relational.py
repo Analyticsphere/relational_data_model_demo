@@ -50,6 +50,7 @@ def load_schema_json(name):
     if not path.exists():
         sys.exit(f"error: schema not found: {path}")
     raw = json.loads(path.read_text())
+    fields = raw["fields"] if isinstance(raw, dict) else raw   # object form carries a table description
     return [
         bigquery.SchemaField(
             name=f["name"],
@@ -57,8 +58,52 @@ def load_schema_json(name):
             mode=f.get("mode", "NULLABLE"),
             description=f.get("description", ""),
         )
-        for f in raw
+        for f in fields
     ]
+
+
+def load_table_description(name):
+    """Table-level description from schemas/relational/<name>.json (object form); '' if absent."""
+    path = SCHEMAS_DIR / f"{name}.json"
+    if not path.exists():
+        return ""
+    raw = json.loads(path.read_text())
+    return raw.get("description", "") if isinstance(raw, dict) else ""
+
+
+COLMAP_VIEW_DESCRIPTION = (
+    "Clean-named view over survey_columns_clean_mapped - the column->placement colmap "
+    "(table_name, source_column -> survey / source-question / question / loop / version) the responses unpivot joins."
+)
+
+
+def apply_table_descriptions(client, bq, project, include_dims):
+    """Set BQ table/view descriptions from the schema JSON (idempotent — only updates when changed)."""
+    from google.cloud.exceptions import NotFound
+    targets = [("responses", "responses"),
+               ("survey_columns_clean_mapped", "survey_columns_clean_mapped")]
+    if include_dims:
+        targets += [(t, t) for t, _ in DIM_TABLES]
+    for tbl, schema_name in targets:
+        desc = load_table_description(schema_name)
+        if not desc:
+            continue
+        try:
+            t = client.get_table(f"{project}.{DATASET}.{tbl}")
+        except NotFound:
+            continue
+        if t.description != desc:
+            t.description = desc
+            client.update_table(t, ["description"])
+            print(f"  described {tbl}")
+    try:  # colmap view has no schema file
+        v = client.get_table(f"{project}.{DATASET}.colmap")
+        if v.description != COLMAP_VIEW_DESCRIPTION:
+            v.description = COLMAP_VIEW_DESCRIPTION
+            client.update_table(v, ["description"])
+            print("  described colmap")
+    except NotFound:
+        pass
 
 
 def ensure_dataset(client, bq, project):
@@ -222,6 +267,9 @@ def main():
     if args.dims:
         print("5. Loading dimension tables...")
         load_dim_tables(client, bq, args.project, args.dims_dir)
+
+    print("6. Applying table descriptions...")
+    apply_table_descriptions(client, bq, args.project, args.dims)
 
     print("\ndone. Run sql/unpivot_stage/unpivot_*.sql to populate responses,")
     print("      then sql/unpivot_stage/type_response_values.sql to populate typed value columns.")

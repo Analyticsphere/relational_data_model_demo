@@ -1,7 +1,11 @@
-[
-  {"name": "question_concept_id",              "type": "STRING", "mode": "NULLABLE", "description": "9-digit concept ID for the Question"},
-  {"name": "current_question_text",            "type": "STRING", "mode": "NULLABLE", "description": "Human-readable question text (current version)"},
-  {"name": "question_type",                    "type": "STRING", "mode": "NULLABLE", "description": "Answer type from the dictionary (e.g. Single, Multiple, Num, Text)"},
-  {"name": "secondary_source_concept_id",      "type": "STRING", "mode": "NULLABLE", "description": "FK to secondary_source (one representative placement; see AGENTS.md caveat)"},
-  {"name": "current_source_question_concept_id","type": "STRING", "mode": "NULLABLE", "description": "FK to source_question; NULL if standalone question"}
-]
+{
+  "description": "Question concept dimension (reusable concept bank) - one row per question concept, with current question text and type. Generated from the data dictionary / CIDTool.",
+  "fields":
+  [
+    {"name": "question_concept_id",              "type": "STRING", "mode": "NULLABLE", "description": "9-digit concept ID for the Question"},
+    {"name": "current_question_text",            "type": "STRING", "mode": "NULLABLE", "description": "Human-readable question text (current version)"},
+    {"name": "question_type",                    "type": "STRING", "mode": "NULLABLE", "description": "Answer type from the dictionary (e.g. Single, Multiple, Num, Text)"},
+    {"name": "secondary_source_concept_id",      "type": "STRING", "mode": "NULLABLE", "description": "FK to secondary_source (one representative placement; see AGENTS.md caveat)"},
+    {"name": "current_source_question_concept_id","type": "STRING", "mode": "NULLABLE", "description": "FK to source_question; NULL if standalone question"}
+  ]
+}

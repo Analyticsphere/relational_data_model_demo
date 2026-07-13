@@ -1,5 +1,9 @@
-[
-  {"name": "secondary_source_concept_id", "type": "STRING", "mode": "NULLABLE", "description": "9-digit concept ID for the Secondary Source (the specific survey/instrument)"},
-  {"name": "secondary_source",            "type": "STRING", "mode": "NULLABLE", "description": "Human-readable Secondary Source label"},
-  {"name": "primary_source_concept_id",   "type": "STRING", "mode": "NULLABLE", "description": "FK to primary_source"}
-]
+{
+  "description": "Dictionary Secondary Source dimension - one row per survey instrument/section concept; FK to primary_source (domain). Generated from the data dictionary / CIDTool.",
+  "fields":
+  [
+    {"name": "secondary_source_concept_id", "type": "STRING", "mode": "NULLABLE", "description": "9-digit concept ID for the Secondary Source (the specific survey/instrument)"},
+    {"name": "secondary_source",            "type": "STRING", "mode": "NULLABLE", "description": "Human-readable Secondary Source label"},
+    {"name": "primary_source_concept_id",   "type": "STRING", "mode": "NULLABLE", "description": "FK to primary_source"}
+  ]
+}
