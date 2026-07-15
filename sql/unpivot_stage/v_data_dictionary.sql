@@ -27,4 +27,10 @@ LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.source_question` sq
 LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.question_response` qr
   ON qr.question_concept_id = q.question_concept_id
 LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.response` r
-  ON r.response_concept_id = qr.response_concept_id;
+  ON r.response_concept_id = qr.response_concept_id
+ORDER BY
+  primary_source_concept_id,
+  secondary_source_concept_id,
+  current_source_question_concept_id NULLS FIRST,
+  question_concept_id,
+  response_concept_id NULLS FIRST;

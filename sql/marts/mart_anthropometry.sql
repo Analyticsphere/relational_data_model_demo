@@ -7,7 +7,7 @@
 -- (feet + inches) nested under D_114314839; weight is standalone D_746012894. Zero values -> NULL,
 -- then BMI = weight_lb / height_in^2 * 703 (imperial), binned into the .rmd's 6 categories.
 
-CREATE OR REPLACE VIEW `${PROJECT}.marts.mart_anthropometry`(
+CREATE OR REPLACE VIEW `nih-nci-dceg-connect-stg-5519.marts.mart_anthropometry`(
   connect_id               OPTIONS(description="Participant Connect ID"),
   height_ft                OPTIONS(description="Reported height, feet component (D_114314839_D_340854069)"),
   height_in                OPTIONS(description="Reported height, inches component (D_114314839_D_600462977)"),
@@ -30,7 +30,7 @@ WITH pivoted AS (
            SAFE_CAST(response_value_as_string AS FLOAT64), NULL)) AS height_in,  -- D_114314839_D_600462977
     MAX(IF(question_concept_id = '746012894',
            SAFE_CAST(response_value_as_string AS FLOAT64), NULL)) AS weight       -- D_746012894
-  FROM `${PROJECT}.relational.responses`
+  FROM `nih-nci-dceg-connect-stg-5519.relational.responses`
   GROUP BY connect_id
 ),
 sized AS (

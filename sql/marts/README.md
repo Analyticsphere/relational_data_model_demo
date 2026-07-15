@@ -67,10 +67,15 @@ Each view carries a **table description and per-column descriptions** (BigQuery 
 they surface in the BQ console (and later in `dbt docs`). The relational tables they read are likewise
 described in `schemas/relational/*.json` (applied by `scripts/setup_relational.py`).
 
+**Conventions:** coded columns are named `<x>_concept_id` and paired immediately with their label
+(`<x>_concept_id, <x>_cat`, …); derived variables (e.g. BMI category, cigarette_cats) come last. The views are
+**hardcoded to the stage project** (`nih-nci-dceg-connect-stg-5519`) so they're copy-paste runnable — swap the
+project for prod later (or parameterize when moved to dbt).
+
 ## Run / rework
 
-- Substitute `${PROJECT}` and ensure `relational.responses` + the `relational.response` dictionary dim are
-  loaded; the views write to a `marts` dataset.
+- Ensure `relational.responses` + the `relational.response` dictionary dim are loaded; the views write to the
+  `marts` dataset (currently in stage). Run each `.sql` as-is (already stage-qualified).
 - **Validate row-for-row against the `.rmd`** before any reporting use — the `.rmd` is the reference oracle.
 - Rework into dbt later: each view becomes a model with `ref()`/`source()`, tests (`bmi_derived > 0`,
   `accepted_values`), and `dbt docs` lineage.

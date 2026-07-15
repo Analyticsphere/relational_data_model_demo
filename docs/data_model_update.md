@@ -1,9 +1,12 @@
 # Connect Data Model — status update
 
-The **Dictionary-Direct** model (accepted) is standing up in the stage BigQuery project: the CIDTool data
-dictionary adopted as the source of truth, plus **one long-format `responses` fact** that everything joins to.
-Below are the objects currently defined, followed by example queries showing what they enable. Roadmap and
-open decisions live in [`enhancement_backlog.md`](enhancement_backlog.md).
+The **Dictionary-Direct** model (accepted) is standing up in the stage BigQuery project
+(`nih-nci-dceg-connect-stg-5519`): the CIDTool data dictionary adopted as the source of truth, plus **one
+long-format `responses` fact** that everything joins to. Below are the objects currently defined, followed by
+example queries showing what they enable. Roadmap and open decisions live in
+[`enhancement_backlog.md`](enhancement_backlog.md).
+
+> All example queries below are copy-paste runnable against the stage project.
 
 ---
 
@@ -22,7 +25,7 @@ open decisions live in [`enhancement_backlog.md`](enhancement_backlog.md).
 | `survey_columns_clean_mapped` | Staging / mapping | Column → dictionary placement mapping: each CleanConnect column parsed to its concept path (survey, source-question, question, loop, version). |
 | `colmap` | View (over the mapping) | Clean-named view of the column → placement mapping the `responses` unpivot joins on. |
 | `v_responses_enriched` | Convenience view | Pre-joins the dictionary onto `responses` so every answer row is self-describing — **zero joins for analysts**. |
-| `v_data_dictionary` | Convenience view | The dimensions denormalized back into a flat, data-dictionary-like row per question × allowed response. |
+| `v_data_dictionary` | Convenience view | The dimensions denormalized back into a flat, data-dictionary-like row per question × allowed response (deterministically ordered). |
 | `mart_demographics` | Mart (curated) | Participant-grain education / marital status / income (labels from the dictionary). |
 | `mart_anthropometry` | Mart (curated) | Participant-grain height / weight / BMI / BMI category. |
 | `mart_smoking` | Mart (curated) | Participant-grain smoking status, cigarette history, and derived Never/Current/Former category. |
@@ -39,8 +42,8 @@ No bespoke `CASE` per question, no knowing column names — swap one concept ID 
 
 ```sql
 SELECT o.current_format_value AS answer, COUNT(*) AS n
-FROM relational.responses r
-JOIN relational.response  o ON o.response_concept_id = r.response_value_as_concept_id
+FROM `nih-nci-dceg-connect-stg-5519.relational.responses` r
+JOIN `nih-nci-dceg-connect-stg-5519.relational.response`  o ON o.response_concept_id = r.response_value_as_concept_id
 WHERE r.question_concept_id = '108417657'   -- e.g. "How many times have you had a proctoscopy?"
 GROUP BY answer ORDER BY n DESC;
 ```
@@ -51,8 +54,8 @@ records that they mean the same thing **once, as data**, so one join gathers the
 
 ```sql
 SELECT r.connect_id, r.loop_instance, r.response_value_as_string AS street_name
-FROM relational.responses r
-JOIN relational.concept_relationship cr
+FROM `nih-nci-dceg-connect-stg-5519.relational.responses` r
+JOIN `nih-nci-dceg-connect-stg-5519.relational.concept_relationship` cr
   ON cr.concept_id_1 = r.question_concept_id AND cr.relationship = 'synonym'
 WHERE cr.concept_id_2 = '105043152';   -- the group's canonical "street name of residence" concept
 ```
@@ -62,13 +65,14 @@ A researcher reuses a vetted variable instead of re-deriving it; the mart's *def
 
 ```sql
 SELECT cigarette_cats, COUNT(*) AS n
-FROM marts.mart_smoking
+FROM `nih-nci-dceg-connect-stg-5519.marts.mart_smoking`
 GROUP BY cigarette_cats ORDER BY n DESC;
 ```
 
 ### 4. What a mart definition looks like (`mart_demographics`)
 Derived variables are just SQL over `responses`, with **labels pulled from the dictionary** (not hand-typed),
-so they can't drift. This is the recipe that dbt will later wrap with lineage + tests.
+so they can't drift. Columns pair each coded answer with its label. This is the recipe dbt will later wrap
+with lineage + tests.
 
 ```sql
 WITH pivoted AS (
@@ -76,21 +80,24 @@ WITH pivoted AS (
     connect_id,
     MAX(IF(question_concept_id = '367803647'
            AND current_source_question_concept_id = '367803647',
-           response_value_as_string, NULL)) AS education_cid,   -- D_367803647_D_367803647
-    MAX(IF(question_concept_id = '783167257', response_value_as_string, NULL)) AS marital_cid,   -- D_783167257
-    MAX(IF(question_concept_id = '759004335', response_value_as_string, NULL)) AS income_cid      -- D_759004335
-  FROM relational.responses
+           response_value_as_string, NULL)) AS education_concept_id,       -- D_367803647_D_367803647
+    MAX(IF(question_concept_id = '783167257', response_value_as_string, NULL)) AS marital_status_concept_id,  -- D_783167257
+    MAX(IF(question_concept_id = '759004335', response_value_as_string, NULL)) AS income_concept_id            -- D_759004335
+  FROM `nih-nci-dceg-connect-stg-5519.relational.responses`
   GROUP BY connect_id
 )
 SELECT
   p.connect_id,
+  p.education_concept_id,
   COALESCE(REGEXP_REPLACE(e.current_format_value, r'^\s*\d+\s*=\s*', ''), 'Missing') AS education_cat,
+  p.marital_status_concept_id,
   COALESCE(REGEXP_REPLACE(m.current_format_value, r'^\s*\d+\s*=\s*', ''), 'Missing') AS marital_status_cat,
+  p.income_concept_id,
   COALESCE(REGEXP_REPLACE(i.current_format_value, r'^\s*\d+\s*=\s*', ''), 'Missing') AS income_cat
 FROM pivoted p
-LEFT JOIN relational.response e ON e.response_concept_id = p.education_cid
-LEFT JOIN relational.response m ON m.response_concept_id = p.marital_cid
-LEFT JOIN relational.response i ON i.response_concept_id = p.income_cid;
+LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.response` e ON e.response_concept_id = p.education_concept_id
+LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.response` m ON m.response_concept_id = p.marital_status_concept_id
+LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.response` i ON i.response_concept_id = p.income_concept_id;
 ```
 
 ### 5. Zero joins for analysts (`v_responses_enriched`)
@@ -99,13 +106,24 @@ and response — self-describing, no joins to remember.
 
 ```sql
 SELECT connect_id, survey, question_text, response_label, response_value
-FROM relational.v_responses_enriched
+FROM `nih-nci-dceg-connect-stg-5519.relational.v_responses_enriched`
 WHERE question_concept_id = '108417657';
+```
+
+### 6. Browse the data dictionary (`v_data_dictionary`)
+The dictionary itself is a queryable, deterministically-ordered view — one row per question × allowed option.
+
+```sql
+SELECT question_concept_id, current_question_text, response_concept_id, current_format_value
+FROM `nih-nci-dceg-connect-stg-5519.relational.v_data_dictionary`
+WHERE secondary_source = 'Background and Overall Health'
+LIMIT 20;
 ```
 
 ---
 
-*Notes for the boss: the model is populated in **stage** (not production); marts and convenience views are a
-first pass pending validation (marts are checked row-for-row against the finalized PR2-analyses derivations).
-The next steps are the enhancement backlog — typed values, version handling, skip logic, sessions, governance,
-and reworking the marts into dbt for full lineage.*
+*Notes for the boss: the model is populated in **stage** (`nih-nci-dceg-connect-stg-5519`), not production.
+The `responses` fact, dimensions, `v_data_dictionary`/`v_responses_enriched` views, and the three marts are
+all queryable now. Marts are a first pass pending validation (checked row-for-row against the finalized
+PR2-analyses derivations). Next steps are the enhancement backlog — typed values, version handling, skip
+logic, sessions, governance — and reworking the marts into dbt for full lineage.*
