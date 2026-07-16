@@ -37,21 +37,38 @@ example queries showing what they enable. Roadmap and open decisions live in
 
 ## Example queries
 
-Each query is shown two ways — **SQL** and **R** (`DBI` + `dbplyr`). The dbplyr pipelines are **lazy**: nothing
-is sent to BigQuery until you pipe to `collect()`, and `show_query()` prints the SQL dbplyr generated (a handy
-bridge for SQL and R users alike). Set up the connection and lazy table handles once:
+Each query is shown three ways — **SQL**, **R** (`dbplyr`), and **Python** (`Ibis`). dbplyr and Ibis are the
+same idea in two languages: a **lazy, backend-portable** grammar of data manipulation that compiles to SQL, so
+the same code repoints from BigQuery to DuckDB / Postgres / Snowflake without a rewrite (nothing is
+BigQuery-specific). Nothing runs until you materialize — `collect()` in R, `.to_pandas()` (or interactive
+mode) in Python. Set up the connection and lazy table handles once:
 
 ```r
+# R — DBI + dbplyr
 library(DBI); library(dplyr); library(dbplyr)
 con <- dbConnect(bigrquery::bigquery(), project = "nih-nci-dceg-connect-stg-5519")
 
-# Lazy handles - no data is pulled until collect().
 responses         <- tbl(con, I("relational.responses"))
 response          <- tbl(con, I("relational.response"))
 concept_rel       <- tbl(con, I("relational.concept_relationship"))
 mart_smoking      <- tbl(con, I("relational.mart_smoking"))
 v_resp_enriched   <- tbl(con, I("relational.v_responses_enriched"))
 v_data_dictionary <- tbl(con, I("relational.v_data_dictionary"))
+```
+```python
+# Python — Ibis (cloud-agnostic; the same expressions run on any Ibis backend)
+import ibis
+from ibis import _                       # deferred column reference, like dplyr's bare names
+ibis.options.interactive = True          # print a preview, like dbplyr's lazy tibble
+
+con = ibis.bigquery.connect(project_id="nih-nci-dceg-connect-stg-5519", dataset_id="relational")
+
+responses         = con.table("responses")
+response          = con.table("response")
+concept_rel       = con.table("concept_relationship")
+mart_smoking      = con.table("mart_smoking")
+v_resp_enriched   = con.table("v_responses_enriched")
+v_data_dictionary = con.table("v_data_dictionary")
 ```
 
 ### 1. One generic query works for *any* question
@@ -68,6 +85,13 @@ GROUP BY answer ORDER BY n DESC;
 v_resp_enriched |>
   filter(question_concept_id == "108417657") |>
   count(answer = response_label, sort = TRUE)     # add |> collect() to run
+```
+```python
+(v_resp_enriched
+   .filter(_.question_concept_id == "108417657")
+   .group_by(answer=_.response_label)
+   .aggregate(n=_.count())
+   .order_by(_.n.desc()))                          # add .to_pandas() to run
 ```
 
 ### 2. Harmonize a reused field — one join instead of a 26-branch `CASE`
@@ -89,6 +113,14 @@ responses |>
   inner_join(street_of_residence, by = c("question_concept_id" = "concept_id_1")) |>
   transmute(connect_id, loop_instance, street_name = response_value_as_string)
 ```
+```python
+street_of_residence = concept_rel.filter(
+    (_.relationship == "synonym") & (_.concept_id_2 == "105043152"))
+
+(responses
+   .join(street_of_residence, responses.question_concept_id == street_of_residence.concept_id_1)
+   .select("connect_id", "loop_instance", street_name=_.response_value_as_string))
+```
 
 ### 3. A curated derived variable is one line
 A researcher reuses a vetted variable instead of re-deriving it.
@@ -98,9 +130,14 @@ SELECT cigarette_cats, COUNT(*) AS n
 FROM relational.mart_smoking
 GROUP BY cigarette_cats ORDER BY n DESC;
 ```
-
 ```r
 mart_smoking |> count(cigarette_cats, sort = TRUE)
+```
+```python
+(mart_smoking
+   .group_by("cigarette_cats")
+   .aggregate(n=_.count())
+   .order_by(_.n.desc()))
 ```
 
 ### 4. What a mart definition looks like (`mart_demographics`)
@@ -133,14 +170,22 @@ LEFT JOIN relational.response m ON m.response_concept_id = p.marital_status_conc
 LEFT JOIN relational.response i ON i.response_concept_id = p.income_concept_id;
 ```
 
-R users usually *consume* the finished mart (like #3) rather than re-author it. And an ad-hoc labeled recode is
-itself a short dplyr pipeline — a labeled distribution for any question is just a join to the dictionary:
+R/Python users usually *consume* the finished mart (like #3) rather than re-author it. And an ad-hoc labeled
+recode is itself a short pipeline — a labeled distribution for any question is just a join to the dictionary:
 
 ```r
 responses |>
   filter(question_concept_id == "367803647") |> # education
   inner_join(response, by = c("response_value_as_string" = "response_concept_id")) |>
   count(education = current_format_value, sort = TRUE)
+```
+```python
+(responses
+   .filter(_.question_concept_id == "367803647")                       # education
+   .join(response, responses.response_value_as_string == response.response_concept_id)
+   .group_by(education=_.current_format_value)
+   .aggregate(n=_.count())
+   .order_by(_.n.desc()))
 ```
 
 ### 5. Zero joins for analysts (`v_responses_enriched`)
@@ -157,9 +202,14 @@ v_resp_enriched |>
   filter(question_concept_id == "108417657") |>
   select(connect_id, survey, question_text, response_label, response_value_as_string)
 ```
+```python
+(v_resp_enriched
+   .filter(_.question_concept_id == "108417657")
+   .select("connect_id", "survey", "question_text", "response_label", "response_value_as_string"))
+```
 
 ### 6. Browse the data dictionary (`v_data_dictionary`)
-The dictionary itself is a queryable, deterministically-ordered view — one row per question x allowed option.
+The dictionary itself is a queryable, deterministically-ordered view — one row per question × allowed option.
 
 ```sql
 SELECT question_concept_id, current_question_text, response_concept_id, current_format_value
@@ -172,6 +222,12 @@ v_data_dictionary |>
   filter(secondary_source == "Background and Overall Health") |>
   select(question_concept_id, current_question_text, response_concept_id, current_format_value) |>
   head(20)
+```
+```python
+(v_data_dictionary
+   .filter(_.secondary_source == "Background and Overall Health")
+   .select("question_concept_id", "current_question_text", "response_concept_id", "current_format_value")
+   .limit(20))
 ```
 
 ---
