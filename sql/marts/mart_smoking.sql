@@ -44,13 +44,13 @@ WITH pivoted AS (
 SELECT
   p.connect_id,
   p.smoker_status_concept_id,
-  COALESCE(REGEXP_REPLACE(ss.current_format_value, r'^\s*\d+\s*=\s*', ''), 'Missing / Skipped') AS smoker_status,
+  COALESCE(ss.current_format_value, 'Missing / Skipped') AS smoker_status,
   p.cigs_lifetime_concept_id,
-  COALESCE(REGEXP_REPLACE(cl.current_format_value, r'^\s*\d+\s*=\s*', ''), 'Missing / Skipped') AS cigs_lifetime,
+  COALESCE(cl.current_format_value, 'Missing / Skipped') AS cigs_lifetime,
   p.smoke_cigs_now_concept_id,
-  COALESCE(REGEXP_REPLACE(cn.current_format_value, r'^\s*\d+\s*=\s*', ''), 'Missing / Skipped') AS smoke_cigs_now,
+  COALESCE(cn.current_format_value, 'Missing / Skipped') AS smoke_cigs_now,
   p.cigs_lasttime_concept_id,
-  COALESCE(REGEXP_REPLACE(lt.current_format_value, r'^\s*\d+\s*=\s*', ''), 'Missing / Skipped') AS cigs_lasttime,
+  COALESCE(lt.current_format_value, 'Missing / Skipped') AS cigs_lasttime,
 
   -- ever_smoker_override (derived): 100+ -> 1 ; <100 -> 0 ; else NULL
   CASE
