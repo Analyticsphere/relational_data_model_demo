@@ -15,22 +15,22 @@
 -- so other types ('maps_to', 'is_a', ...) can be added later.
 
 CREATE OR REPLACE TABLE _addr AS
-SELECT question_concept_id AS cid, current_question_text AS txt,
+SELECT question_concept_id AS cid, question_text AS txt,
   CASE
-    WHEN regexp_matches(lower(current_question_text), 'street.*name|full street')      THEN 'street_name'
-    WHEN regexp_matches(lower(current_question_text), 'street.*number|number.*street') THEN 'street_number'
-    WHEN regexp_matches(lower(current_question_text), 'apartment|apt|unit|suite')      THEN 'apartment'
-    WHEN regexp_matches(lower(current_question_text), '\bcity\b|town')                 THEN 'city'
-    WHEN regexp_matches(lower(current_question_text), '\bstate\b|province')            THEN 'state'
-    WHEN regexp_matches(lower(current_question_text), 'zip|postal')                    THEN 'zip'
-    WHEN regexp_matches(lower(current_question_text), 'country')                       THEN 'country'
+    WHEN regexp_matches(lower(question_text), 'street.*name|full street')      THEN 'street_name'
+    WHEN regexp_matches(lower(question_text), 'street.*number|number.*street') THEN 'street_number'
+    WHEN regexp_matches(lower(question_text), 'apartment|apt|unit|suite')      THEN 'apartment'
+    WHEN regexp_matches(lower(question_text), '\bcity\b|town')                 THEN 'city'
+    WHEN regexp_matches(lower(question_text), '\bstate\b|province')            THEN 'state'
+    WHEN regexp_matches(lower(question_text), 'zip|postal')                    THEN 'zip'
+    WHEN regexp_matches(lower(question_text), 'country')                       THEN 'country'
   END AS component,
   CASE
-    WHEN regexp_matches(lower(current_question_text), 'employer|work') THEN 'work'
-    WHEN regexp_matches(lower(current_question_text), 'school')        THEN 'school'
+    WHEN regexp_matches(lower(question_text), 'employer|work') THEN 'work'
+    WHEN regexp_matches(lower(question_text), 'school')        THEN 'school'
     ELSE 'residence'
   END AS address_class
-FROM question WHERE current_question_text IS NOT NULL;
+FROM question WHERE question_text IS NOT NULL;
 DELETE FROM _addr WHERE component IS NULL;
 
 -- canonical = the lowest concept_id in each (component × address class) group
@@ -53,10 +53,10 @@ COPY (SELECT * FROM concept_relationship ORDER BY relationship_source, concept_i
 .print '=== synonym groups built (address component x class) ==='
 SELECT relationship_source, count(*) AS n_concepts FROM concept_relationship GROUP BY 1 ORDER BY n_concepts DESC;
 .print '=== demo: every "street name of RESIDENCE" concept, in one join (no 26-branch case_when) ==='
-SELECT q.question_concept_id, q.current_question_text
+SELECT q.question_concept_id, q.question_text
 FROM concept_relationship cr
 JOIN question q ON q.question_concept_id = cr.concept_id_1
 WHERE cr.relationship='synonym'
   AND cr.concept_id_2 = (SELECT concept_id_2 FROM concept_relationship
                          WHERE relationship_source = 'demo: address residence street_name (matched on question text)' LIMIT 1)
-ORDER BY q.current_question_text LIMIT 10;
+ORDER BY q.question_text LIMIT 10;

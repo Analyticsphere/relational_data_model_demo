@@ -4,7 +4,7 @@
   [
     {"name": "connect_id",                       "type": "STRING",  "mode": "NULLABLE", "description": "Participant Connect ID (10-digit integer stored as STRING to match CleanConnect source schema and avoid cast friction on joins)"},
     {"name": "secondary_source_concept_id",      "type": "STRING",  "mode": "NULLABLE", "description": "Survey concept ID (stamped from the table via colmap)"},
-    {"name": "current_source_question_concept_id","type": "STRING", "mode": "NULLABLE", "description": "Grid / select-all parent concept ID; NULL if standalone question"},
+    {"name": "source_question_concept_id","type": "STRING", "mode": "NULLABLE", "description": "Grid / select-all parent concept ID; NULL if standalone question"},
     {"name": "question_concept_id",              "type": "STRING",  "mode": "NULLABLE", "description": "Leaf question concept ID"},
     {"name": "loop_instance",                    "type": "INTEGER", "mode": "NULLABLE", "description": "Loop instance index (_N suffix); 1 if not looped"},
     {"name": "question_version",                 "type": "STRING",  "mode": "NULLABLE", "description": "Question/concept revision tag e.g. _v2; NULL if none"},

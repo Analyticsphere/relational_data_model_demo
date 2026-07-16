@@ -17,11 +17,11 @@ SELECT
   ps.primary_source         AS domain,
   ss.secondary_source       AS survey,
   sq.source_question_text   AS source_question,
-  q.current_question_text   AS question_text,
+  q.question_text,
   q.question_type,
   r.loop_instance,
   r.response_concept_id,
-  resp.current_format_value AS response_label,     -- the chosen answer, e.g. "1 = Yes"
+  resp.format_value AS response_label,     -- the chosen answer, e.g. "1 = Yes"
   r.value                   AS response_value,      -- free-text / numeric answers
   opt.response_option_set,                          -- the full offered menu for this question
   vm.pii,
@@ -30,14 +30,14 @@ SELECT
   -- keys + provenance kept for traceability
   r.question_concept_id,
   r.secondary_source_concept_id,
-  r.current_source_question_concept_id,
+  r.source_question_concept_id,
   r.source_table,
   r.source_column
 FROM responses r
 LEFT JOIN secondary_source  ss   ON ss.secondary_source_concept_id        = r.secondary_source_concept_id
 LEFT JOIN primary_source    ps   ON ps.primary_source_concept_id          = ss.primary_source_concept_id
 LEFT JOIN question          q    ON q.question_concept_id                 = r.question_concept_id
-LEFT JOIN source_question   sq   ON sq.current_source_question_concept_id = r.current_source_question_concept_id
+LEFT JOIN source_question   sq   ON sq.source_question_concept_id = r.source_question_concept_id
 LEFT JOIN response          resp ON resp.response_concept_id              = r.response_concept_id
 LEFT JOIN variable_metadata vm   ON vm.question_concept_id         = r.question_concept_id
                                 AND vm.secondary_source_concept_id = r.secondary_source_concept_id
@@ -48,7 +48,7 @@ LEFT JOIN variable_metadata vm   ON vm.question_concept_id         = r.question_
 -- (that arrives with the version-handling enhancement's response_options).
 LEFT JOIN (
   SELECT qr.question_concept_id,
-         STRING_AGG(o.current_format_value, '; ' ORDER BY qr.response_concept_id) AS response_option_set
+         STRING_AGG(o.format_value, '; ' ORDER BY qr.response_concept_id) AS response_option_set
   FROM question_response qr
   LEFT JOIN response o ON o.response_concept_id = qr.response_concept_id
   GROUP BY qr.question_concept_id

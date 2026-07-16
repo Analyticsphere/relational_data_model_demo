@@ -31,7 +31,7 @@
 CREATE TABLE IF NOT EXISTS `nih-nci-dceg-connect-stg-5519.relational.responses` (
   connect_id STRING,
   secondary_source_concept_id STRING,           -- the SURVEY (stamped from the table via colmap)
-  current_source_question_concept_id STRING,    -- grid / select-all parent; NULL if standalone
+  source_question_concept_id STRING,    -- grid / select-all parent; NULL if standalone
   question_concept_id STRING,
   loop_instance INT64,                          -- the _N loop suffix (1 if not looped)
   question_version STRING,                      -- the _v2 question/concept revision tag
@@ -55,7 +55,7 @@ SELECT
   `table`                    AS table_name,
   `column`                   AS source_column,
   secondary_source_concept_id,
-  NULLIF(source_question_concept_id, '') AS current_source_question_concept_id,  -- NULL = standalone question
+  NULLIF(source_question_concept_id, '') AS source_question_concept_id,  -- NULL = standalone question
   question_concept_id,
   COALESCE(SAFE_CAST(NULLIF(loop_number, '') AS INT64), 1) AS loop_instance,  -- default 1 when not looped
   NULLIF(version_tag, '')     AS question_version

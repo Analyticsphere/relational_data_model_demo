@@ -64,8 +64,8 @@ SELECT m.source_table, m.cols_mapped, IFNULL(p.cols_with_rows, 0) AS cols_with_r
 FROM mapped m LEFT JOIN produced p USING (source_table) ORDER BY cols_all_null DESC;
 
 -- 7. worked spot-check: tooth-loss select-all (899251483). Expect one row per participant per SELECTED
---    option — no binary 0/1 explosion. current_source_question_concept_id should be 899251483.
+--    option — no binary 0/1 explosion. source_question_concept_id should be 899251483.
 SELECT question_concept_id, question_version, COUNT(*) AS selections, COUNT(DISTINCT connect_id) AS participants
 FROM `${PROJECT}.${DATASET}.responses`
-WHERE current_source_question_concept_id = '899251483'
+WHERE source_question_concept_id = '899251483'
 GROUP BY 1, 2 ORDER BY 1, 2;

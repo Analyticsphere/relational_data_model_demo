@@ -7,10 +7,9 @@ erDiagram
     text primary_source
   }
   source_question {
-    int current_source_question_concept_id PK
+    int source_question_concept_id PK
     text source_question_text
-    text v1_source_question
-    text grid_source_question_name
+    text grid_name
   }
   secondary_source {
     int secondary_source_concept_id PK
@@ -19,14 +18,14 @@ erDiagram
   }
   question {
     int question_concept_id PK
-    int current_source_question_concept_id FK
+    int source_question_concept_id FK
     int secondary_source_concept_id FK
-    text current_question_text
+    text question_text
     text question_type
   }
   response {
     int response_concept_id PK
-    text current_format_value
+    text format_value
   }
   question_response {
     int question_concept_id PK
@@ -35,7 +34,7 @@ erDiagram
   variable_metadata {
     int primary_source_concept_id PK
     int secondary_source_concept_id PK
-    int current_source_question_concept_id PK
+    int source_question_concept_id PK
     int question_concept_id PK
     int response_concept_id PK
     text variable_label
@@ -52,7 +51,7 @@ erDiagram
     int connect_id
     int secondary_source_concept_id FK
     int question_concept_id FK
-    int current_source_question_concept_id FK
+    int source_question_concept_id FK
     int loop_instance
     int response_concept_id FK
     text value
@@ -61,16 +60,16 @@ erDiagram
   }
 
   primary_source   ||--o{ secondary_source  : primary_source_concept_id
-  source_question  ||--o{ question          : current_source_question_concept_id
+  source_question  ||--o{ question          : source_question_concept_id
   secondary_source ||--o{ question          : secondary_source_concept_id
   question         ||--o{ question_response : question_concept_id
   response         ||--o{ question_response : response_concept_id
   primary_source   ||--o{ variable_metadata : primary_source_concept_id
   secondary_source ||--o{ variable_metadata : secondary_source_concept_id
-  source_question  ||--o{ variable_metadata : current_source_question_concept_id
+  source_question  ||--o{ variable_metadata : source_question_concept_id
   question         ||--o{ variable_metadata : question_concept_id
   response         ||--o{ variable_metadata : response_concept_id
   secondary_source ||--o{ responses         : secondary_source_concept_id
   question         ||--o{ responses         : question_concept_id
-  source_question  ||--o{ responses         : current_source_question_concept_id
+  source_question  ||--o{ responses         : source_question_concept_id
   response         ||--o{ responses         : response_concept_id

@@ -22,16 +22,16 @@ UNION ALL SELECT 'question->secondary orphans', count(*)
   FROM question q LEFT JOIN secondary_source s USING(secondary_source_concept_id)
   WHERE q.secondary_source_concept_id IS NOT NULL AND s.secondary_source_concept_id IS NULL
 UNION ALL SELECT 'question->source_question orphans', count(*)
-  FROM question q LEFT JOIN source_question sq USING(current_source_question_concept_id)
-  WHERE q.current_source_question_concept_id IS NOT NULL AND sq.current_source_question_concept_id IS NULL
+  FROM question q LEFT JOIN source_question sq USING(source_question_concept_id)
+  WHERE q.source_question_concept_id IS NOT NULL AND sq.source_question_concept_id IS NULL
 UNION ALL SELECT 'question_response->question orphans', count(*)
   FROM question_response qr LEFT JOIN question q USING(question_concept_id) WHERE q.question_concept_id IS NULL
 UNION ALL SELECT 'question_response->response orphans', count(*)
   FROM question_response qr LEFT JOIN response r USING(response_concept_id) WHERE r.response_concept_id IS NULL;
 
 .print '=== 3. worked example: tooth-loss select-all 899251483 ==='
-SELECT q.question_concept_id, q.current_question_text, q.question_type
-FROM question q WHERE q.current_source_question_concept_id = '899251483' ORDER BY 1;
+SELECT q.question_concept_id, q.question_text, q.question_type
+FROM question q WHERE q.source_question_concept_id = '899251483' ORDER BY 1;
 
 .print '=== 4. source_question cross-check vs column-derived (output/survey_columns_clean_mapped.csv) ==='
 WITH col AS (
@@ -42,8 +42,8 @@ WITH col AS (
 per_q AS (SELECT question_concept_id, count(DISTINCT col_sq) AS n_parents FROM col GROUP BY 1)
 SELECT
   count(*) AS pairs_compared,
-  sum(CASE WHEN c.col_sq = q.current_source_question_concept_id THEN 1 ELSE 0 END) AS agree_all,
+  sum(CASE WHEN c.col_sq = q.source_question_concept_id THEN 1 ELSE 0 END) AS agree_all,
   sum(CASE WHEN p.n_parents = 1 THEN 1 ELSE 0 END) AS single_parent_pairs,
-  sum(CASE WHEN p.n_parents = 1 AND c.col_sq = q.current_source_question_concept_id THEN 1 ELSE 0 END) AS single_parent_agree,
+  sum(CASE WHEN p.n_parents = 1 AND c.col_sq = q.source_question_concept_id THEN 1 ELSE 0 END) AS single_parent_agree,
   count(DISTINCT CASE WHEN p.n_parents > 1 THEN c.question_concept_id END) AS reused_concepts
 FROM col c JOIN per_q p USING(question_concept_id) JOIN question q USING(question_concept_id);

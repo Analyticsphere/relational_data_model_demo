@@ -15,7 +15,7 @@ cells, so an **unanswered question produces no row** — the sparse long fact.
 - **Select-all / grid** → one row per checked option (no indicator-column explosion).
 - **Loops** → `_N` suffix becomes `loop_instance` (a value, not a column).
 - **Reused concepts** → the survey (`secondary_source_concept_id`) and grid/select-all parent
-  (`current_source_question_concept_id`) come from the colmap, i.e. *stamped from the table*, not guessed.
+  (`source_question_concept_id`) come from the colmap, i.e. *stamped from the table*, not guessed.
 
 The melt+join logic is verified on synthetic data (multi-select → multiple rows, NULLs dropped, loop
 carried) — the pattern, not the data.

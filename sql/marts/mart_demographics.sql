@@ -5,7 +5,7 @@
 -- (validate row-for-row against it before use).
 --
 -- DESIGN: pure code->label recodes JOIN the dictionary (`response` dim: response_concept_id ->
--- current_format_value, the dictionary's "N = value" label kept intact) instead of hand-typed CASE maps,
+-- format_value, the dictionary's "N = value" label kept intact) instead of hand-typed CASE maps,
 -- so labels can't drift. The number,value pairing is preserved (e.g. "3 = Married") on purpose.
 -- Column order pairs each coded answer with its label: <x>_concept_id, <x>_cat, ...
 -- Coded answers are read from `response_value_as_string` (always populated).
@@ -25,7 +25,7 @@ WITH pivoted AS (
   SELECT
     connect_id,
     MAX(IF(question_concept_id = '367803647'
-           AND current_source_question_concept_id = '367803647',
+           AND source_question_concept_id = '367803647',
            response_value_as_string, NULL)) AS education_concept_id,      -- D_367803647_D_367803647
     MAX(IF(question_concept_id = '783167257', response_value_as_string, NULL)) AS marital_status_concept_id,  -- D_783167257
     MAX(IF(question_concept_id = '759004335', response_value_as_string, NULL)) AS income_concept_id            -- D_759004335
@@ -35,11 +35,11 @@ WITH pivoted AS (
 SELECT
   p.connect_id,
   p.education_concept_id,
-  COALESCE(e.current_format_value, 'Missing') AS education_cat,
+  COALESCE(e.format_value, 'Missing') AS education_cat,
   p.marital_status_concept_id,
-  COALESCE(m.current_format_value, 'Missing') AS marital_status_cat,
+  COALESCE(m.format_value, 'Missing') AS marital_status_cat,
   p.income_concept_id,
-  COALESCE(i.current_format_value, 'Missing') AS income_cat
+  COALESCE(i.format_value, 'Missing') AS income_cat
 FROM pivoted p
 LEFT JOIN `${PROJECT}.relational.response` e ON e.response_concept_id = p.education_concept_id
 LEFT JOIN `${PROJECT}.relational.response` m ON m.response_concept_id = p.marital_status_concept_id

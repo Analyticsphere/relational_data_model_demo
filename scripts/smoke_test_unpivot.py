@@ -45,7 +45,7 @@ def main():
     con.execute(f"""
         CREATE VIEW colmap AS
         SELECT "column" AS source_column, secondary_source_concept_id,
-               NULLIF(source_question_concept_id,'') AS current_source_question_concept_id,
+               NULLIF(source_question_concept_id,'') AS source_question_concept_id,
                question_concept_id,
                COALESCE(TRY_CAST(NULLIF(loop_number,'') AS INTEGER), 1) AS loop_instance,
                NULLIF(version_tag,'')          AS question_version
@@ -69,7 +69,7 @@ def main():
     in_list = ", ".join(f'"{c}"' for c in cols)
     responses = con.execute(f"""
         SELECT u.Connect_ID AS connect_id, m.secondary_source_concept_id AS survey,
-               m.current_source_question_concept_id AS parent_sq, m.question_concept_id AS question,
+               m.source_question_concept_id AS parent_sq, m.question_concept_id AS question,
                m.loop_instance AS loop, m.question_version AS qver,
                u.value AS response_value_as_string, u.source_column
         FROM wide t

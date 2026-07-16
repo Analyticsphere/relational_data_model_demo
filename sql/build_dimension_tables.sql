@@ -16,7 +16,7 @@ CREATE OR REPLACE TABLE _raw AS
 SELECT row_number() OVER () AS rn,
   NULLIF(column02,'') AS prim_cid, NULLIF(column03,'') AS prim,
   NULLIF(column04,'') AS sec_cid,  NULLIF(column05,'') AS sec,
-  NULLIF(column06,'') AS sq_cid,   NULLIF(column07,'') AS sq_text, NULLIF(column09,'') AS sq_v1, NULLIF(column10,'') AS grid_name,
+  NULLIF(column06,'') AS sq_cid,   NULLIF(column07,'') AS sq_text, NULLIF(column10,'') AS grid_name,
   NULLIF(column13,'') AS q_cid,    NULLIF(column14,'') AS q_text,  NULLIF(column35,'') AS q_type,
   NULLIF(column22,'') AS resp_cid, NULLIF(column23,'') AS resp_fmt
 FROM read_csv('data_dictionary/masterFile.csv', header=false, all_varchar=true, skip=1,
@@ -30,7 +30,7 @@ SELECT rn,
   last_value(sec_cid  IGNORE NULLS) OVER w AS sec_cid_f,
   last_value(sec      IGNORE NULLS) OVER w AS sec_f,
   last_value(q_cid    IGNORE NULLS) OVER w AS q_cid_f,
-  prim_cid, sec_cid, sq_cid, sq_text, sq_v1, grid_name,
+  prim_cid, sec_cid, sq_cid, sq_text, grid_name,
   q_cid AS q_cid_o, q_text, q_type, resp_cid, resp_fmt
 FROM _raw
 WINDOW w AS (ORDER BY rn ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW);
@@ -46,19 +46,19 @@ SELECT sec_cid AS secondary_source_concept_id, any_value(sec_f) AS secondary_sou
 FROM _ff WHERE sec_cid IS NOT NULL GROUP BY sec_cid;
 
 CREATE OR REPLACE TABLE source_question AS
-SELECT sq_cid AS current_source_question_concept_id, any_value(sq_text) AS source_question_text,
-       any_value(sq_v1) AS v1_source_question, any_value(grid_name) AS grid_source_question_name
+SELECT sq_cid AS source_question_concept_id, any_value(sq_text) AS source_question_text,
+       any_value(grid_name) AS grid_name
 FROM _ff WHERE sq_cid IS NOT NULL GROUP BY sq_cid;
 
 CREATE OR REPLACE TABLE question AS
-SELECT q_cid_o AS question_concept_id, any_value(q_text) AS current_question_text,
+SELECT q_cid_o AS question_concept_id, any_value(q_text) AS question_text,
        any_value(q_type) AS question_type,
        any_value(sec_cid_f) AS secondary_source_concept_id,
-       any_value(sq_cid) AS current_source_question_concept_id   -- co-located on the definer row; NULL = standalone
+       any_value(sq_cid) AS source_question_concept_id   -- co-located on the definer row; NULL = standalone
 FROM _ff WHERE q_cid_o IS NOT NULL GROUP BY q_cid_o;
 
 CREATE OR REPLACE TABLE response AS
-SELECT resp_cid AS response_concept_id, any_value(resp_fmt) AS current_format_value
+SELECT resp_cid AS response_concept_id, any_value(resp_fmt) AS format_value
 FROM _ff WHERE resp_cid IS NOT NULL GROUP BY resp_cid;
 
 CREATE OR REPLACE TABLE question_response AS   -- bridge: allowed responses per question
@@ -74,26 +74,26 @@ CREATE OR REPLACE VIEW v_data_dictionary AS
 SELECT
   ps.primary_source_concept_id,            ps.primary_source,
   q.secondary_source_concept_id,           ss.secondary_source,
-  q.current_source_question_concept_id,    sq.source_question_text, sq.grid_source_question_name,
-  q.question_concept_id,                   q.current_question_text, q.question_type,
-  r.response_concept_id,                   r.current_format_value
+  q.source_question_concept_id,    sq.source_question_text, sq.grid_name,
+  q.question_concept_id,                   q.question_text, q.question_type,
+  r.response_concept_id,                   r.format_value
 FROM question q
 LEFT JOIN secondary_source  ss USING (secondary_source_concept_id)
 LEFT JOIN primary_source    ps USING (primary_source_concept_id)
-LEFT JOIN source_question   sq USING (current_source_question_concept_id)
+LEFT JOIN source_question   sq USING (source_question_concept_id)
 LEFT JOIN question_response qr USING (question_concept_id)
 LEFT JOIN response          r  USING (response_concept_id);
 
 -- 3a. export reviewable CSVs (ORDER BY the key so rebuilds are deterministic — no git churn)
 COPY (SELECT * FROM primary_source    ORDER BY primary_source_concept_id)            TO 'output/dim/primary_source.csv'    (HEADER);
 COPY (SELECT * FROM secondary_source  ORDER BY secondary_source_concept_id)          TO 'output/dim/secondary_source.csv'  (HEADER);
-COPY (SELECT * FROM source_question   ORDER BY current_source_question_concept_id)   TO 'output/dim/source_question.csv'   (HEADER);
+COPY (SELECT * FROM source_question   ORDER BY source_question_concept_id)   TO 'output/dim/source_question.csv'   (HEADER);
 COPY (SELECT * FROM question          ORDER BY question_concept_id)                  TO 'output/dim/question.csv'          (HEADER);
 COPY (SELECT * FROM response          ORDER BY response_concept_id)                  TO 'output/dim/response.csv'          (HEADER);
 COPY (SELECT * FROM question_response ORDER BY question_concept_id, response_concept_id) TO 'output/dim/question_response.csv' (HEADER);
 COPY (SELECT * FROM v_data_dictionary
       ORDER BY primary_source_concept_id, secondary_source_concept_id,
-               current_source_question_concept_id NULLS FIRST, question_concept_id, response_concept_id NULLS FIRST)
+               source_question_concept_id NULLS FIRST, question_concept_id, response_concept_id NULLS FIRST)
   TO 'output/dim/v_data_dictionary.csv' (HEADER);
 
 -- 3b. export Parquet — load-ready for BigQuery (schema + types embedded; no autodetect needed):
@@ -101,7 +101,7 @@ COPY (SELECT * FROM v_data_dictionary
 -- Concept IDs stay STRING here (they are identifiers, not numbers) — the desired BigQuery type.
 COPY (SELECT * FROM primary_source    ORDER BY primary_source_concept_id)            TO 'output/dim/primary_source.parquet'    (FORMAT parquet);
 COPY (SELECT * FROM secondary_source  ORDER BY secondary_source_concept_id)          TO 'output/dim/secondary_source.parquet'  (FORMAT parquet);
-COPY (SELECT * FROM source_question   ORDER BY current_source_question_concept_id)   TO 'output/dim/source_question.parquet'   (FORMAT parquet);
+COPY (SELECT * FROM source_question   ORDER BY source_question_concept_id)   TO 'output/dim/source_question.parquet'   (FORMAT parquet);
 COPY (SELECT * FROM question          ORDER BY question_concept_id)                  TO 'output/dim/question.parquet'          (FORMAT parquet);
 COPY (SELECT * FROM response          ORDER BY response_concept_id)                  TO 'output/dim/response.parquet'          (FORMAT parquet);
 COPY (SELECT * FROM question_response ORDER BY question_concept_id, response_concept_id) TO 'output/dim/question_response.parquet' (FORMAT parquet);

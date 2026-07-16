@@ -2,9 +2,8 @@
   "description": "Dictionary Source Question dimension - the grid / select-all group parent (GridID) that sub-questions attach to. Generated from the data dictionary / CIDTool.",
   "fields":
   [
-    {"name": "current_source_question_concept_id", "type": "STRING", "mode": "NULLABLE", "description": "9-digit concept ID for the Source Question (grid/select-all parent)"},
+    {"name": "source_question_concept_id", "type": "STRING", "mode": "NULLABLE", "description": "9-digit concept ID for the Source Question (grid/select-all parent)"},
     {"name": "source_question_text",               "type": "STRING", "mode": "NULLABLE", "description": "Human-readable Source Question text"},
-    {"name": "v1_source_question",                 "type": "STRING", "mode": "NULLABLE", "description": "v1 Source Question label (if revised)"},
-    {"name": "grid_source_question_name",          "type": "STRING", "mode": "NULLABLE", "description": "Grid name from Quest markup (if a grid)"}
+    {"name": "grid_name",          "type": "STRING", "mode": "NULLABLE", "description": "Grid name from Quest markup (if a grid)"}
   ]
 }

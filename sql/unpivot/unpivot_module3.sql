@@ -4,13 +4,13 @@
 DELETE FROM `${PROJECT}.relational.responses` WHERE source_table = 'CleanConnect.module3';
 
 INSERT INTO `${PROJECT}.relational.responses`
-  (connect_id, secondary_source_concept_id, current_source_question_concept_id, question_concept_id,
+  (connect_id, secondary_source_concept_id, source_question_concept_id, question_concept_id,
    loop_instance, question_version, response_value_as_string, response_value_as_number,
    response_value_as_concept_id, source_table, source_column)
 SELECT
   u.Connect_ID                                       AS connect_id,     -- passthrough belongs to the UNPIVOT alias
   m.secondary_source_concept_id,
-  m.current_source_question_concept_id,
+  m.source_question_concept_id,
   m.question_concept_id,
   m.loop_instance,                                                      -- 1 when not looped (colmap COALESCEs)
   m.question_version,

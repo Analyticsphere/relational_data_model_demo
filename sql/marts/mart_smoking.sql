@@ -33,7 +33,7 @@ AS
 WITH pivoted AS (
   SELECT
     connect_id,
-    MAX(IF(question_concept_id='712653855' AND current_source_question_concept_id='947205597',
+    MAX(IF(question_concept_id='712653855' AND source_question_concept_id='947205597',
            response_value_as_string, NULL)) AS smoker_status_concept_id,   -- D_947205597_D_712653855
     MAX(IF(question_concept_id='763164658', response_value_as_string, NULL)) AS cigs_lifetime_concept_id,   -- D_763164658
     MAX(IF(question_concept_id='639684251', response_value_as_string, NULL)) AS smoke_cigs_now_concept_id,  -- D_639684251
@@ -44,13 +44,13 @@ WITH pivoted AS (
 SELECT
   p.connect_id,
   p.smoker_status_concept_id,
-  COALESCE(ss.current_format_value, 'Missing / Skipped') AS smoker_status,
+  COALESCE(ss.format_value, 'Missing / Skipped') AS smoker_status,
   p.cigs_lifetime_concept_id,
-  COALESCE(cl.current_format_value, 'Missing / Skipped') AS cigs_lifetime,
+  COALESCE(cl.format_value, 'Missing / Skipped') AS cigs_lifetime,
   p.smoke_cigs_now_concept_id,
-  COALESCE(cn.current_format_value, 'Missing / Skipped') AS smoke_cigs_now,
+  COALESCE(cn.format_value, 'Missing / Skipped') AS smoke_cigs_now,
   p.cigs_lasttime_concept_id,
-  COALESCE(lt.current_format_value, 'Missing / Skipped') AS cigs_lasttime,
+  COALESCE(lt.format_value, 'Missing / Skipped') AS cigs_lasttime,
 
   -- ever_smoker_override (derived): 100+ -> 1 ; <100 -> 0 ; else NULL
   CASE

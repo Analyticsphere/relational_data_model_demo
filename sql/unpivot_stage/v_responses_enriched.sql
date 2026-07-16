@@ -21,10 +21,10 @@ SELECT
 
   -- question placement context
   sq.source_question_text                             AS source_question,
-  r.current_source_question_concept_id,
+  r.source_question_concept_id,
 
   -- question
-  q.current_question_text                             AS question_text,
+  q.question_text,
   q.question_type,
   r.question_concept_id,
   r.question_version,
@@ -35,7 +35,7 @@ SELECT
   r.response_value_as_number,
   r.response_value_as_concept_id,
   r.response_value_as_date,
-  resp.current_format_value                           AS response_label,  -- human label for coded answers
+  resp.format_value                           AS response_label,  -- human label for coded answers
 
   -- offered option set for this question (all allowed responses, semicolon-joined)
   opt.response_option_set,
@@ -51,14 +51,14 @@ LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.primary_source` ps
 LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.question` q
   ON q.question_concept_id = r.question_concept_id
 LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.source_question` sq
-  ON sq.current_source_question_concept_id = r.current_source_question_concept_id
+  ON sq.source_question_concept_id = r.source_question_concept_id
 LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.response` resp
   ON resp.response_concept_id = r.response_value_as_concept_id
 -- offered option set: aggregate the question_response bridge into one readable string per question
 LEFT JOIN (
   SELECT
     qr.question_concept_id,
-    STRING_AGG(o.current_format_value, '; ' ORDER BY qr.response_concept_id) AS response_option_set
+    STRING_AGG(o.format_value, '; ' ORDER BY qr.response_concept_id) AS response_option_set
   FROM `nih-nci-dceg-connect-stg-5519.relational.question_response` qr
   LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.response` o
     ON o.response_concept_id = qr.response_concept_id

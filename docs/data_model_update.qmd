@@ -186,7 +186,7 @@ WITH pivoted AS (
   SELECT
     connect_id,
     MAX(IF(question_concept_id = '367803647'
-           AND current_source_question_concept_id = '367803647', response_value_as_string, NULL)) AS education_concept_id,
+           AND source_question_concept_id = '367803647', response_value_as_string, NULL)) AS education_concept_id,
     MAX(IF(question_concept_id = '783167257', response_value_as_string, NULL)) AS marital_status_concept_id,
     MAX(IF(question_concept_id = '759004335', response_value_as_string, NULL)) AS income_concept_id
   FROM relational.responses
@@ -195,11 +195,11 @@ WITH pivoted AS (
 SELECT
   p.connect_id,
   p.education_concept_id,
-  COALESCE(e.current_format_value, 'Missing') AS education_cat,
+  COALESCE(e.format_value, 'Missing') AS education_cat,
   p.marital_status_concept_id,
-  COALESCE(m.current_format_value, 'Missing') AS marital_status_cat,
+  COALESCE(m.format_value, 'Missing') AS marital_status_cat,
   p.income_concept_id,
-  COALESCE(i.current_format_value, 'Missing') AS income_cat
+  COALESCE(i.format_value, 'Missing') AS income_cat
 FROM pivoted p
 LEFT JOIN relational.response e ON e.response_concept_id = p.education_concept_id
 LEFT JOIN relational.response m ON m.response_concept_id = p.marital_status_concept_id
@@ -214,14 +214,14 @@ recode is itself a short pipeline — a labeled distribution for any question is
 responses |>
   filter(question_concept_id == "367803647") |>                                     # education
   inner_join(response, by = c("response_value_as_string" = "response_concept_id")) |>
-  count(education = current_format_value, sort = TRUE)
+  count(education = format_value, sort = TRUE)
 ```
 ```{python}
 # python
 (responses
    .filter(_.question_concept_id == "367803647")                       # education
    .join(response, responses.response_value_as_string == response.response_concept_id)
-   .group_by(education=_.current_format_value)
+   .group_by(education=_.format_value)
    .aggregate(n=_.count())
    .order_by(_.n.desc()))
 ```
@@ -261,7 +261,7 @@ The dictionary itself is a queryable, deterministically-ordered view — one row
 ```{sql}
 #| connection: con
 -- sql
-SELECT question_concept_id, current_question_text, response_concept_id, current_format_value
+SELECT question_concept_id, question_text, response_concept_id, format_value
 FROM relational.v_data_dictionary
 WHERE secondary_source = 'Background and Overall Health'
 LIMIT 20
@@ -270,14 +270,14 @@ LIMIT 20
 # r
 v_data_dictionary |>
   filter(secondary_source == "Background and Overall Health") |>
-  select(question_concept_id, current_question_text, response_concept_id, current_format_value) |>
+  select(question_concept_id, question_text, response_concept_id, format_value) |>
   head(20)
 ```
 ```{python}
 # python
 (v_data_dictionary
    .filter(_.secondary_source == "Background and Overall Health")
-   .select("question_concept_id", "current_question_text", "response_concept_id", "current_format_value")
+   .select("question_concept_id", "question_text", "response_concept_id", "format_value")
    .limit(20))
 ```
 

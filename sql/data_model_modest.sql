@@ -13,10 +13,9 @@ CREATE TABLE primary_source (
 );
 
 CREATE TABLE source_question (
-  current_source_question_concept_id INT PRIMARY KEY,
+  source_question_concept_id INT PRIMARY KEY,
   source_question_text        TEXT,
-  v1_source_question          TEXT,
-  grid_source_question_name   TEXT
+  grid_name   TEXT
 );
 
 CREATE TABLE secondary_source (
@@ -27,15 +26,15 @@ CREATE TABLE secondary_source (
 
 CREATE TABLE question (
   question_concept_id                 INT PRIMARY KEY,
-  current_source_question_concept_id  INT,
+  source_question_concept_id  INT,
   secondary_source_concept_id         INT,
-  current_question_text               TEXT,
+  question_text               TEXT,
   question_type                       TEXT
 );
 
 CREATE TABLE response (
   response_concept_id         INT PRIMARY KEY,
-  current_format_value        TEXT
+  format_value        TEXT
 );
 
 -- the QUESTION.response_concept_id "list" FK, as a bridge (allowed answers)
@@ -48,7 +47,7 @@ CREATE TABLE question_response (
 CREATE TABLE variable_metadata (
   primary_source_concept_id           INT,
   secondary_source_concept_id         INT,
-  current_source_question_concept_id  INT,
+  source_question_concept_id  INT,
   question_concept_id                 INT,
   response_concept_id                 INT,
   variable_label              TEXT,
@@ -67,7 +66,7 @@ CREATE TABLE responses (
   connect_id                          INT,
   secondary_source_concept_id         INT,
   question_concept_id                 INT,
-  current_source_question_concept_id  INT,
+  source_question_concept_id  INT,
   loop_instance                       INT,
   response_concept_id                 INT,
   value                               TEXT,

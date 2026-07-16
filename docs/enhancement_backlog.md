@@ -257,7 +257,7 @@ in stage (82k rows fits in one cluster block regardless of clustering).
 - Relabeling / redesigning the dictionary dimensions into new researcher-facing tables — the dictionary
   **is** the model's dimensions.
 - A mandatory `survey_questions` placement bridge that `responses` must key on. (Model A instead carries the
-  placement coordinates — `secondary_source_concept_id` + `current_source_question_concept_id` — inline on
+  placement coordinates — `secondary_source_concept_id` + `source_question_concept_id` — inline on
   the fact.) A bridge could be revisited only if reused-concept integrity demands it, but it is **not** the
   planned path.
 - A layered Core→Analytic→Marts rearchitecture as a prerequisite. Marts (#8) can sit downstream without it.
