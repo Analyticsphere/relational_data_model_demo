@@ -15,7 +15,7 @@
 --   smoke_cigs_now No 419415087 · rarely 299561721 · some-days 716761013 · everyday 804785430   [D_639684251]
 --   cigs_lasttime  past-month 317567178 · <1yr 484055234 · >1yr 802197176        [D_798549704]
 
-CREATE OR REPLACE VIEW `nih-nci-dceg-connect-stg-5519.marts.mart_smoking`(
+CREATE OR REPLACE VIEW `${PROJECT}.marts.mart_smoking`(
   connect_id                OPTIONS(description="Participant Connect ID"),
   smoker_status_concept_id  OPTIONS(description="Ever-smoked binary answer concept ID (D_947205597_D_712653855)"),
   smoker_status             OPTIONS(description="Ever-smoked label from the dictionary response dim"),
@@ -38,7 +38,7 @@ WITH pivoted AS (
     MAX(IF(question_concept_id='763164658', response_value_as_string, NULL)) AS cigs_lifetime_concept_id,   -- D_763164658
     MAX(IF(question_concept_id='639684251', response_value_as_string, NULL)) AS smoke_cigs_now_concept_id,  -- D_639684251
     MAX(IF(question_concept_id='798549704', response_value_as_string, NULL)) AS cigs_lasttime_concept_id    -- D_798549704
-  FROM `nih-nci-dceg-connect-stg-5519.relational.responses`
+  FROM `${PROJECT}.relational.responses`
   GROUP BY connect_id
 )
 SELECT
@@ -80,7 +80,7 @@ SELECT
   END AS cigarette_cats
 
 FROM pivoted p
-LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.response` ss ON ss.response_concept_id = p.smoker_status_concept_id
-LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.response` cl ON cl.response_concept_id = p.cigs_lifetime_concept_id
-LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.response` cn ON cn.response_concept_id = p.smoke_cigs_now_concept_id
-LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.response` lt ON lt.response_concept_id = p.cigs_lasttime_concept_id;
+LEFT JOIN `${PROJECT}.relational.response` ss ON ss.response_concept_id = p.smoker_status_concept_id
+LEFT JOIN `${PROJECT}.relational.response` cl ON cl.response_concept_id = p.cigs_lifetime_concept_id
+LEFT JOIN `${PROJECT}.relational.response` cn ON cn.response_concept_id = p.smoke_cigs_now_concept_id
+LEFT JOIN `${PROJECT}.relational.response` lt ON lt.response_concept_id = p.cigs_lasttime_concept_id;

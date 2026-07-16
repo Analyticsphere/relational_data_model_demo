@@ -9,7 +9,7 @@
 -- Column order pairs each coded answer with its label: <x>_concept_id, <x>_cat, ...
 -- Coded answers are read from `response_value_as_string` (always populated).
 
-CREATE OR REPLACE VIEW `nih-nci-dceg-connect-stg-5519.marts.mart_demographics`(
+CREATE OR REPLACE VIEW `${PROJECT}.marts.mart_demographics`(
   connect_id                OPTIONS(description="Participant Connect ID"),
   education_concept_id      OPTIONS(description="Education answer concept ID (coded; D_367803647_D_367803647)"),
   education_cat             OPTIONS(description="Education category label from the dictionary response dim ('Missing' if unanswered)"),
@@ -28,7 +28,7 @@ WITH pivoted AS (
            response_value_as_string, NULL)) AS education_concept_id,      -- D_367803647_D_367803647
     MAX(IF(question_concept_id = '783167257', response_value_as_string, NULL)) AS marital_status_concept_id,  -- D_783167257
     MAX(IF(question_concept_id = '759004335', response_value_as_string, NULL)) AS income_concept_id            -- D_759004335
-  FROM `nih-nci-dceg-connect-stg-5519.relational.responses`
+  FROM `${PROJECT}.relational.responses`
   GROUP BY connect_id
 )
 SELECT
@@ -40,6 +40,6 @@ SELECT
   p.income_concept_id,
   COALESCE(REGEXP_REPLACE(i.current_format_value, r'^\s*\d+\s*=\s*', ''), 'Missing') AS income_cat
 FROM pivoted p
-LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.response` e ON e.response_concept_id = p.education_concept_id
-LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.response` m ON m.response_concept_id = p.marital_status_concept_id
-LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.response` i ON i.response_concept_id = p.income_concept_id;
+LEFT JOIN `${PROJECT}.relational.response` e ON e.response_concept_id = p.education_concept_id
+LEFT JOIN `${PROJECT}.relational.response` m ON m.response_concept_id = p.marital_status_concept_id
+LEFT JOIN `${PROJECT}.relational.response` i ON i.response_concept_id = p.income_concept_id;
