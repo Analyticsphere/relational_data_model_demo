@@ -56,19 +56,18 @@ v_data_dictionary <- tbl(con, I("relational.v_data_dictionary"))
 
 ### 1. One generic query works for *any* question
 No bespoke `CASE` per question, no knowing column names — swap one concept ID and it works across every survey.
+Using the **enriched view**, the answer label is already joined on, so there's no join to write.
 
 ```sql
-SELECT o.current_format_value AS answer, COUNT(*) AS n
-FROM relational.responses r
-JOIN relational.response  o ON o.response_concept_id = r.response_value_as_concept_id
-WHERE r.question_concept_id = '108417657'   -- e.g. "How many times have you had a proctoscopy?"
+SELECT response_label AS answer, COUNT(*) AS n
+FROM relational.v_responses_enriched
+WHERE question_concept_id = '108417657'   -- e.g. "How many times have you had a proctoscopy?"
 GROUP BY answer ORDER BY n DESC;
 ```
 ```r
-responses |>
+v_resp_enriched |>
   filter(question_concept_id == "108417657") |>
-  inner_join(response, by = c("response_value_as_concept_id" = "response_concept_id")) |>
-  count(answer = current_format_value, sort = TRUE)     # add |> collect() to run
+  count(answer = response_label, sort = TRUE)     # add |> collect() to run
 ```
 
 ### 2. Harmonize a reused field — one join instead of a 26-branch `CASE`
