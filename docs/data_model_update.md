@@ -76,7 +76,7 @@ No bespoke `CASE` per question, no knowing column names — swap one concept ID 
 Using the **enriched view**, the answer label is already joined on, so there's no join to write.
 
 ```sql
-# sql
+-- sql
 SELECT response_label AS answer, COUNT(*) AS n
 FROM relational.v_responses_enriched
 WHERE question_concept_id = '108417657'   -- e.g. "How many times have you had a proctoscopy?"
@@ -102,7 +102,7 @@ The same real-world field ("street name of residence") is ~66 different concept 
 records that they mean the same thing **once, as data**, so one join gathers them all.
 
 ```sql
-# sql
+-- sql
 SELECT r.connect_id, r.loop_instance, r.response_value_as_string AS street_name
 FROM relational.responses r
 JOIN relational.concept_relationship cr
@@ -132,7 +132,7 @@ street_of_residence = concept_rel.filter(
 A researcher reuses a vetted variable instead of re-deriving it.
 
 ```sql
-# sql
+-- sql
 SELECT cigarette_cats, COUNT(*) AS n
 FROM relational.mart_smoking
 GROUP BY cigarette_cats ORDER BY n DESC;
@@ -155,7 +155,7 @@ so they can't drift. Columns pair each coded answer with its label. This is the 
 with lineage + tests.
 
 ```sql
-# sql
+-- sql
 WITH pivoted AS (
   SELECT
     connect_id,
@@ -205,7 +205,7 @@ For hand-SQL users, the convenience view ships every answer already labeled with
 and response — self-describing, no joins to remember.
 
 ```sql
-# sql
+-- sql
 SELECT connect_id, survey, question_text, response_label, response_value_as_string
 FROM relational.v_responses_enriched
 WHERE question_concept_id = '108417657';
@@ -227,7 +227,7 @@ v_resp_enriched |>
 The dictionary itself is a queryable, deterministically-ordered view — one row per question × allowed option.
 
 ```sql
-# sql
+-- sql
 SELECT question_concept_id, current_question_text, response_concept_id, current_format_value
 FROM relational.v_data_dictionary
 WHERE secondary_source = 'Background and Overall Health'

@@ -94,7 +94,7 @@ Using the **enriched view**, the answer label is already joined on, so there's n
 
 ```{sql}
 #| connection: con
-# sql
+-- sql
 SELECT response_label AS answer, COUNT(*) AS n
 FROM relational.v_responses_enriched
 WHERE question_concept_id = '108417657'   -- e.g. "How many times have you had a proctoscopy?"
@@ -122,7 +122,7 @@ records that they mean the same thing **once, as data**, so one join gathers the
 
 ```{sql}
 #| connection: con
-# sql
+-- sql
 SELECT r.connect_id, r.loop_instance, r.response_value_as_string AS street_name
 FROM relational.responses r
 JOIN relational.concept_relationship cr
@@ -154,7 +154,7 @@ A researcher reuses a vetted variable instead of re-deriving it.
 
 ```{sql}
 #| connection: con
-# sql
+-- sql
 SELECT cigarette_cats, COUNT(*) AS n
 FROM relational.mart_smoking
 GROUP BY cigarette_cats ORDER BY n DESC
@@ -181,7 +181,7 @@ with lineage + tests. (Shown for reference — the deployed view already exists,
 ```{sql}
 #| connection: con
 #| max.print: 8
-# sql
+-- sql
 WITH pivoted AS (
   SELECT
     connect_id,
@@ -233,7 +233,7 @@ and response — self-describing, no joins to remember.
 
 ```{sql}
 #| connection: con
-# sql
+-- sql
 SELECT connect_id, survey, question_text, response_label, response_value_as_string
 FROM relational.v_responses_enriched
 WHERE question_concept_id = '108417657'
@@ -260,7 +260,7 @@ The dictionary itself is a queryable, deterministically-ordered view — one row
 
 ```{sql}
 #| connection: con
-# sql
+-- sql
 SELECT question_concept_id, current_question_text, response_concept_id, current_format_value
 FROM relational.v_data_dictionary
 WHERE secondary_source = 'Background and Overall Health'
