@@ -148,14 +148,14 @@ For hand-SQL users, the convenience view ships every answer already labeled with
 and response — self-describing, no joins to remember.
 
 ```sql
-SELECT connect_id, survey, question_text, response_label, response_value
+SELECT connect_id, survey, question_text, response_label, response_value_as_string
 FROM relational.v_responses_enriched
 WHERE question_concept_id = '108417657';
 ```
 ```r
 v_resp_enriched |>
   filter(question_concept_id == "108417657") |>
-  select(connect_id, survey, question_text, response_label, response_value)
+  select(connect_id, survey, question_text, response_label, response_value_as_string)
 ```
 
 ### 6. Browse the data dictionary (`v_data_dictionary`)
