@@ -9,7 +9,7 @@
 -- Column order pairs each coded answer with its label: <x>_concept_id, <x>_cat, ...
 -- Coded answers are read from `response_value_as_string` (always populated).
 
-CREATE OR REPLACE VIEW `${PROJECT}.marts.mart_demographics`(
+CREATE OR REPLACE VIEW `${PROJECT}.relational.mart_demographics`(
   connect_id                OPTIONS(description="Participant Connect ID"),
   education_concept_id      OPTIONS(description="Education answer concept ID (coded; D_367803647_D_367803647)"),
   education_cat             OPTIONS(description="Education category label from the dictionary response dim ('Missing' if unanswered)"),

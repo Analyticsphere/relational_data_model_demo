@@ -15,7 +15,7 @@
 --   smoke_cigs_now No 419415087 · rarely 299561721 · some-days 716761013 · everyday 804785430   [D_639684251]
 --   cigs_lasttime  past-month 317567178 · <1yr 484055234 · >1yr 802197176        [D_798549704]
 
-CREATE OR REPLACE VIEW `${PROJECT}.marts.mart_smoking`(
+CREATE OR REPLACE VIEW `${PROJECT}.relational.mart_smoking`(
   connect_id                OPTIONS(description="Participant Connect ID"),
   smoker_status_concept_id  OPTIONS(description="Ever-smoked binary answer concept ID (D_947205597_D_712653855)"),
   smoker_status             OPTIONS(description="Ever-smoked label from the dictionary response dim"),

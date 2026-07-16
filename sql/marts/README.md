@@ -75,7 +75,7 @@ the **`${PROJECT}` placeholder** (like `sql/unpivot/`) — the deploy scripts su
 ## Run / rework
 
 - Substitute `${PROJECT}` and ensure `relational.responses` + the `relational.response` dictionary dim are
-  loaded; the views write to the `marts` dataset.
+  loaded; the views are created in the `relational` dataset (alongside the fact/dims).
 - **Validate row-for-row against the `.rmd`** before any reporting use — the `.rmd` is the reference oracle.
 - Rework into dbt later: each view becomes a model with `ref()`/`source()`, tests (`bmi_derived > 0`,
   `accepted_values`), and `dbt docs` lineage.
