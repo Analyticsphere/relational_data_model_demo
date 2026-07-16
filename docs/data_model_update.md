@@ -76,17 +76,20 @@ No bespoke `CASE` per question, no knowing column names — swap one concept ID 
 Using the **enriched view**, the answer label is already joined on, so there's no join to write.
 
 ```sql
+# sql
 SELECT response_label AS answer, COUNT(*) AS n
 FROM relational.v_responses_enriched
 WHERE question_concept_id = '108417657'   -- e.g. "How many times have you had a proctoscopy?"
 GROUP BY answer ORDER BY n DESC;
 ```
 ```r
+# r
 v_resp_enriched |>
   filter(question_concept_id == "108417657") |>
   count(answer = response_label, sort = TRUE)     # add |> collect() to run
 ```
 ```python
+# python
 (v_resp_enriched
    .filter(_.question_concept_id == "108417657")
    .group_by(answer=_.response_label)
@@ -99,6 +102,7 @@ The same real-world field ("street name of residence") is ~66 different concept 
 records that they mean the same thing **once, as data**, so one join gathers them all.
 
 ```sql
+# sql
 SELECT r.connect_id, r.loop_instance, r.response_value_as_string AS street_name
 FROM relational.responses r
 JOIN relational.concept_relationship cr
@@ -106,6 +110,7 @@ JOIN relational.concept_relationship cr
 WHERE cr.concept_id_2 = '105043152';   -- the group's canonical "street name of residence" concept
 ```
 ```r
+# r
 street_of_residence <- concept_rel |>
   filter(relationship == "synonym", concept_id_2 == "105043152")
 
@@ -114,6 +119,7 @@ responses |>
   transmute(connect_id, loop_instance, street_name = response_value_as_string)
 ```
 ```python
+# python
 street_of_residence = concept_rel.filter(
     (_.relationship == "synonym") & (_.concept_id_2 == "105043152"))
 
@@ -126,14 +132,17 @@ street_of_residence = concept_rel.filter(
 A researcher reuses a vetted variable instead of re-deriving it.
 
 ```sql
+# sql
 SELECT cigarette_cats, COUNT(*) AS n
 FROM relational.mart_smoking
 GROUP BY cigarette_cats ORDER BY n DESC;
 ```
 ```r
+# r
 mart_smoking |> count(cigarette_cats, sort = TRUE)
 ```
 ```python
+# python
 (mart_smoking
    .group_by("cigarette_cats")
    .aggregate(n=_.count())
@@ -146,6 +155,7 @@ so they can't drift. Columns pair each coded answer with its label. This is the 
 with lineage + tests.
 
 ```sql
+# sql
 WITH pivoted AS (
   SELECT
     connect_id,
@@ -174,12 +184,14 @@ R/Python users usually *consume* the finished mart (like #3) rather than re-auth
 recode is itself a short pipeline — a labeled distribution for any question is just a join to the dictionary:
 
 ```r
+# r
 responses |>
   filter(question_concept_id == "367803647") |> # education
   inner_join(response, by = c("response_value_as_string" = "response_concept_id")) |>
   count(education = current_format_value, sort = TRUE)
 ```
 ```python
+# python
 (responses
    .filter(_.question_concept_id == "367803647")                       # education
    .join(response, responses.response_value_as_string == response.response_concept_id)
@@ -193,16 +205,19 @@ For hand-SQL users, the convenience view ships every answer already labeled with
 and response — self-describing, no joins to remember.
 
 ```sql
+# sql
 SELECT connect_id, survey, question_text, response_label, response_value_as_string
 FROM relational.v_responses_enriched
 WHERE question_concept_id = '108417657';
 ```
 ```r
+# r
 v_resp_enriched |>
   filter(question_concept_id == "108417657") |>
   select(connect_id, survey, question_text, response_label, response_value_as_string)
 ```
 ```python
+# python
 (v_resp_enriched
    .filter(_.question_concept_id == "108417657")
    .select("connect_id", "survey", "question_text", "response_label", "response_value_as_string"))
@@ -212,18 +227,21 @@ v_resp_enriched |>
 The dictionary itself is a queryable, deterministically-ordered view — one row per question × allowed option.
 
 ```sql
+# sql
 SELECT question_concept_id, current_question_text, response_concept_id, current_format_value
 FROM relational.v_data_dictionary
 WHERE secondary_source = 'Background and Overall Health'
 LIMIT 20;
 ```
 ```r
+# r
 v_data_dictionary |>
   filter(secondary_source == "Background and Overall Health") |>
   select(question_concept_id, current_question_text, response_concept_id, current_format_value) |>
   head(20)
 ```
 ```python
+# python
 (v_data_dictionary
    .filter(_.secondary_source == "Background and Overall Health")
    .select("question_concept_id", "current_question_text", "response_concept_id", "current_format_value")
