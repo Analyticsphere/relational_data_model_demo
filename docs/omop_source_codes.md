@@ -81,15 +81,20 @@ response_hash <- function(sec, sq, q, value_verbatim) {
 ```
 Both return the same lowercase hex as `TO_HEX(SHA256(...))` in BigQuery.
 
-## The same id as an OMOP custom concept_id (`response_custom_concept_id`)
+## `response_unique_id` — the id in integer form (also usable as an OMOP custom concept_id)
 
-The hex id is the Usagi `source_code`. But OMOP reserves `concept_id > 2,000,000,000` for **custom (local)
-concepts**, so the same source code can also live in the `CONCEPT` table as a [faux custom
+`response_unique_id` is the **same identity** as `response_hash_id` — one value per unique
+`(secondary_source | source_question | question | response_value)` combination — just an integer instead of
+hex. It is named generically on purpose: it is **not** a Connect `concept_id`, and calling it
+`custom_concept_id` would invite exactly that confusion (Connect uses concept IDs everywhere).
+
+Its integer range is not arbitrary: OMOP reserves `concept_id > 2,000,000,000` for **custom (local)
+concepts**, so this id can *also* live in the `CONCEPT` table as a [faux custom
 concept](https://ohdsi.github.io/CommonDataModel/customConcepts.html). That needs an **integer** in the
 reserved range — so we **project** the hash (we do not hash anything new, so it still can't drift):
 
 ```
-response_custom_concept_id = 2000000001 + (first 15 hex chars of response_hash_id, read as base-16)
+response_unique_id = 2000000001 + (first 15 hex chars of response_hash_id, read as base-16)
 ```
 
 | Constraint (per OHDSI custom concepts) | Holds because |
@@ -109,7 +114,7 @@ response_custom_concept_id = 2000000001 + (first 15 hex chars of response_hash_i
 
 The hex id is universal; each engine just needs to read its first 15 chars as base-16 and add the offset:
 
-| Engine | `response_custom_concept_id` |
+| Engine | `response_unique_id` |
 |---|---|
 | BigQuery | `2000000001 + (SELECT SUM((STRPOS('0123456789abcdef', SUBSTR(h,pos,1))-1) * CAST(POW(16,15-pos) AS INT64)) FROM UNNEST(GENERATE_ARRAY(1,15)) pos)` |
 | Snowflake | `2000000001 + TO_NUMBER(SUBSTR(h,1,15), 'XXXXXXXXXXXXXXX')` |
@@ -121,11 +126,11 @@ BigQuery has no hex→int cast, so it sums nibble·16ⁿ; the weights are powers
 `FLOAT64`/`INT64`. All forms return the identical integer (`h` = `response_hash_id`).
 
 ```python
-def response_custom_concept_id(response_hash_id):      # pure projection of the hex id
+def response_unique_id(response_hash_id):      # pure projection of the hex id
     return 2000000001 + int(response_hash_id[:15], 16)
 ```
 ```r
-response_custom_concept_id <- function(response_hash_id) {   # needs 64-bit ints
+response_unique_id <- function(response_hash_id) {   # needs 64-bit ints
   bit64::as.integer64(2000000001) +
     Reduce(function(a, d) a * 16L + d,
            strtoi(strsplit(substr(response_hash_id, 1, 15), "")[[1]], 16L),
@@ -165,7 +170,7 @@ names → RxNorm, condition text → SNOMED, etc.). Two consequences:
 - `source_code_description` = `source_code_description` (coded → question text + answer label from the
   dictionary; free text → question text + the verbatim string)
 - optionally carry `question_concept_id` / `response_value_verbatim` so mappings round-trip back to Connect.
-- to store the source code as a **custom OMOP concept**, use `response_custom_concept_id` as its
+- to store the source code as a **custom OMOP concept**, use `response_unique_id` as its
   `concept_id` (and as `*_source_concept_id` on facts) — it's the same id, in integer form.
 
 ## Run

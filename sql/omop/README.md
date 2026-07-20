@@ -5,7 +5,7 @@ on synthetic data.
 
 | File | What it does |
 |---|---|
-| `response_source_codes.sql` | Builds `relational.response_source_codes` — one **deterministic** SHA-256 id per unique response (`response_hash_id`), the stable `source_code` a colleague maps to OMOP concepts in **Usagi** (incl. every unique free-text response). Also emits `response_custom_concept_id` — the same id as an integer in OMOP's custom-concept range (>2e9), a pure projection of the hash. |
+| `response_source_codes.sql` | Builds `relational.response_source_codes` — one **deterministic** SHA-256 id per unique response (`response_hash_id`), the stable `source_code` a colleague maps to OMOP concepts in **Usagi** (incl. every unique free-text response). Also emits `response_unique_id` — the same id as an integer in OMOP's custom-concept range (>2e9), a pure projection of the hash. |
 
 **Reproducibility contract:** `response_hash_id` hashes **only** four raw, stable fields
 (`secondary_source_concept_id | source_question_concept_id | question_concept_id | response_value_as_string`,

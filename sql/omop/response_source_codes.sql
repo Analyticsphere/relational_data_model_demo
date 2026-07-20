@@ -27,16 +27,19 @@
 --   BEST PRACTICE: compute ONCE here, store it, and have every tool (incl. Usagi) READ this column.
 --   Do not recompute in multiple places.
 --
--- ┌─ response_custom_concept_id — the SAME id as an OMOP custom concept_id ────────────────────────────┐
--- │ OMOP reserves concept_id > 2,000,000,000 for custom (local) concepts, so the source code can also  │
--- │ live in the CONCEPT table as a faux custom concept. We need an INTEGER in that reserved range, so   │
--- │ we PROJECT the hash (never a new input, so it still can't drift):                                   │
--- │   response_custom_concept_id = 2000000001 + (first 15 hex chars of response_hash_id, base-16)       │
--- │ 15 hex chars = 60 bits -> [0, 2^60-1]; +2000000001 -> [2000000001, ~1.153e18]:                      │
--- │   integer ✓   strictly > 2,000,000,000 ✓   << 9,223,372,036,854,775,807 (signed-64 max) ✓          │
--- │ 15 (not 16) hex on purpose: 16 = 64 bits could exceed signed BIGINT and overflow on some engines.   │
--- │ Collision: two responses clash only if 60 hash bits match — ~N^2/2^61 (negligible for our N).       │
--- │ It is a pure function of response_hash_id, so the hex id stays the single source of truth.          │
+-- ┌─ response_unique_id — the integer form of the id (also valid as an OMOP custom concept_id) ────────┐
+-- │ Same identity as response_hash_id: one value per unique (secondary_source | source_question |       │
+-- │ question | response_value) combination — just an integer instead of hex. Named generically on       │
+-- │ purpose: it is NOT a Connect concept_id, and "custom_concept_id" would invite that confusion.        │
+-- │ It ALSO satisfies OMOP's custom-concept constraints, so the source code can live in the CONCEPT      │
+-- │ table as a faux custom concept (concept_id > 2,000,000,000). We PROJECT the hash (no new input, so   │
+-- │ it still can't drift):                                                                               │
+-- │   response_unique_id = 2000000001 + (first 15 hex chars of response_hash_id, base-16)                │
+-- │ 15 hex chars = 60 bits -> [0, 2^60-1]; +2000000001 -> [2000000001, ~1.153e18]:                       │
+-- │   integer ✓   strictly > 2,000,000,000 ✓   << 9,223,372,036,854,775,807 (signed-64 max) ✓           │
+-- │ 15 (not 16) hex on purpose: 16 = 64 bits could exceed signed BIGINT and overflow on some engines.    │
+-- │ Collision: two responses clash only if 60 hash bits match — ~N^2/2^61 (negligible for our N).        │
+-- │ It is a pure function of response_hash_id, so the hex id stays the single source of truth.           │
 -- └───────────────────────────────────────────────────────────────────────────────────────────────────┘
 --
 -- DECIDE BEFORE FIRST USE (changing any of these re-hashes EVERYTHING — it is a one-time contract):
@@ -49,7 +52,7 @@
 --   downstream and never changes ids.
 
 CREATE OR REPLACE TABLE `${PROJECT}.relational.response_source_codes`
-OPTIONS(description="Deterministic SHA-256 source codes for OMOP/Usagi mapping — one row per unique response. response_hash_id hashes ONLY raw stable inputs (secondary_source, source_question, question, response_value_as_string, '|'-joined, NULL->''), so it never drifts. response_custom_concept_id = 2000000001 + first-15-hex-of-hash (an integer in OMOP's custom-concept range >2e9, a pure projection of the hash). All other columns are decoration (never feed the hash). response_value_verbatim exposes free text -> govern as PII. First pass; see docs/omop_source_codes.md.")
+OPTIONS(description="Deterministic SHA-256 source codes for OMOP/Usagi mapping — one row per unique response. response_hash_id hashes ONLY raw stable inputs (secondary_source, source_question, question, response_value_as_string, '|'-joined, NULL->''), so it never drifts. response_unique_id = 2000000001 + first-15-hex-of-hash (an integer in OMOP's custom-concept range >2e9, a pure projection of the hash). All other columns are decoration (never feed the hash). response_value_verbatim exposes free text -> govern as PII. First pass; see docs/omop_source_codes.md.")
 AS
 WITH distinct_responses AS (
   SELECT DISTINCT
@@ -78,7 +81,7 @@ hashed AS (
 SELECT
   h.response_hash_id,
 
-  -- ── THE SAME ID as an OMOP custom concept_id: integer, >2e9, <2^63-1 (see header block) ──
+  -- ── response_unique_id: the id in integer form (also valid as an OMOP custom concept_id; see header) ──
   -- Pure projection of response_hash_id: 2000000001 + base-16 value of its first 15 hex chars.
   -- Portable because the weights are powers of two (exact in FLOAT64/INT64); STRPOS maps each
   -- lowercase-hex nibble to 0..15. Recompute recipe + per-engine equivalents in the doc.
@@ -88,7 +91,7 @@ SELECT
         * CAST(POW(16, 15 - pos) AS INT64)
     )
     FROM UNNEST(GENERATE_ARRAY(1, 15)) AS pos
-  ) AS response_custom_concept_id,
+  ) AS response_unique_id,
 
   -- the exact inputs, kept for audit / regeneration
   h.secondary_source_concept_id,
