@@ -1,4 +1,4 @@
-question_concept_id,current_question_text,question_type,secondary_source_concept_id,current_source_question_concept_id
+question_concept_id,question_text,question_type,secondary_source_concept_id,source_question_concept_id
 100181644,Pergonal,,745268907,881200765
 100591237,"Commuter rail, subway, metro- Thinking about the one-way trip from [insert address from CURWORK1 - CURWORK3/this address] to your home on a usual workday, about how much time did you usually spend in each type of transportation?",,716117817,786253125
 100618603,Other - Home Collections,,377669767,633640710

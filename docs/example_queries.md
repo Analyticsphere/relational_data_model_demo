@@ -36,10 +36,10 @@ GROUP BY reason;
 ```sql
 -- One table, no column enumeration. Labels via join. v1/v2 columns both unpivoted to the same
 -- question_concept_id, so the revision pools automatically (no COALESCE).
-SELECT q.current_question_text AS reason, COUNT(*) AS n
+SELECT q.question_text AS reason, COUNT(*) AS n
 FROM responses r
 JOIN question q USING (question_concept_id)
-WHERE r.current_source_question_concept_id = 899251483   -- the select-all group
+WHERE r.source_question_concept_id = 899251483   -- the select-all group
   AND r.response_concept_id = 353358909                  -- "Yes" (selected)
 GROUP BY reason;
 ```
@@ -81,7 +81,7 @@ GROUP BY answer;
 ### 🙂 The model
 ```sql
 -- Labels via join; swap the concept_id to run it for ANY question — one query, all questions.
-SELECT resp.current_format_value AS answer, COUNT(*) AS n
+SELECT resp.format_value AS answer, COUNT(*) AS n
 FROM responses r
 JOIN response resp USING (response_concept_id)
 WHERE r.question_concept_id = 724589244
@@ -102,7 +102,7 @@ WHERE question_concept_id = 724589244;
 > derived `question_type_norm` view (messy string → clean `base_type` + flags, backfilled from Quest) lets a
 > single query span every question of a type — the "common abstraction" goal:
 > ```sql
-> SELECT t.base_type, r.question_concept_id, resp.current_format_value AS answer, COUNT(*) AS n
+> SELECT t.base_type, r.question_concept_id, resp.format_value AS answer, COUNT(*) AS n
 > FROM responses r
 > JOIN question_type_norm t USING (question_concept_id)
 > JOIN response resp        USING (response_concept_id)
@@ -211,12 +211,12 @@ SELECT
   ps.primary_source        AS domain,           -- e.g. Survey
   ss.secondary_source      AS survey,           -- e.g. Mouthwash
   sq.source_question_text  AS source_question,  -- NULL when the question is standalone
-  q.current_question_text  AS question,
-  COALESCE(resp.current_format_value, r.value) AS answer
+  q.question_text  AS question,
+  COALESCE(resp.format_value, r.value) AS answer
 FROM responses r
 JOIN secondary_source ss     USING (secondary_source_concept_id)    -- survey  (stamped on the fact)
 JOIN primary_source  ps      USING (primary_source_concept_id)      -- domain  (follows by FK)
-LEFT JOIN source_question sq USING (current_source_question_concept_id)
+LEFT JOIN source_question sq USING (source_question_concept_id)
 JOIN question q              USING (question_concept_id)
 LEFT JOIN response resp      USING (response_concept_id)            -- NULL for free-text / numeric answers
 WHERE r.response_row_id = @row;
@@ -264,7 +264,7 @@ WHERE d_899251483_d_812107266_v2 = '353358909';     -- and repeat, per table, fo
 SELECT *
 FROM responses r
 WHERE secondary_source_concept_id     = 390351864     -- survey      = Mouthwash
-  AND current_source_question_concept_id = 899251483   -- group       = tooth-loss select-all
+  AND source_question_concept_id = 899251483   -- group       = tooth-loss select-all
   AND question_concept_id             = 812107266      -- sub-question= "accident"
   AND response_concept_id             = 353358909      -- answer      = "Yes"
   AND loop_instance                   = 1;             -- loop iter   (default 1)
@@ -276,7 +276,7 @@ WHERE secondary_source_concept_id     = 390351864     -- survey      = Mouthwash
 | Everything in a whole **domain** | `JOIN secondary_source ss USING (secondary_source_concept_id)` → `WHERE ss.primary_source_concept_id = 129084651` (Survey) |
 | One **question, pooled across every survey** it appears in | `question_concept_id = 784119588` ("Survey Language", all 15 instruments) |
 | **The payoff** — that shared question, but only **in one survey** | `question_concept_id = 784119588 AND secondary_source_concept_id = 390351864` |
-| A whole **grid / select-all group** | `current_source_question_concept_id = 899251483` |
+| A whole **grid / select-all group** | `source_question_concept_id = 899251483` |
 | A specific **loop iteration** | `question_concept_id = 206625031 AND loop_instance = 3` |
 
 The fourth row is the one the wide model and verbatim dictionary cannot do: isolating a deliberately-reused concept to a single survey is only possible because the survey is stamped on the fact.
@@ -310,21 +310,21 @@ SELECT
   ps.primary_source        AS domain,
   ss.secondary_source      AS survey,
   sq.source_question_text  AS source_question,
-  q.current_question_text  AS question_text,
+  q.question_text  AS question_text,
   q.question_type,
   r.loop_instance,
   r.response_concept_id,
-  resp.current_format_value AS response_label,   -- "1 = Yes"
+  resp.format_value AS response_label,   -- "1 = Yes"
   r.value                   AS response_value,    -- free-text / numeric
   vm.pii, vm.variable_type, vm.variable_label,
   opt.response_option_set,                         -- the full offered menu for this question
   r.question_concept_id, r.secondary_source_concept_id,
-  r.current_source_question_concept_id, r.source_table, r.source_column   -- provenance kept
+  r.source_question_concept_id, r.source_table, r.source_column   -- provenance kept
 FROM responses r
 LEFT JOIN secondary_source  ss   ON ss.secondary_source_concept_id        = r.secondary_source_concept_id
 LEFT JOIN primary_source    ps   ON ps.primary_source_concept_id          = ss.primary_source_concept_id
 LEFT JOIN question          q    ON q.question_concept_id                 = r.question_concept_id
-LEFT JOIN source_question   sq   ON sq.current_source_question_concept_id = r.current_source_question_concept_id
+LEFT JOIN source_question   sq   ON sq.source_question_concept_id = r.source_question_concept_id
 LEFT JOIN response          resp ON resp.response_concept_id              = r.response_concept_id
 LEFT JOIN variable_metadata vm   ON vm.question_concept_id         = r.question_concept_id
                                 AND vm.secondary_source_concept_id = r.secondary_source_concept_id
@@ -332,7 +332,7 @@ LEFT JOIN variable_metadata vm   ON vm.question_concept_id         = r.question_
 -- offered option set per question: aggregate the allowed-answers bridge into one string
 LEFT JOIN (
   SELECT qr.question_concept_id,
-         STRING_AGG(o.current_format_value, '; ' ORDER BY qr.response_concept_id) AS response_option_set
+         STRING_AGG(o.format_value, '; ' ORDER BY qr.response_concept_id) AS response_option_set
   FROM question_response qr
   LEFT JOIN response o ON o.response_concept_id = qr.response_concept_id
   GROUP BY qr.question_concept_id

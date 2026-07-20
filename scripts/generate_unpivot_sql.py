@@ -56,13 +56,13 @@ def _insert_stmt(table, cols, types, project, dataset):
     inner.append(f"  FROM `{project}.CleanConnect.{table}`")
     in_list = ", ".join(bq(c) for c in cols)
     return f"""INSERT INTO `{project}.{dataset}.responses`
-  (connect_id, secondary_source_concept_id, current_source_question_concept_id, question_concept_id,
+  (connect_id, secondary_source_concept_id, source_question_concept_id, question_concept_id,
    loop_instance, question_version, response_value_as_string, response_value_as_number,
    response_value_as_concept_id, source_table, source_column)
 SELECT
   u.Connect_ID                                       AS connect_id,     -- passthrough belongs to the UNPIVOT alias
   m.secondary_source_concept_id,
-  m.current_source_question_concept_id,
+  m.source_question_concept_id,
   m.question_concept_id,
   m.loop_instance,                                                      -- 1 when not looped (colmap COALESCEs)
   m.question_version,
@@ -107,7 +107,7 @@ SELECT
   `table`                    AS table_name,
   `column`                   AS source_column,
   secondary_source_concept_id,
-  NULLIF(source_question_concept_id, '') AS current_source_question_concept_id,  -- NULL = standalone question
+  NULLIF(source_question_concept_id, '') AS source_question_concept_id,  -- NULL = standalone question
   question_concept_id,
   COALESCE(loop_number, 1)   AS loop_instance,                                   -- default 1 when not looped (INTEGER in table)
   NULLIF(version_tag, '')    AS question_version
@@ -148,7 +148,7 @@ def main():
 CREATE TABLE IF NOT EXISTS `{args.project}.{args.dataset}.responses` (
   connect_id STRING,
   secondary_source_concept_id STRING,           -- the SURVEY (stamped from the table via colmap)
-  current_source_question_concept_id STRING,    -- grid / select-all parent; NULL if standalone
+  source_question_concept_id STRING,    -- grid / select-all parent; NULL if standalone
   question_concept_id STRING,
   loop_instance INT64,                          -- the _N loop suffix (1 if not looped)
   question_version STRING,                      -- the _v2 question/concept revision tag

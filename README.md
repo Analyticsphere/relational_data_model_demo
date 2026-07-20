@@ -102,7 +102,7 @@ The transformation: **adopt the [CIDTool](#cidtool-and-the-conceptvariable-dicti
 > The dictionary tables are arranged to mirror the CIDTool ERD; `responses` is the only new table. [Full diagram with columns](docs/connect_model_a.svg).
 
 - **Dimensions = CIDTool ERD, verbatim:** `primary_source`, `secondary_source`, `source_question`, `question`, `response`, `question_response` (the question→response list), `variable_metadata`. Loaded from CIDTool's output — we model nothing new.
-- **Fact = `responses`** (the one new table): one row per answered cell, keyed on `(connect_id, current_source_question_concept_id, question_concept_id, loop_instance)`, with `response_concept_id` / `value` and `source_table` / `source_column` provenance. It joins to the dictionary for every label, type, and flag. It carries two **placement coordinates** so a row resolves to its position in the dictionary's hierarchy even when concepts are reused: the source-question path (`current_source_question_concept_id`) and the **survey** (`secondary_source_concept_id`). The survey is required because concept reuse is deliberate — the same question concept is shared across instruments (≈9% of survey questions; e.g. "Survey Language" appears in 15), so the survey is *not* recoverable from the rest of the row and is stamped by the unpivot transform; the domain then follows by FK.
+- **Fact = `responses`** (the one new table): one row per answered cell, keyed on `(connect_id, source_question_concept_id, question_concept_id, loop_instance)`, with `response_concept_id` / `value` and `source_table` / `source_column` provenance. It joins to the dictionary for every label, type, and flag. It carries two **placement coordinates** so a row resolves to its position in the dictionary's hierarchy even when concepts are reused: the source-question path (`source_question_concept_id`) and the **survey** (`secondary_source_concept_id`). The survey is required because concept reuse is deliberate — the same question concept is shared across instruments (≈9% of survey questions; e.g. "Survey Language" appears in 15), so the survey is *not* recoverable from the rest of the row and is stamped by the unpivot transform; the domain then follows by FK.
 
 **Why this model:** it adopts existing CIDTool work with no new ontology to defend, kills the dancing-schema pain with a single table, and keeps the dictionary as the source of truth. It is also **forward-compatible**: every candidate in the [enhancement backlog](#incremental-enhancements) attaches to this same `responses` fact without rebuilding it.
 
@@ -114,7 +114,7 @@ The model already carries `question_type` from the dictionary — so the "common
 
 With it, one query works across *every* question of a type:
 ```sql
-SELECT r.question_concept_id, resp.current_format_value AS answer, COUNT(*) AS n
+SELECT r.question_concept_id, resp.format_value AS answer, COUNT(*) AS n
 FROM responses r
 JOIN question_type_norm t USING (question_concept_id)
 JOIN response resp        USING (response_concept_id)
@@ -261,15 +261,15 @@ The CIDTool ERD (`cid_tool_erd.drawio.png` in this repo) defines two logical gro
 |---|---|
 | `PRIMARY_SOURCE` | `primary_source_concept_id` (PK), `primary_source` |
 | `SECONDARY_SOURCE` | `secondary_source_concept_id` (PK), `secondary_source`, `primary_source_concept_id` (FK) |
-| `SOURCE_QUESTION` | `current_source_question_concept_id` (PK), `source_question_text`, `v1_source_question`, `grid_source_question_name` |
-| `QUESTION` | `question_concept_id` (PK), `current_source_question_concept_id` (FK), `secondary_source_concept_id` (FK), `response_concept_id` (FK, list), `current_question_text`, `question_type` |
-| `RESPONSE` | `response_concept_id` (PK), `current_format_value` |
+| `SOURCE_QUESTION` | `source_question_concept_id` (PK), `source_question_text`, `grid_name` |
+| `QUESTION` | `question_concept_id` (PK), `source_question_concept_id` (FK), `secondary_source_concept_id` (FK), `response_concept_id` (FK, list), `question_text`, `question_type` |
+| `RESPONSE` | `response_concept_id` (PK), `format_value` |
 
 ### Variable Dictionary — grain: one row per *variable*
 
 | Table | Description |
 |---|---|
-| `VARIABLE_METADATA` | Compound PK across `primary_source_concept_id`, `secondary_source_concept_id`, `current_source_question_concept_id`, `response_concept_id`, and `question_concept_id`. Carries human-readable labels, `variable_type`, `variable_length`, `pii` flag, skip logic hints, deprecation history, derivation notes, and `gcp_document_table` (the source BigQuery table name). |
+| `VARIABLE_METADATA` | Compound PK across `primary_source_concept_id`, `secondary_source_concept_id`, `source_question_concept_id`, `response_concept_id`, and `question_concept_id`. Carries human-readable labels, `variable_type`, `variable_length`, `pii` flag, skip logic hints, deprecation history, derivation notes, and `gcp_document_table` (the source BigQuery table name). |
 
 Note from the ERD: PII can be flagged at either the question level or the response level. If a response is not PII but its parent question is, the variable inherits the question-level PII designation.
 

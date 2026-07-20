@@ -217,6 +217,260 @@ This routes deprecated-concept responses to their successors automatically, whil
 
 ---
 
+## Recommended Design: SCD Type 4 (clean current table + version overlay)
+
+The four patterns above are all instances of one classic data-warehouse problem: a **Slowly Changing
+Dimension (SCD)** — a descriptive table (`question`, `response`, `source_question`) whose attributes change
+slowly over time. The only real design question is *"when a description changes, what happens to the old
+value?"* The standard answers are the "SCD types":
+
+| Type | What it does | On our `question` dim | Verdict for Connect |
+|---|---|---|---|
+| **Type 1** | Overwrite — keep only the current value | One row per question, current text only; history lost | What the clean current tables do today |
+| **Type 2** | Add a new **row** per version (`version` / `valid_from` / `is_current`) | `question` gets many rows per concept | History kept, but every join must filter to current or fan out |
+| **Type 3** | Add a **column** for each prior value (`v1_text`, `v2_text`, …) | Every row carries mostly-null version columns | This *is* the dictionary's `Current/V1/V2` layout we normalized away |
+| **Type 4** | **Split into two tables**: a clean *current* table + a separate *history* table | `question` stays 1 row/concept; a `question_version` overlay holds versions | **Recommended** |
+
+**Recommendation: Type 4.** Keep the current-state dimensions (`question`, `response`, `source_question`)
+exactly as they are now — one clean row per concept, holding the live value — and add a **separate version
+overlay** per entity that actually versions. Rationale:
+
+- **The common path stays foolproof.** ~99% of analysis wants the current label with a simple 1:1 join.
+  Type 4 keeps `responses → question` matching exactly one row, so no query needs to remember
+  `AND is_current`. (Type 2 would break this — a missed filter silently double-counts.)
+- **We already removed Type 3.** The `current_`/`v1_` prefixes were Type 3 in disguise: mostly-null version
+  columns bloating every row and capping history at a fixed number of priors. Normalizing those into rows
+  is the Type-4 move.
+- **History becomes opt-in, not mandatory.** Version-aware analysis joins the overlay; everyone else never
+  sees it.
+
+### Which mechanism per pattern (the "version attribute vs. concept relationship" rule)
+
+The overlay is not one-size-fits-all — the discriminator is **whether the source minted a new concept ID**:
+
+| | Same concept ID kept (Pattern 3) | New concept ID minted (Pattern 4) |
+|---|---|---|
+| Example | `899251483` → `899251483_V2` (same ID, options changed) | sex-at-birth restructured → new CID `407056417` |
+| Mechanism | **version attribute**: `question_version` on the fact (already present) + version-scoped `response_options` + a `question_version` history row | **concept relationship**: `concept_relationship` (`replaces`/`replaced_by`) + `successor_concept_id` on `question` |
+| Why | The dictionary keeps the ID; fabricating per-version IDs would violate the concept-ID spine (principle #1) | Two *real* distinct IDs already exist; the link between them is the data |
+
+Do **not** mint synthetic per-version IDs to force everything through `concept_relationship` — that fights the
+source. And do **not** express a genuine new-ID replacement as an attribute history — that link is *between
+two IDs*, not an attribute of one.
+
+### Structure
+
+```
+responses ──question_concept_id──────────────▶ question           (current: 1 row/concept — default join)
+     │
+     └──(question_concept_id, question_version)─▶ question_version  (history: 1 row/version — opt-in)
+
+question ──successor_concept_id──▶ question   (Pattern 4: deprecated CID → replacement CID)
+```
+
+The `question` dimension carries the *current* value plus lightweight, **typed** version descriptors (not a
+boolean — see below). The `question_version` overlay carries the full per-version detail.
+
+```sql
+-- current dimension: unchanged, plus typed version descriptors
+question(
+  question_concept_id,      -- PK, one row per concept
+  question_text,            -- CURRENT wording
+  question_type,
+  status,                   -- Deprecated | Revised | New | (blank)
+  max_version,              -- highest _vN seen (1, 2, 3…)
+  deprecated_at,            -- DATE, Pattern 4
+  successor_concept_id      -- FK -> question, Pattern 4 replacement
+)
+
+-- version overlay (SCD Type 4 history side): one row per (concept, version)
+question_version(
+  question_concept_id,          -- FK -> question
+  version,                      -- 1, 2, …
+  question_text,                -- wording AS OF this version
+  source_question_concept_id,   -- placement AS OF this version
+  status,                       -- Deprecated | Revised | New | Current
+  status_date,
+  replaced_by_concept_id        -- optional, for option/question supersession
+)
+```
+
+Option-set membership changes (an option added/dropped) ride in the **version-scoped option set** —
+`response_options` keyed by `(question_concept_id, version, response_concept_id)` — because "an option was
+added" is a change to a *set*, not a scalar field, so it doesn't belong in `question_version`.
+
+### Worked example — tooth-loss `899251483`
+
+**`question` (current — the clean default):**
+
+| question_concept_id | question_text | status | max_version |
+|---|---|---|---|
+| 899251483 | *(current wording)* | Revised | 2 |
+
+**`question_version` (history overlay):**
+
+| question_concept_id | version | question_text | status | status_date |
+|---|---|---|---|---|
+| 899251483 | 1 | *(v1 wording)* | Deprecated | 2022-… |
+| 899251483 | 2 | *(v2 wording)* | Current | 2023-… |
+
+**version-scoped `response_options` (the option *set* per version):**
+
+| question_concept_id | version | response_concept_id | label |
+|---|---|---|---|
+| 899251483 | 1 | 812107266 | accident |
+| 899251483 | 1 | 452438775 | decay |
+| 899251483 | 1 | 104430631 | No *(old)* |
+| 899251483 | 2 | 812107266 | accident |
+| 899251483 | 2 | 452438775 | decay |
+| 899251483 | 2 | 886864375 | other reason *(new)* |
+| 899251483 | 2 | 551489317 | No *(new)* |
+
+A participant answering under v1 has `responses` rows with `question_version = 1`; joining `question` gives
+the current label ("what is this question"), while joining `question_version` + the version-scoped options
+tells you they were only *offered* the v1 set — so the absence of "other reason" is *not offered*, not
+*declined*.
+
+### Query patterns
+
+```sql
+-- Everyday (unchanged; doesn't know versioning exists): current label, 1:1 join
+SELECT q.question_text, r.*
+FROM responses r
+JOIN question q USING (question_concept_id);
+
+-- Version-aware (opt-in): text/options AS THE PARTICIPANT SAW THEM
+SELECT qv.question_text, r.*
+FROM responses r
+JOIN question_version qv
+  ON qv.question_concept_id = r.question_concept_id
+ AND qv.version            = r.question_version;
+```
+
+### Common operation: safe cross-version pooling
+
+The single most common versioned-table operation is *"give me the distribution of answers to question X
+across all participants"* — and it's exactly where a naive `GROUP BY question_concept_id` goes wrong, because
+v1 and v2 may have offered different options (Pattern 3) or the concept may have been replaced outright
+(Pattern 4). The Type-4 tables make the safe version straightforward.
+
+**(a) Pattern 4 — normalize deprecated CIDs to their successor *before* grouping**, so answers to a
+replaced-concept question pool with its replacement:
+
+```sql
+WITH normalized AS (
+  SELECT COALESCE(q.successor_concept_id, r.question_concept_id) AS q_cid,
+         r.response_value_as_concept_id
+  FROM responses r
+  JOIN question q USING (question_concept_id)
+)
+SELECT n.q_cid, resp.format_value AS answer, COUNT(*) AS n
+FROM normalized n
+LEFT JOIN response resp ON resp.response_concept_id = n.response_value_as_concept_id
+GROUP BY n.q_cid, answer
+ORDER BY n DESC;
+```
+
+**(b) Pattern 3 — pool a same-CID question but keep comparability visible.** Tag each answer with the
+version it was collected under and with *how many versions offered that option*, so an option that existed in
+only one version (the new "other reason") surfaces instead of silently merging into a rate whose denominator
+differs by version:
+
+```sql
+-- comparability lookup: how many versions offered each option
+WITH opt_versions AS (
+  SELECT response_concept_id, COUNT(DISTINCT version) AS versions_offered
+  FROM response_options
+  WHERE question_concept_id = '899251483'
+  GROUP BY response_concept_id
+)
+SELECT resp.format_value  AS answer,
+       r.question_version,
+       COUNT(*)           AS n,
+       ov.versions_offered            -- 1 = version-specific (pool with care); 2 = offered in both
+FROM responses r
+LEFT JOIN response     resp ON resp.response_concept_id = r.response_value_as_concept_id
+LEFT JOIN opt_versions ov   ON ov.response_concept_id   = r.response_value_as_concept_id
+WHERE r.question_concept_id = '899251483'
+GROUP BY answer, r.question_version, ov.versions_offered
+ORDER BY r.question_version, n DESC;
+```
+
+`versions_offered` is the guardrail: options seen in *every* version are safe to pool; options seen in only
+one are reported on their own. (This is the structured version of the hand-`COALESCE` reconciliation the
+pain-exhibit repos do by column name.)
+
+### On an `is_versioned` flag — derive it, don't store it
+
+Tempting, but a stored boolean is (1) **lossy** — "versioned" conflates repeat-administration (Pattern 1),
+minor `_rN` revision (Pattern 2), same-ID option change (Pattern 3), and new-ID replacement (Pattern 4) —
+and (2) **derived**, so storing it invites drift when a new version lands (against principle #4, "metadata is
+generated, not authored"). In Type 4 the question answers itself:
+
+```sql
+-- convenience flag as a VIEW column, never an authored/stored column
+CREATE OR REPLACE VIEW v_question AS
+SELECT q.*,
+       (q.max_version > 1 OR q.status IN ('Deprecated','Revised')) AS is_versioned
+FROM question q;
+```
+
+Keep the *typed* descriptors (`status`, `max_version`, `successor_concept_id`) on the dimension; let the
+boolean fall out of them in the view. On the fact, don't add a flag either — a pooling hazard is already
+detectable via `COUNT(DISTINCT question_version) OVER (PARTITION BY question_concept_id) > 1`.
+
+### Populating the overlay from the data dictionary
+
+The neat part: the dictionary *already* stores versions — but as **wide Type-3 columns**
+(`Current / V1 / V2 Question Text`, `Current / V1 / V2 Source Question`), which is the very shape we're
+normalizing away. So building the Type-4 overlay is the **same wide→long unpivot** we run for the `responses`
+fact, applied to the dictionary's version columns.
+
+| Overlay target | Data-dictionary source (`masterFile.csv`) | Transform |
+|---|---|---|
+| `question.status` | `Deprecated, New, or Revised` (col 12) | forward-fill to the question row |
+| `question.added_at` / `deprecated_at` / `status_date` | `Date … Pushed to Prod` (col 13); `Date added or modified` (col 33) | forward-fill |
+| `question.max_version` | the `_vN` in the SAS mnemonic (`Variable Label`, col 18) | parse `_v(\d+)`, take MAX per concept |
+| `question_version` rows | `Current / V1 / V2 Question Text` + `Current / V1 / V2 Source Question` columns | **unpivot**: one row per non-null version column → `(question_concept_id, version, question_text, source_question_concept_id)` |
+| version-scoped `response_options` | response concepts under the concept's v1 vs `_v2` physical columns + per-response `Deprecated/New` flags | reconcile **Quest > dictionary flags > columns** (the offered-set decision) |
+| `question.successor_concept_id` | **not stored explicitly** — old is `Deprecated`, new is a separate row/CID | infer by matching the mnemonic **base** (`SrvBOH_SexAtBirth_*`) across a version bump; ambiguous pairs **hand-authored** |
+
+Two honesty notes:
+
+- **The same-CID vs new-CID split falls straight out of the source.** If the `_V2` variable keeps the concept
+  ID → a `question_version` row (Pattern 3, version attribute). If it carries a *new* concept ID → a
+  `successor_concept_id` / `concept_relationship` link (Pattern 4). The transform branches on exactly that test.
+- **`successor_concept_id` is the only non-mechanical part.** Everything else is forward-fill + unpivot +
+  regex-parse; the deprecated→replacement links are curation (mnemonic-base matching gets most; the tail is
+  hand-authored) — the "curation work, not schema work" called out in Summary of Scope. (If CIDTool later
+  emits these version relationships directly, the overlay loads from CIDTool instead of being parsed from
+  masterFile, like the other dimensions.)
+
+### Added questions (`status = New`) — a birth, not a version conflict
+
+Questions are genuinely **added over time**, not just revised. In `masterFile.csv`, **994 rows** are flagged
+`New`, and **488 carry a `Date … Pushed to Prod`** spanning **June 2022 → May 2026** (per year: 2022 · 20,
+2023 · 80, 2024 · 65, **2025 · 269**, 2026 · 54). Whole sections arrive at once — the **Cancer Screening
+History** module alone contributes **226**.
+
+This is distinct from the four version *patterns*: there is no v1 to pool with — the concept simply **did not
+exist before its add date**. It maps to the overlay cleanly, and matters most for denominators:
+
+- `question.status = 'New'` + `question.added_at` (the push-to-prod date); no `successor` link, no prior
+  `question_version` row.
+- **Absence of a response is not "missing" for a participant who finished the survey before the add date** —
+  they were never offered the question. So the correct denominator for a `New` question excludes pre-add-date
+  sessions: `session.completed_at < question.added_at` ⇒ *not offered* (distinct from asked-and-skipped).
+  This is the same *offered-vs-not-offered* logic as option-set versioning, one level up (whole question,
+  keyed on date). Worth stating for the view library, since a naive "N answered / total participants" rate
+  silently understates a recently-added question.
+
+This is enhancement §3's resolved shape, and it is where `v1_source_question` (removed from the core
+`source_question` dim in the column-rename PR) lands: as a `source_question_version` overlay row under the
+same Type-4 pattern, if/when the need is pulled in.
+
+---
+
 ## Summary of Scope
 
 | Dimension | Count |

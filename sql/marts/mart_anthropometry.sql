@@ -23,10 +23,10 @@ WITH pivoted AS (
   SELECT
     connect_id,
     MAX(IF(question_concept_id = '340854069'
-           AND current_source_question_concept_id = '114314839',
+           AND source_question_concept_id = '114314839',
            SAFE_CAST(response_value_as_string AS FLOAT64), NULL)) AS height_ft,  -- D_114314839_D_340854069
     MAX(IF(question_concept_id = '600462977'
-           AND current_source_question_concept_id = '114314839',
+           AND source_question_concept_id = '114314839',
            SAFE_CAST(response_value_as_string AS FLOAT64), NULL)) AS height_in,  -- D_114314839_D_600462977
     MAX(IF(question_concept_id = '746012894',
            SAFE_CAST(response_value_as_string AS FLOAT64), NULL)) AS weight       -- D_746012894

@@ -32,7 +32,7 @@ own lineage); (c) **computed** `beer_dwk`/`wine_dwk`/drinks-per-week + a multi-c
 A recode falls into one of three shapes — only the third is hand-typed:
 
 1. **Pure code → label** (education, marital, income): **JOIN the dictionary** (`response` dim:
-   `response_concept_id → current_format_value`) rather than hand-typing the labels. The label keeps its full
+   `response_concept_id → format_value`) rather than hand-typing the labels. The label keeps its full
    `"N = value"` form (the number,value pairing is intentional). Labels stay in sync with the dictionary and
    can't drift — the whole point of the model.
 2. **Category collapse** (e.g. grouping several codes into one bucket): a `CASE` over the coded values — but

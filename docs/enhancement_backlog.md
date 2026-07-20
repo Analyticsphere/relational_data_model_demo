@@ -148,6 +148,15 @@ in stage (82k rows fits in one cluster block regardless of clustering).
   transparent minor revisions (351 `r`-increment variables), same-CID option-set changes (Pattern 3),
   and new-CID concept replacements (Pattern 4, including the entire COVID-19 module). The biggest lift
   is authoring `successor_cid` links for deprecated→replaced pairs — curation work, not schema work.
+- **Design (recommended — SCD Type 4):** keep the current-state dims clean (one row/concept — done) and add a
+  `question_version` **history overlay** (one row per concept × version); the fact's `question_version`
+  bridges them. Choose the mechanism by whether the source **keeps the concept ID** (Pattern 3 → version
+  *attribute* + version-scoped options) or **mints a new ID** (Pattern 4 → `concept_relationship` +
+  `successor_concept_id`) — never fabricate per-version IDs. `is_versioned` is a **derived view column, not a
+  stored flag**. Added questions (`status = 'New'` — 994 rows, pushed to prod 2022→2026) are a *birth*, not a
+  version conflict: denominators must exclude pre-add-date sessions. Full write-up + the SCD 1–4 comparison,
+  pooling queries, and dictionary→overlay mapping in
+  [`version_handling_survey.md`](version_handling_survey.md) → "Recommended Design: SCD Type 4."
 
 ### 4. `skip_logic` (structured branching from Quest)
 - **What:** first-class rules `(trigger, operator, value, action, enable_behavior, trigger_default)` parsed
@@ -257,7 +266,7 @@ in stage (82k rows fits in one cluster block regardless of clustering).
 - Relabeling / redesigning the dictionary dimensions into new researcher-facing tables — the dictionary
   **is** the model's dimensions.
 - A mandatory `survey_questions` placement bridge that `responses` must key on. (Model A instead carries the
-  placement coordinates — `secondary_source_concept_id` + `current_source_question_concept_id` — inline on
+  placement coordinates — `secondary_source_concept_id` + `source_question_concept_id` — inline on
   the fact.) A bridge could be revisited only if reused-concept integrity demands it, but it is **not** the
   planned path.
 - A layered Core→Analytic→Marts rearchitecture as a prerequisite. Marts (#8) can sit downstream without it.

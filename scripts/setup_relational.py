@@ -173,7 +173,7 @@ def create_colmap_view(client, bq, project):
   `table`                    AS table_name,
   `column`                   AS source_column,
   secondary_source_concept_id,
-  NULLIF(source_question_concept_id, '') AS current_source_question_concept_id,
+  NULLIF(source_question_concept_id, '') AS source_question_concept_id,
   question_concept_id,
   COALESCE(loop_number, 1)   AS loop_instance,
   NULLIF(version_tag, '')    AS question_version

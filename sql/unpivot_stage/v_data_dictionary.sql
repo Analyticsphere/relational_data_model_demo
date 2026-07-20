@@ -9,21 +9,21 @@ SELECT
   ps.primary_source,
   q.secondary_source_concept_id,
   ss.secondary_source,
-  q.current_source_question_concept_id,
+  q.source_question_concept_id,
   sq.source_question_text,
-  sq.grid_source_question_name,
+  sq.grid_name,
   q.question_concept_id,
-  q.current_question_text,
+  q.question_text,
   q.question_type,
   r.response_concept_id,
-  r.current_format_value
+  r.format_value
 FROM `nih-nci-dceg-connect-stg-5519.relational.question` q
 LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.secondary_source` ss
   ON ss.secondary_source_concept_id = q.secondary_source_concept_id
 LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.primary_source` ps
   ON ps.primary_source_concept_id = ss.primary_source_concept_id
 LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.source_question` sq
-  ON sq.current_source_question_concept_id = q.current_source_question_concept_id
+  ON sq.source_question_concept_id = q.source_question_concept_id
 LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.question_response` qr
   ON qr.question_concept_id = q.question_concept_id
 LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.response` r
@@ -31,6 +31,6 @@ LEFT JOIN `nih-nci-dceg-connect-stg-5519.relational.response` r
 ORDER BY
   primary_source_concept_id,
   secondary_source_concept_id,
-  current_source_question_concept_id NULLS FIRST,
+  source_question_concept_id NULLS FIRST,
   question_concept_id,
   response_concept_id NULLS FIRST;

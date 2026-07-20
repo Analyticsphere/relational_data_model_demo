@@ -51,7 +51,7 @@ def _():
         """
         CREATE TABLE responses (
           connect_id VARCHAR, secondary_source_concept_id VARCHAR,
-          current_source_question_concept_id VARCHAR, question_concept_id VARCHAR, loop_instance INT,
+          source_question_concept_id VARCHAR, question_concept_id VARCHAR, loop_instance INT,
           question_version VARCHAR, response_value_as_string VARCHAR, response_value_as_number DOUBLE,
           response_value_as_concept_id VARCHAR, source_table VARCHAR, source_column VARCHAR);
 
@@ -94,8 +94,8 @@ def _(con, mo):
         """
         SELECT r.connect_id,
                ss.secondary_source                                        AS survey,
-               q.current_question_text                                    AS question,
-               COALESCE(o.current_format_value, r.response_value_as_string) AS answer,
+               q.question_text                                    AS question,
+               COALESCE(o.format_value, r.response_value_as_string) AS answer,
                r.loop_instance
         FROM responses r
         JOIN question q               ON q.question_concept_id          = r.question_concept_id
@@ -127,11 +127,11 @@ def _(mo):
 def _(con, mo):
     _ = mo.sql(
         """
-        SELECT o.current_format_value AS answer, COUNT(*) AS n
+        SELECT o.format_value AS answer, COUNT(*) AS n
         FROM responses r
         JOIN response o ON o.response_concept_id = r.response_value_as_concept_id
         WHERE r.question_concept_id = '108417657'   -- "How many times have you had a proctoscopy?"
-        GROUP BY o.current_format_value
+        GROUP BY o.format_value
         ORDER BY n DESC
         """,
         engine=con,
@@ -159,7 +159,7 @@ def _(con, mo):
     _pooled = mo.sql(
         """
         -- pooled across every survey the concept appears in
-        SELECT o.current_format_value AS language, COUNT(*) AS n
+        SELECT o.format_value AS language, COUNT(*) AS n
         FROM responses r
         JOIN response o ON o.response_concept_id = r.response_value_as_concept_id
         WHERE r.question_concept_id = '784119588'
@@ -175,7 +175,7 @@ def _(con, mo):
     _by_survey = mo.sql(
         """
         -- the same concept, sliced by the stamped survey
-        SELECT ss.secondary_source AS survey, o.current_format_value AS language, COUNT(*) AS n
+        SELECT ss.secondary_source AS survey, o.format_value AS language, COUNT(*) AS n
         FROM responses r
         JOIN response o          ON o.response_concept_id          = r.response_value_as_concept_id
         JOIN secondary_source ss ON ss.secondary_source_concept_id = r.secondary_source_concept_id
@@ -212,7 +212,7 @@ def _(con, mo):
           FROM concept_relationship
           WHERE relationship = 'synonym' AND concept_id_2 = '105043152'   -- the group's canonical concept
         )
-        SELECT q.current_question_text        AS field,
+        SELECT q.question_text        AS field,
                r.response_value_as_string      AS street_name,
                r.connect_id, r.loop_instance
         FROM responses r
