@@ -149,13 +149,7 @@ for f in "$UNPIVOT_DIR"/unpivot_*.sql; do
     && echo "ok" || { echo "FAILED"; exit 1; }
 done
 
-# ── Step G: type value columns ────────────────────────────────────────────────
-echo ""
-echo "=== Step G: typing value columns ==="
-bq --project_id="$PROJECT" query --use_legacy_sql=false \
-  < "$UNPIVOT_DIR/type_response_values.sql"
-
-# ── Step H: create response_source_codes view ─────────────────────────────────
+# ── Step G: create response_source_codes view ─────────────────────────────────
 echo ""
 echo "=== Step H: creating response_source_codes view ==="
 bq_run sql/omop/response_source_codes.sql

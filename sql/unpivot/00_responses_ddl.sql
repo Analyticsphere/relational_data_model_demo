@@ -9,8 +9,9 @@ CREATE TABLE IF NOT EXISTS `${PROJECT}.relational.responses` (
   loop_instance INT64,                          -- the _N loop suffix (1 if not looped)
   question_version STRING,                      -- the _v2 question/concept revision tag
   response_value_as_string STRING,              -- verbatim raw cell — always populated
-  response_value_as_number FLOAT64,             -- numeric answers (Num/Year/count)
-  response_value_as_concept_id STRING,          -- coded answer (single/multi-select)
+  response_value_as_concept_id STRING,          -- coded answer (9-digit concept ID); typed inline at unpivot
+  response_value_as_date DATE,                  -- ISO date answer; typed inline at unpivot
+  response_value_as_number FLOAT64,             -- numeric answer (Num/Year/count); typed inline at unpivot
   response_unique_id INT64,                     -- stable OMOP-compatible integer id; see sql/omop/response_unique_id_udf.sql
   source_table STRING,
   source_column STRING
