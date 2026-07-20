@@ -10,6 +10,7 @@ Table schemas are read from schemas/relational/*.json — the single source of t
 Usage:
     python scripts/setup_relational.py                          # responses infra only (defaults to stage)
     python scripts/setup_relational.py --dims                   # also load dimension tables
+    python scripts/setup_relational.py --recreate --dims        # drop+recreate responses, reload dims
     python scripts/setup_relational.py --dims --dims-dir output/dim
     python scripts/setup_relational.py --project my-project
 
@@ -152,18 +153,34 @@ def load_colmap(client, bq, project, mapping_path):
     print(f"  loaded {tbl.num_rows} rows into {table_ref}")
 
 
-def create_responses_table(client, bq, project):
-    """Create the responses fact table from schemas/relational/responses.json if it doesn't exist."""
+def create_responses_table(client, bq, project, recreate=False):
+    """Create the responses fact table from schemas/relational/responses.json.
+
+    If recreate=True and the table already exists, drops it first so the schema
+    is always in sync with schemas/relational/responses.json. All rows are lost —
+    re-run the unpivot inserts after.
+    """
     table_ref = f"{project}.{DATASET}.responses"
     schema = load_schema_json("responses")
     table = bq.Table(table_ref, schema=schema)
     table.clustering_fields = ["secondary_source_concept_id", "question_concept_id", "connect_id"]
+
+    exists = True
     try:
         client.get_table(table_ref)
-        print(f"  responses table already exists — skipping creation")
     except Exception:
+        exists = False
+
+    if exists and recreate:
+        client.delete_table(table_ref)
+        print(f"  dropped existing {table_ref}")
+        exists = False
+
+    if exists:
+        print(f"  responses table already exists — skipping (use --recreate to drop and recreate)")
+    else:
         client.create_table(table)
-        print(f"  created table {table_ref} (clustered by secondary_source_concept_id, question_concept_id, connect_id)")
+        print(f"  created {table_ref} (clustered by secondary_source_concept_id, question_concept_id, connect_id)")
 
 
 def create_colmap_view(client, bq, project):
@@ -227,6 +244,9 @@ def main():
                     help="also load dimension tables (primary_source, secondary_source, etc.)")
     ap.add_argument("--dims-dir", default=DEFAULT_DIMS_DIR,
                     help=f"directory containing dim CSVs (default: {DEFAULT_DIMS_DIR})")
+    ap.add_argument("--recreate", action="store_true",
+                    help="drop and recreate the responses table — schema will match schemas/relational/responses.json. "
+                         "WARNING: all rows are deleted; re-run unpivot inserts after.")
     ap.add_argument("--yes", action="store_true",
                     help="skip confirmation prompt (for CI/scripted use)")
     args = ap.parse_args()
@@ -237,12 +257,14 @@ def main():
                  "  run: python scripts/parse_survey_columns.py --layer CleanConnect -o output/survey_columns_stage_clean.csv\n"
                  "       python scripts/map_survey_columns.py output/survey_columns_stage_clean.csv -o output/survey_columns_stage_mapped.csv")
 
-    print(f"\nTarget project : {args.project}")
+    print(f"Target project : {args.project}")
     print(f"Dataset        : {DATASET}")
     print(f"Mapping file   : {mapping}")
     print(f"Schema dir     : {SCHEMAS_DIR}")
     if args.dims:
         print(f"Dims dir       : {args.dims_dir}")
+    if args.recreate:
+        print(f"⚠️  --recreate: responses table will be DROPPED and recreated (all rows deleted)")
     print()
 
     if not args.yes:
@@ -259,7 +281,7 @@ def main():
     load_colmap(client, bq, args.project, mapping)
 
     print("3. Creating responses table...")
-    create_responses_table(client, bq, args.project)
+    create_responses_table(client, bq, args.project, recreate=args.recreate)
 
     print("4. Creating colmap view...")
     create_colmap_view(client, bq, args.project)

@@ -84,12 +84,11 @@ envsubst '${PROJECT}' < sql/omop/response_unique_id_udf.sql | bq --project_id=$P
 ## Step C — stand up the `relational` dataset + dims + `responses` table/colmap
 
 `setup_relational.py` prints the target project and prompts before writing (drop `--yes` to keep the prompt).
-It creates the dataset, loads the column mapping, creates the empty `responses` table + `colmap` view, and
-loads the dimension tables from `output/dim/*.csv` (built offline from the data dictionary — no participant
-data).
+Pass `--recreate` to drop and recreate `responses` with the current schema (required if the schema has
+changed since the last run — all rows are deleted and must be reloaded in Steps D and E).
 
 ```bash
-python scripts/setup_relational.py --project $PROJECT --mapping $MAPPING --dims       # confirm at the prompt
+python scripts/setup_relational.py --project $PROJECT --mapping $MAPPING --dims --recreate  # confirm at the prompt
 ```
 
 ## Step D — populate `responses` (reads real CleanConnect data)
@@ -104,10 +103,13 @@ done
 envsubst '${PROJECT}' < "$UNPIVOT_DIR"/type_response_values.sql | bq --project_id=$PROJECT query --use_legacy_sql=false
 ```
 
-## Step E — build the OMOP source-code table
+## Step E — create the `response_source_codes` view
+
+Run once to create (or update) the view definition. After this, the view is always current —
+no re-run needed when `responses` is repopulated.
 
 ```bash
-envsubst '${PROJECT}' < sql/omop/response_source_codes.sql | bq --project_id=$PROJECT query --use_legacy_sql=false
+sed 's/${PROJECT}/'"$PROJECT"'/g' sql/omop/response_source_codes.sql | bq --project_id=$PROJECT query --use_legacy_sql=false
 ```
 
 ## Step F — validate (counts + id uniqueness; NO verbatim values printed)
@@ -116,7 +118,6 @@ envsubst '${PROJECT}' < sql/omop/response_source_codes.sql | bq --project_id=$PR
 bq --project_id=$PROJECT query --use_legacy_sql=false --format=pretty "
 SELECT
   COUNT(*)                                   AS n_rows,
-  COUNT(DISTINCT response_hash_id)           AS n_hash,        -- expect = n_rows
   COUNT(DISTINCT response_unique_id)         AS n_unique_id,   -- expect = n_rows (no 60-bit collisions)
   MIN(response_unique_id)                    AS min_id,        -- expect > 2000000000
   MAX(response_unique_id)                    AS max_id,        -- expect < 9223372036854775807
@@ -125,28 +126,29 @@ SELECT
 FROM \`$PROJECT.relational.response_source_codes\`"
 ```
 
-`n_hash = n_unique_id = n_rows` and `out_of_omop_range = 0` confirm the ids are unique and OMOP-valid.
+`n_unique_id = n_rows` and `out_of_omop_range = 0` confirm ids are unique and OMOP-valid.
 (Repo `sql/unpivot/validate_responses.sql` has broader upstream checks for the `responses` fact.)
 
 ## Governance / PII
 
-`response_value_verbatim` is free text = PII/PHI. Govern this table at its inputs' sensitivity, and restrict
+`response_value_verbatim` is free text = PII/PHI. Govern this view at its inputs' sensitivity, and restrict
 which free-text (`response_kind = 'free_text'`) questions you export to Usagi to a vetted allow-list. Do not
 print verbatim values into logs/tickets. See `docs/omop_source_codes.md`.
 
 ## Idempotency / rollback
 
-- Every step is re-runnable: `setup_relational.py` is idempotent, each `unpivot_*.sql` clears its own rows
-  first, and `response_source_codes.sql` is `CREATE OR REPLACE TABLE`.
-- To roll back just the OMOP step: `bq rm -f -t $PROJECT:relational.response_source_codes`.
+- Every step is re-runnable: `setup_relational.py --recreate` drops and recreates `responses` with the
+  current schema (then re-run unpivots); each `unpivot_*.sql` clears its own rows first;
+  `response_source_codes.sql` is `CREATE OR REPLACE VIEW`.
+- To roll back just the view: `bq rm -f --view $PROJECT:relational.response_source_codes`.
 
 ## One-liner recap (stage)
 
 ```bash
 export PROJECT=nih-nci-dceg-connect-stg-5519 MAPPING=output/survey_columns_stage_mapped.csv UNPIVOT_DIR=sql/unpivot_stage
 python scripts/smoke_test_omop_hash.py
-envsubst '${PROJECT}' < sql/omop/response_unique_id_udf.sql | bq --project_id=$PROJECT query --use_legacy_sql=false
-python scripts/setup_relational.py --project $PROJECT --mapping $MAPPING --dims
-for f in "$UNPIVOT_DIR"/unpivot_*.sql; do envsubst '${PROJECT}' < "$f" | bq --project_id=$PROJECT query --use_legacy_sql=false; done
-envsubst '${PROJECT}' < sql/omop/response_source_codes.sql | bq --project_id=$PROJECT query --use_legacy_sql=false
+sed 's/${PROJECT}/'"$PROJECT"'/g' sql/omop/response_unique_id_udf.sql | bq --project_id=$PROJECT query --use_legacy_sql=false
+python scripts/setup_relational.py --project $PROJECT --mapping $MAPPING --dims --recreate
+for f in "$UNPIVOT_DIR"/unpivot_*.sql; do bq --project_id=$PROJECT query --use_legacy_sql=false < "$f"; done
+sed 's/${PROJECT}/'"$PROJECT"'/g' sql/omop/response_source_codes.sql | bq --project_id=$PROJECT query --use_legacy_sql=false
 ```
