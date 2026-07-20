@@ -81,6 +81,58 @@ response_hash <- function(sec, sq, q, value_verbatim) {
 ```
 Both return the same lowercase hex as `TO_HEX(SHA256(...))` in BigQuery.
 
+## The same id as an OMOP custom concept_id (`response_custom_concept_id`)
+
+The hex id is the Usagi `source_code`. But OMOP reserves `concept_id > 2,000,000,000` for **custom (local)
+concepts**, so the same source code can also live in the `CONCEPT` table as a [faux custom
+concept](https://ohdsi.github.io/CommonDataModel/customConcepts.html). That needs an **integer** in the
+reserved range — so we **project** the hash (we do not hash anything new, so it still can't drift):
+
+```
+response_custom_concept_id = 2000000001 + (first 15 hex chars of response_hash_id, read as base-16)
+```
+
+| Constraint (per OHDSI custom concepts) | Holds because |
+|---|---|
+| **Integer** | base-16 parse of 15 hex chars → a whole number |
+| **> 2,000,000,000** | offset is `2000000001`; the parsed value is ≥ 0, so the result is always ≥ `2000000001` |
+| **< 9,223,372,036,854,775,807** (signed-64 max) | 15 hex chars = 60 bits → ≤ `2^60−1`; `2000000001 + (2^60−1) ≈ 1.153×10¹⁸`, far below the ceiling |
+
+- **15, not 16, hex chars** on purpose: 16 = 64 bits could exceed a signed `BIGINT` and overflow on some
+  engines. 60 bits keeps every engine in safe positive-integer territory.
+- **Collision.** Two responses share a concept_id only if 60 bits of their hashes match — expected collisions
+  ≈ `N²/2⁶¹` (negligible at our scale). The `UNIQUE`ness check in the smoke test guards it.
+- It is a **pure function of `response_hash_id`**, so the hex id stays the single source of truth; the integer
+  is just a second representation for OMOP.
+
+### Reproducing the integer per engine
+
+The hex id is universal; each engine just needs to read its first 15 chars as base-16 and add the offset:
+
+| Engine | `response_custom_concept_id` |
+|---|---|
+| BigQuery | `2000000001 + (SELECT SUM((STRPOS('0123456789abcdef', SUBSTR(h,pos,1))-1) * CAST(POW(16,15-pos) AS INT64)) FROM UNNEST(GENERATE_ARRAY(1,15)) pos)` |
+| Snowflake | `2000000001 + TO_NUMBER(SUBSTR(h,1,15), 'XXXXXXXXXXXXXXX')` |
+| Spark / Databricks | `2000000001 + CAST(conv(substr(h,1,15),16,10) AS BIGINT)` |
+| Postgres | `2000000001 + ('x' \|\| substr(h,1,15))::bit(60)::bigint` |
+| DuckDB | `2000000001 + CAST('0x' \|\| substr(h,1,15) AS BIGINT)` |
+
+BigQuery has no hex→int cast, so it sums nibble·16ⁿ; the weights are powers of two and thus exact in
+`FLOAT64`/`INT64`. All forms return the identical integer (`h` = `response_hash_id`).
+
+```python
+def response_custom_concept_id(response_hash_id):      # pure projection of the hex id
+    return 2000000001 + int(response_hash_id[:15], 16)
+```
+```r
+response_custom_concept_id <- function(response_hash_id) {   # needs 64-bit ints
+  bit64::as.integer64(2000000001) +
+    Reduce(function(a, d) a * 16L + d,
+           strtoi(strsplit(substr(response_hash_id, 1, 15), "")[[1]], 16L),
+           bit64::as.integer64(0))
+}
+```
+
 ## Decisions to make up front (each one re-hashes everything)
 
 Because the recipe is a one-time contract, settle these **before** first use — changing them later invalidates
@@ -113,6 +165,8 @@ names → RxNorm, condition text → SNOMED, etc.). Two consequences:
 - `source_code_description` = `source_code_description` (coded → question text + answer label from the
   dictionary; free text → question text + the verbatim string)
 - optionally carry `question_concept_id` / `response_value_verbatim` so mappings round-trip back to Connect.
+- to store the source code as a **custom OMOP concept**, use `response_custom_concept_id` as its
+  `concept_id` (and as `*_source_concept_id` on facts) — it's the same id, in integer form.
 
 ## Run
 

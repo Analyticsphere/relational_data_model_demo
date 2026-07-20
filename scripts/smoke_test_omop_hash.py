@@ -7,7 +7,9 @@ Proves the deterministic source-code id without any Connect data:
   3. INDEPENDENTLY recomputes it in pure Python (hashlib) and asserts byte-identical output
      — this is the cross-engine reproducibility guarantee: DuckDB == Python, and BigQuery's
      TO_HEX(SHA256(x)) is the same standard SHA-256 -> lowercase hex, so it matches too,
-  4. checks the DISTINCT grain, determinism on re-run, collision-safety (incl. a pipe inside a
+  4. derives response_custom_concept_id (= 2000000001 + first-15-hex-of-hash) and asserts it is an
+     integer in OMOP's custom-concept range (>2e9, <2^63-1), DuckDB == Python, and collision-free,
+  5. checks the DISTINCT grain, determinism on re-run, collision-safety (incl. a pipe inside a
      free-text value, and the same text under two questions), and NULL secondary_source handling.
 
 No production rows are ever read. Requires: duckdb.
@@ -27,6 +29,13 @@ except ImportError:
 #   NULL -> '' ; delimiter '|' ; UTF-8 ; SHA-256 -> lowercase hex
 def py_hash(sec, sq, qc, val):
     return hashlib.sha256("|".join([sec or "", sq or "", qc or "", val]).encode("utf-8")).hexdigest()
+
+# Custom OMOP concept_id: pure projection of the hash into OMOP's custom range (>2e9).
+#   response_custom_concept_id = 2000000001 + (first 15 hex chars of the hash, base-16)
+CONCEPT_OFFSET = 2000000001
+INT64_MAX = 9223372036854775807
+def py_concept_id(hexid):
+    return CONCEPT_OFFSET + int(hexid[:15], 16)
 
 HASH_SQL = """
   sha256( COALESCE(d.secondary_source_concept_id,'') || '|' ||
@@ -67,19 +76,27 @@ def main():
              question_concept_id, response_value_as_string
       FROM responses
       WHERE response_value_as_string IS NOT NULL AND response_value_as_string <> ''
+    ),
+    hashed AS (
+      SELECT {HASH_SQL} AS response_hash_id,
+        d.secondary_source_concept_id, d.source_question_concept_id,
+        d.question_concept_id, d.response_value_as_string
+      FROM distinct_responses d
     )
-    SELECT {HASH_SQL} AS response_hash_id,
-      d.secondary_source_concept_id, d.source_question_concept_id,
-      d.question_concept_id, d.response_value_as_string AS v,
+    SELECT h.response_hash_id,
+      -- custom OMOP concept_id = 2000000001 + first-15-hex-of-hash (base-16); DuckDB hex-cast form
+      {CONCEPT_OFFSET} + CAST('0x' || substr(h.response_hash_id, 1, 15) AS BIGINT) AS response_custom_concept_id,
+      h.secondary_source_concept_id, h.source_question_concept_id,
+      h.question_concept_id, h.response_value_as_string AS v,
       CASE WHEN qr.response_concept_id IS NOT NULL THEN 'coded'
-           WHEN TRY_CAST(d.response_value_as_string AS DOUBLE) IS NOT NULL
-             OR regexp_matches(d.response_value_as_string, '^\\d{{4}}-\\d{{2}}-\\d{{2}}') THEN 'numeric_or_date'
+           WHEN TRY_CAST(h.response_value_as_string AS DOUBLE) IS NOT NULL
+             OR regexp_matches(h.response_value_as_string, '^\\d{{4}}-\\d{{2}}-\\d{{2}}') THEN 'numeric_or_date'
            ELSE 'free_text' END AS response_kind
-    FROM distinct_responses d
+    FROM hashed h
     LEFT JOIN question q USING (question_concept_id)
-    LEFT JOIN question_response qr ON qr.question_concept_id=d.question_concept_id
-                                  AND qr.response_concept_id=d.response_value_as_string
-    LEFT JOIN response resp ON resp.response_concept_id=d.response_value_as_string
+    LEFT JOIN question_response qr ON qr.question_concept_id=h.question_concept_id
+                                  AND qr.response_concept_id=h.response_value_as_string
+    LEFT JOIN response resp ON resp.response_concept_id=h.response_value_as_string
     """
     cols = None
     rows = con.execute(q).fetchall()
@@ -88,23 +105,33 @@ def main():
 
     # 1. DISTINCT grain (9 input rows, 1 duplicate -> 8)
     assert len(R) == 8, f"DISTINCT grain wrong: got {len(R)}"
-    # 2. cross-engine: DuckDB == Python for every row
+    # 2. cross-engine: DuckDB == Python for every row (hash AND custom concept_id)
     for r in R:
         exp = py_hash(r['secondary_source_concept_id'], r['source_question_concept_id'],
                       r['question_concept_id'], r['v'])
         assert r['response_hash_id'] == exp, f"DuckDB/Python mismatch on {r['v']!r}"
+        exp_cid = py_concept_id(exp)
+        assert r['response_custom_concept_id'] == exp_cid, \
+            f"DuckDB/Python concept_id mismatch on {r['v']!r}"
+        # OMOP custom-concept constraints: integer, > 2e9, < signed-64 max
+        cid = r['response_custom_concept_id']
+        assert isinstance(cid, int) and 2000000000 < cid < INT64_MAX, \
+            f"concept_id out of OMOP custom range: {cid}"
     # 3. determinism
     again = {x[0] for x in con.execute(q).fetchall()}
     assert again == {r['response_hash_id'] for r in R}, "non-deterministic"
-    # 4. collision-safety
+    # 4. collision-safety — hash ids AND the derived custom concept_ids
     ids = [r['response_hash_id'] for r in R]
     assert len(set(ids)) == len(ids), "hash collision"
+    cids = [r['response_custom_concept_id'] for r in R]
+    assert len(set(cids)) == len(cids), "custom concept_id collision"
     asp = {r['question_concept_id']: r['response_hash_id'] for r in R if r['v'] == 'Aspirin'}
     assert asp['400'] != asp['401'], "same text under diff question collided"
     assert any(r['secondary_source_concept_id'] is None for r in R), "NULL secondary_source dropped"
 
     print(f"rows: 9 in -> {len(R)} distinct codes (1 duplicate collapsed)")
     print("cross-engine (DuckDB sha256 == Python hashlib): PASS for all 8")
+    print("custom concept_id: integer, >2e9, <2^63-1, DuckDB == Python, unique: PASS")
     print("determinism / no-collision / pipe-in-value / NULL secondary_source: PASS")
     print("PASS")
 
