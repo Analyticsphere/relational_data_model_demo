@@ -75,6 +75,12 @@ for f in "$UNPIVOT_DIR"/unpivot_*.sql "$UNPIVOT_DIR"/type_response_values.sql sq
 done
 ```
 
+## Step B2 — deploy the `response_unique_id` UDF
+
+```bash
+envsubst '${PROJECT}' < sql/omop/response_unique_id_udf.sql | bq --project_id=$PROJECT query --use_legacy_sql=false
+```
+
 ## Step C — stand up the `relational` dataset + dims + `responses` table/colmap
 
 `setup_relational.py` prints the target project and prompts before writing (drop `--yes` to keep the prompt).
@@ -139,6 +145,7 @@ print verbatim values into logs/tickets. See `docs/omop_source_codes.md`.
 ```bash
 export PROJECT=nih-nci-dceg-connect-stg-5519 MAPPING=output/survey_columns_stage_mapped.csv UNPIVOT_DIR=sql/unpivot_stage
 python scripts/smoke_test_omop_hash.py
+envsubst '${PROJECT}' < sql/omop/response_unique_id_udf.sql | bq --project_id=$PROJECT query --use_legacy_sql=false
 python scripts/setup_relational.py --project $PROJECT --mapping $MAPPING --dims
 for f in "$UNPIVOT_DIR"/unpivot_*.sql; do envsubst '${PROJECT}' < "$f" | bq --project_id=$PROJECT query --use_legacy_sql=false; done
 envsubst '${PROJECT}' < sql/omop/response_source_codes.sql | bq --project_id=$PROJECT query --use_legacy_sql=false

@@ -58,7 +58,7 @@ def _insert_stmt(table, cols, types, project, dataset):
     return f"""INSERT INTO `{project}.{dataset}.responses`
   (connect_id, secondary_source_concept_id, source_question_concept_id, question_concept_id,
    loop_instance, question_version, response_value_as_string, response_value_as_number,
-   response_value_as_concept_id, source_table, source_column)
+   response_value_as_concept_id, response_unique_id, source_table, source_column)
 SELECT
   u.Connect_ID                                       AS connect_id,     -- passthrough belongs to the UNPIVOT alias
   m.secondary_source_concept_id,
@@ -69,6 +69,12 @@ SELECT
   u.value                                            AS response_value_as_string,   -- verbatim raw cell (always)
   CAST(NULL AS FLOAT64)                              AS response_value_as_number,    -- typed later by question_type
   CAST(NULL AS STRING)                               AS response_value_as_concept_id,-- coded answer, set later by question_type
+  `{project}.{dataset}.response_unique_id`(          -- stable integer id; see sql/omop/response_unique_id_udf.sql
+    m.secondary_source_concept_id,
+    m.source_question_concept_id,
+    m.question_concept_id,
+    u.value
+  )                                                  AS response_unique_id,
   'CleanConnect.{table}'                             AS source_table,
   u.source_column
 FROM (
@@ -155,6 +161,7 @@ CREATE TABLE IF NOT EXISTS `{args.project}.{args.dataset}.responses` (
   response_value_as_string STRING,              -- verbatim raw cell — always populated
   response_value_as_number FLOAT64,             -- numeric answers (Num/Year/count)
   response_value_as_concept_id STRING,          -- coded answer (single/multi-select)
+  response_unique_id INT64,                     -- stable OMOP-compatible integer id; see sql/omop/response_unique_id_udf.sql
   source_table STRING,
   source_column STRING
 );

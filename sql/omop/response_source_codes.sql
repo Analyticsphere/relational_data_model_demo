@@ -1,5 +1,5 @@
 -- response_source_codes — deterministic, reproducible source codes for OMOP mapping via Usagi.
--- FIRST PASS on the long `responses` fact. NOT run against production; logic validated on synthetic data.
+-- NOT run against production; logic validated on synthetic data.
 --
 -- ┌─ REPRODUCIBILITY IS THE PRIORITY ────────────────────────────────────────────────────────────────┐
 -- │ response_hash_id = SHA-256 (lowercase hex) of RAW, VERBATIM, STABLE inputs ONLY:                   │
@@ -11,36 +11,15 @@
 --
 -- CANONICAL STRING — freeze this; it is the contract (see docs/omop_source_codes.md):
 --   fields, in fixed order:  secondary_source_concept_id ‖ source_question_concept_id ‖ question_concept_id ‖ response_value_as_string
---   NULL            -> empty string ''
---   delimiter       -> '|'   (the first three fields are digit-only concept IDs and never contain it;
---                             the free-text value is LAST, so any '|' inside it cannot create ambiguity)
---   encoding        -> UTF-8 ;  hash -> SHA-256 -> lowercase hex
+--   NULL -> ''   delimiter -> '|'   encoding -> UTF-8   hash -> SHA-256 -> lowercase hex
 --
--- RAW value on purpose: we hash `response_value_as_string` verbatim (always populated; never re-typed).
--- We do NOT normalize case/whitespace and do NOT COALESCE with the typed columns — either would let the id
--- move later. If you want to collapse "Aspirin"/"aspirin", do it DOWNSTREAM (see the derived `value_norm`
--- column); the id stays fixed forever.
+-- RAW value on purpose: response_value_as_string is always the verbatim cell — never re-typed.
+-- Do NOT normalize case/whitespace; that lets the id move. Downstream grouping -> value_norm column.
 --
--- REPRODUCES ANYWHERE (identical bytes -> identical hash):
---   BigQuery  TO_HEX(SHA256(x))            Snowflake SHA2(x, 256)         Spark  sha2(x, 256)
---   Postgres  encode(digest(x,'sha256'),'hex')   Python hashlib.sha256(x.encode()).hexdigest()
---   BEST PRACTICE: compute ONCE here, store it, and have every tool (incl. Usagi) READ this column.
---   Do not recompute in multiple places.
---
--- ┌─ response_unique_id — the integer form of the id (also valid as an OMOP custom concept_id) ────────┐
--- │ Same identity as response_hash_id: one value per unique (secondary_source | source_question |       │
--- │ question | response_value) combination — just an integer instead of hex. Named generically on       │
--- │ purpose: it is NOT a Connect concept_id, and "custom_concept_id" would invite that confusion.        │
--- │ It ALSO satisfies OMOP's custom-concept constraints, so the source code can live in the CONCEPT      │
--- │ table as a faux custom concept (concept_id > 2,000,000,000). We PROJECT the hash (no new input, so   │
--- │ it still can't drift):                                                                               │
--- │   response_unique_id = 2000000001 + (first 15 hex chars of response_hash_id, base-16)                │
--- │ 15 hex chars = 60 bits -> [0, 2^60-1]; +2000000001 -> [2000000001, ~1.153e18]:                       │
--- │   integer ✓   strictly > 2,000,000,000 ✓   << 9,223,372,036,854,775,807 (signed-64 max) ✓           │
--- │ 15 (not 16) hex on purpose: 16 = 64 bits could exceed signed BIGINT and overflow on some engines.    │
--- │ Collision: two responses clash only if 60 hash bits match — ~N^2/2^61 (negligible for our N).        │
--- │ It is a pure function of response_hash_id, so the hex id stays the single source of truth.           │
--- └───────────────────────────────────────────────────────────────────────────────────────────────────┘
+-- response_unique_id — the integer form of the id (also valid as an OMOP custom concept_id):
+--   Stored on relational.responses (computed by the response_unique_id UDF at unpivot time).
+--   This table reads it directly — no recomputation here.
+--   See sql/omop/response_unique_id_udf.sql for the full derivation.
 --
 -- DECIDE BEFORE FIRST USE (changing any of these re-hashes EVERYTHING — it is a one-time contract):
 --   1. Column set — is `secondary_source_concept_id` in the key? IN = survey-specific codes; OUT = one code
@@ -52,20 +31,22 @@
 --   downstream and never changes ids.
 
 CREATE OR REPLACE TABLE `${PROJECT}.relational.response_source_codes`
-OPTIONS(description="Deterministic SHA-256 source codes for OMOP/Usagi mapping — one row per unique response. response_hash_id hashes ONLY raw stable inputs (secondary_source, source_question, question, response_value_as_string, '|'-joined, NULL->''), so it never drifts. response_unique_id = 2000000001 + first-15-hex-of-hash (an integer in OMOP's custom-concept range >2e9, a pure projection of the hash). All other columns are decoration (never feed the hash). response_value_verbatim exposes free text -> govern as PII. First pass; see docs/omop_source_codes.md.")
+OPTIONS(description="Deterministic SHA-256 source codes for OMOP/Usagi mapping — one row per unique response. response_hash_id hashes ONLY raw stable inputs (secondary_source, source_question, question, response_value_as_string, '|'-joined, NULL->''), so it never drifts. response_unique_id is read directly from relational.responses (computed there by the response_unique_id UDF). All other columns are decoration (never feed the hash). response_value_verbatim exposes free text -> govern as PII. See docs/omop_source_codes.md.")
 AS
 WITH distinct_responses AS (
   SELECT DISTINCT
     secondary_source_concept_id,
     source_question_concept_id,
     question_concept_id,
-    response_value_as_string
+    response_value_as_string,
+    response_unique_id
   FROM `${PROJECT}.relational.responses`
   WHERE response_value_as_string IS NOT NULL AND response_value_as_string <> ''
 ),
 hashed AS (
   SELECT
-    -- ── THE ID: pure function of the four raw fields, nothing else ──
+    -- ── THE HASH ID: pure function of the four raw fields, nothing else ──
+    -- Computed here (not stored on responses) — response_unique_id is the persisted form.
     TO_HEX(SHA256(CONCAT(
       COALESCE(d.secondary_source_concept_id, ''), '|',
       COALESCE(d.source_question_concept_id,  ''), '|',
@@ -75,23 +56,13 @@ hashed AS (
     d.secondary_source_concept_id,
     d.source_question_concept_id,
     d.question_concept_id,
-    d.response_value_as_string
+    d.response_value_as_string,
+    d.response_unique_id
   FROM distinct_responses d
 )
 SELECT
   h.response_hash_id,
-
-  -- ── response_unique_id: the id in integer form (also valid as an OMOP custom concept_id; see header) ──
-  -- Pure projection of response_hash_id: 2000000001 + base-16 value of its first 15 hex chars.
-  -- Portable because the weights are powers of two (exact in FLOAT64/INT64); STRPOS maps each
-  -- lowercase-hex nibble to 0..15. Recompute recipe + per-engine equivalents in the doc.
-  2000000001 + (
-    SELECT SUM(
-      (STRPOS('0123456789abcdef', SUBSTR(h.response_hash_id, pos, 1)) - 1)
-        * CAST(POW(16, 15 - pos) AS INT64)
-    )
-    FROM UNNEST(GENERATE_ARRAY(1, 15)) AS pos
-  ) AS response_unique_id,
+  h.response_unique_id,
 
   -- the exact inputs, kept for audit / regeneration
   h.secondary_source_concept_id,
