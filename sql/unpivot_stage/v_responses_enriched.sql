@@ -15,27 +15,27 @@ CREATE OR REPLACE VIEW `nih-nci-dceg-connect-stg-5519.relational.v_responses_enr
 SELECT
   -- participant + survey context
   r.connect_id,
-  ps.primary_source                                   AS domain,
-  ss.secondary_source                                 AS survey,
   r.secondary_source_concept_id,
+  ss.secondary_source                                 AS survey,
+  ps.primary_source                                   AS domain,
 
   -- question placement context
-  sq.source_question_text                             AS source_question,
   r.source_question_concept_id,
+  sq.source_question_text                             AS source_question,
 
   -- question
+  r.question_concept_id,
   q.question_text,
   q.question_type,
-  r.question_concept_id,
   r.question_version,
   r.loop_instance,
 
   -- answer values (OMOP observation-style; as_string is always populated)
   r.response_value_as_string,
-  r.response_value_as_number,
   r.response_value_as_concept_id,
-  r.response_value_as_date,
   resp.format_value                           AS response_label,  -- human label for coded answers
+  r.response_value_as_number,
+  r.response_value_as_date,
 
   -- offered option set for this question (all allowed responses, semicolon-joined)
   opt.response_option_set,

@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """Generate BigQuery SQL that unpivots the wide CleanConnect survey tables into the long `responses` fact.
 
@@ -57,18 +58,34 @@ def _insert_stmt(table, cols, types, project, dataset):
     in_list = ", ".join(bq(c) for c in cols)
     return f"""INSERT INTO `{project}.{dataset}.responses`
   (connect_id, secondary_source_concept_id, source_question_concept_id, question_concept_id,
-   loop_instance, question_version, response_value_as_string, response_value_as_number,
-   response_value_as_concept_id, source_table, source_column)
+   loop_instance, question_version, response_value_as_string,
+   response_value_as_concept_id, response_value_as_date, response_value_as_number,
+   response_unique_id, source_table, source_column)
 SELECT
-  u.Connect_ID                                       AS connect_id,     -- passthrough belongs to the UNPIVOT alias
+  u.Connect_ID                                       AS connect_id,
   m.secondary_source_concept_id,
   m.source_question_concept_id,
   m.question_concept_id,
   m.loop_instance,                                                      -- 1 when not looped (colmap COALESCEs)
   m.question_version,
   u.value                                            AS response_value_as_string,   -- verbatim raw cell (always)
-  CAST(NULL AS FLOAT64)                              AS response_value_as_number,    -- typed later by question_type
-  CAST(NULL AS STRING)                               AS response_value_as_concept_id,-- coded answer, set later by question_type
+  -- typed value columns — routing is mutually exclusive, applied in priority order:
+  --   9-digit integer → concept_id  |  YYYY-MM-DD → date  |  numeric → number  |  else → NULL
+  CASE WHEN REGEXP_CONTAINS(u.value, r'^\\d{{9}}$')
+       THEN u.value                  ELSE NULL END   AS response_value_as_concept_id,
+  CASE WHEN NOT REGEXP_CONTAINS(u.value, r'^\\d{{9}}$')
+        AND REGEXP_CONTAINS(u.value, r'^\\d{{4}}-\\d{{2}}-\\d{{2}}$')
+        AND SAFE_CAST(u.value AS DATE) IS NOT NULL
+       THEN SAFE_CAST(u.value AS DATE) ELSE NULL END AS response_value_as_date,
+  CASE WHEN NOT REGEXP_CONTAINS(u.value, r'^\\d{{9}}$')
+        AND NOT REGEXP_CONTAINS(u.value, r'^\\d{{4}}-\\d{{2}}-\\d{{2}}$')
+       THEN SAFE_CAST(u.value AS FLOAT64) ELSE NULL END AS response_value_as_number,
+  `{project}.{dataset}.response_unique_id`(          -- stable integer id; see sql/omop/response_unique_id_udf.sql
+    m.secondary_source_concept_id,
+    m.source_question_concept_id,
+    m.question_concept_id,
+    u.value
+  )                                                  AS response_unique_id,
   'CleanConnect.{table}'                             AS source_table,
   u.source_column
 FROM (
@@ -153,8 +170,10 @@ CREATE TABLE IF NOT EXISTS `{args.project}.{args.dataset}.responses` (
   loop_instance INT64,                          -- the _N loop suffix (1 if not looped)
   question_version STRING,                      -- the _v2 question/concept revision tag
   response_value_as_string STRING,              -- verbatim raw cell — always populated
-  response_value_as_number FLOAT64,             -- numeric answers (Num/Year/count)
-  response_value_as_concept_id STRING,          -- coded answer (single/multi-select)
+  response_value_as_concept_id STRING,          -- coded answer (9-digit concept ID); typed inline at unpivot
+  response_value_as_date DATE,                  -- ISO date answer; typed inline at unpivot
+  response_value_as_number FLOAT64,             -- numeric answer (Num/Year/count); typed inline at unpivot
+  response_unique_id INT64,                     -- stable OMOP-compatible integer id; see sql/omop/response_unique_id_udf.sql
   source_table STRING,
   source_column STRING
 );

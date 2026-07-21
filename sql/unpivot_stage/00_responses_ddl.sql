@@ -1,33 +1,6 @@
--- Target fact + colmap for the responses unpivot. NOT run against production.
---
--- CLUSTERING DECISION:
---   CLUSTER BY (secondary_source_concept_id, question_concept_id, connect_id)
---
---   Key order rationale:
---     1. secondary_source_concept_id first — most queries filter by survey; 10 surveys means
---        each cluster block covers ~10% of the table (good initial pruning).
---     2. question_concept_id second — within a survey, analyses are almost always
---        question-specific ("distribution of answers to Q"); high cardinality (~3,240 concepts)
---        makes this highly selective.
---     3. connect_id third — participant lookups and cohort-level queries benefit from the
---        remaining sort order.
---   Estimated benefit: 70–85% scan reduction for typical question-level and survey-level queries.
---
--- PARTITIONING DECISION: deferred.
---   No suitable partition column exists — response_value_as_date covers <0.1% of rows (sparse
---   Special Functions questions only); ingestion-time _PARTITIONTIME forces unnatural query
---   filters. Estimated compressed table size at 200k participants: ~2–3 GB. BigQuery
---   partitioning yields its biggest gains above ~1 TB; clustering alone is sufficient now.
---
--- FUTURE: once survey_completed_at DATE is available from the participants table (backlog §5),
---   add DATE partitioning and retain the clustering:
---   PARTITION BY survey_completed_at
---   CLUSTER BY (secondary_source_concept_id, question_concept_id, connect_id)
---   This requires a one-time table recreate at that point.
---
--- NOTE: clustering must be applied before the first production load (cannot be added
---   retroactively). Add OPTIONS(...) to the CREATE TABLE before that load.
-
+-- Target responses fact table + colmap view for the responses unpivot.
+-- Schema source of truth: schemas/relational/responses.json (used by scripts/setup_relational.py).
+-- NOT run against production. Run scripts/setup_relational.py to create these objects.
 CREATE TABLE IF NOT EXISTS `nih-nci-dceg-connect-stg-5519.relational.responses` (
   connect_id STRING,
   secondary_source_concept_id STRING,           -- the SURVEY (stamped from the table via colmap)
@@ -35,21 +8,15 @@ CREATE TABLE IF NOT EXISTS `nih-nci-dceg-connect-stg-5519.relational.responses` 
   question_concept_id STRING,
   loop_instance INT64,                          -- the _N loop suffix (1 if not looped)
   question_version STRING,                      -- the _v2 question/concept revision tag
-  -- value columns (OMOP observation-style). as_string is ALWAYS the verbatim cell (lossless source of
-  -- truth); as_number / as_concept_id are typed extracts filled by a later step keyed on question_type.
   response_value_as_string STRING,              -- verbatim raw cell — always populated
-  response_value_as_number FLOAT64,             -- numeric answers (Num/Year/count) for direct AVG/SUM
-  response_value_as_concept_id STRING,          -- coded answer (single/multi-select) -> joins response / response_options / concept_relationship
-  response_value_as_date DATE,                  -- date answer (ISO YYYY-MM-DD); populated by type step
+  response_value_as_concept_id STRING,          -- coded answer (9-digit concept ID); typed inline at unpivot
+  response_value_as_date DATE,                  -- ISO date answer; typed inline at unpivot
+  response_value_as_number FLOAT64,             -- numeric answer (Num/Year/count); typed inline at unpivot
+  response_unique_id INT64,                     -- stable OMOP-compatible integer id; see sql/omop/response_unique_id_udf.sql
   source_table STRING,
   source_column STRING
-)
-CLUSTER BY secondary_source_concept_id, question_concept_id, connect_id;
+);
 
--- colmap: a clean-named view over the loaded column->placement mapping. Load the mapping first, e.g.
---   bq load --autodetect --source_format=CSV relational.survey_columns_clean_mapped \
---           gs://<bucket>/survey_columns_clean_mapped.csv
--- (`table`/`column` are reserved words -> backticked and aliased below.)
 CREATE OR REPLACE VIEW `nih-nci-dceg-connect-stg-5519.relational.colmap` AS
 SELECT
   `table`                    AS table_name,
@@ -57,6 +24,6 @@ SELECT
   secondary_source_concept_id,
   NULLIF(source_question_concept_id, '') AS source_question_concept_id,  -- NULL = standalone question
   question_concept_id,
-  COALESCE(SAFE_CAST(NULLIF(loop_number, '') AS INT64), 1) AS loop_instance,  -- default 1 when not looped
-  NULLIF(version_tag, '')     AS question_version
+  COALESCE(loop_number, 1)   AS loop_instance,                                   -- default 1 when not looped (INTEGER in table)
+  NULLIF(version_tag, '')    AS question_version
 FROM `nih-nci-dceg-connect-stg-5519.relational.survey_columns_clean_mapped`;
