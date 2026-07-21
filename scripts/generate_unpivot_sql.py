@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """Generate BigQuery SQL that unpivots the wide CleanConnect survey tables into the long `responses` fact.
 
