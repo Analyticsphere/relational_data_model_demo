@@ -12,10 +12,8 @@
 #   C. Deploy response_unique_id UDF
 #   D. Set up dataset + responses table (--recreate) + colmap view + dims
 #   E. Dry-run all unpivot files (syntax/type check, 0 bytes billed)
-#   F. Populate responses (reads real CleanConnect data)
-#   G. Type the value columns
-#   H. Create/update response_source_codes view
-#   I. Validate
+#   F. Populate responses (reads real CleanConnect data; value typing is inlined per insert)
+#   G. Validate response_unique_id on responses
 #
 # Guardrails:
 #   - --project is required; there is no default (forces a conscious choice).
@@ -149,23 +147,24 @@ for f in "$UNPIVOT_DIR"/unpivot_*.sql; do
     && echo "ok" || { echo "FAILED"; exit 1; }
 done
 
-# ── Step G: create response_source_codes view ─────────────────────────────────
+# ── Step G: validate response_unique_id on responses ──────────────────────────
 echo ""
-echo "=== Step H: creating response_source_codes view ==="
-bq_run sql/omop/response_source_codes.sql
-echo "  view created/updated"
-
-# ── Step I: validate ──────────────────────────────────────────────────────────
-echo ""
-echo "=== Step I: validation ==="
+echo "=== Step G: validation ==="
+# n_unique_id == n_distinct_responses confirms the id is collision-free over the 4-field key;
+# out_of_omop_range == 0 confirms every id sits in OMOP's custom-concept range.
 bq --project_id="$PROJECT" query --use_legacy_sql=false --format=pretty "
 SELECT
-  (SELECT COUNT(*) FROM \`$PROJECT.relational.responses\`)          AS responses_rows,
-  COUNT(*)                                                           AS source_codes_rows,
-  COUNT(DISTINCT response_unique_id)                                 AS n_unique_id,
+  COUNT(*)                                          AS response_rows,
+  COUNT(DISTINCT response_unique_id)                AS n_unique_id,
+  COUNT(DISTINCT CONCAT(
+    COALESCE(secondary_source_concept_id,''), '|',
+    COALESCE(source_question_concept_id,''),  '|',
+    COALESCE(question_concept_id,''),         '|',
+    COALESCE(response_value_as_string,'')))         AS n_distinct_responses,
   COUNTIF(response_unique_id <= 2000000000
-       OR response_unique_id >= 9223372036854775807)                 AS out_of_omop_range
-FROM \`$PROJECT.relational.response_source_codes\`"
+       OR response_unique_id >= 9223372036854775807) AS out_of_omop_range
+FROM \`$PROJECT.relational.responses\`
+WHERE response_value_as_string IS NOT NULL AND response_value_as_string <> ''"
 
 echo ""
 echo "=== Pipeline complete ==="

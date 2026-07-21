@@ -1,9 +1,9 @@
-# Run protocol — `relational.response_source_codes` in stage / prod
+# Run protocol — `response_unique_id` on `relational.responses` (stage / prod)
 
-How to materialize the OMOP source-code table (`sql/omop/response_source_codes.sql`) in a real BigQuery
-project. The OMOP step is the *last* step of a chain — it reads `relational.responses` + the dimension tables,
-so those must exist first. This protocol builds the whole chain, idempotently, with a dry-run gate before
-every write.
+How to populate `relational.responses` with the stable `response_unique_id` (the OMOP-compatible id, from the
+`response_unique_id` UDF) in a real BigQuery project. This is the end of *this* repo's OMOP responsibility —
+the Usagi source-code prep is maintained **downstream** by the OMOP mapping owner. The protocol builds the
+whole chain, idempotently, with a dry-run gate before every write. (`scripts/run_pipeline.sh` automates it.)
 
 > **Prod guardrail.** Everything here is safe to run in **stage** yourself. In **prod**, run every step
 > yourself on your own machine — the only prod operation anyone else (incl. an assistant) should run is the
@@ -69,7 +69,7 @@ python scripts/smoke_test_omop_hash.py        # hash + response_unique_id determ
 ## Step B — dry-run everything first (0 bytes billed, syntax/type check)
 
 ```bash
-for f in "$UNPIVOT_DIR"/unpivot_*.sql "$UNPIVOT_DIR"/type_response_values.sql sql/omop/response_source_codes.sql; do
+for f in "$UNPIVOT_DIR"/unpivot_*.sql; do
   echo "dry-run: $f"
   envsubst '${PROJECT}' < "$f" | bq --project_id=$PROJECT query --use_legacy_sql=false --dry_run || { echo "FAILED: $f"; break; }
 done
@@ -103,44 +103,40 @@ done
 envsubst '${PROJECT}' < "$UNPIVOT_DIR"/type_response_values.sql | bq --project_id=$PROJECT query --use_legacy_sql=false
 ```
 
-## Step E — create the `response_source_codes` view
-
-Run once to create (or update) the view definition. After this, the view is always current —
-no re-run needed when `responses` is repopulated.
-
-```bash
-sed 's/${PROJECT}/'"$PROJECT"'/g' sql/omop/response_source_codes.sql | bq --project_id=$PROJECT query --use_legacy_sql=false
-```
-
-## Step F — validate (counts + id uniqueness; NO verbatim values printed)
+## Step E — validate `response_unique_id` on `responses` (no verbatim values printed)
 
 ```bash
 bq --project_id=$PROJECT query --use_legacy_sql=false --format=pretty "
 SELECT
-  COUNT(*)                                   AS n_rows,
-  COUNT(DISTINCT response_unique_id)         AS n_unique_id,   -- expect = n_rows (no 60-bit collisions)
-  MIN(response_unique_id)                    AS min_id,        -- expect > 2000000000
-  MAX(response_unique_id)                    AS max_id,        -- expect < 9223372036854775807
+  COUNT(*)                                          AS response_rows,
+  COUNT(DISTINCT response_unique_id)                AS n_unique_id,
+  COUNT(DISTINCT CONCAT(
+    COALESCE(secondary_source_concept_id,''), '|',
+    COALESCE(source_question_concept_id,''),  '|',
+    COALESCE(question_concept_id,''),         '|',
+    COALESCE(response_value_as_string,'')))         AS n_distinct_responses,   -- expect = n_unique_id
   COUNTIF(response_unique_id <= 2000000000
-       OR response_unique_id >= 9223372036854775807) AS out_of_omop_range  -- expect 0
-FROM \`$PROJECT.relational.response_source_codes\`"
+       OR response_unique_id >= 9223372036854775807) AS out_of_omop_range        -- expect 0
+FROM \`$PROJECT.relational.responses\`
+WHERE response_value_as_string IS NOT NULL AND response_value_as_string <> ''"
 ```
 
-`n_unique_id = n_rows` and `out_of_omop_range = 0` confirm ids are unique and OMOP-valid.
-(Repo `sql/unpivot/validate_responses.sql` has broader upstream checks for the `responses` fact.)
+`n_unique_id = n_distinct_responses` (collision-free over the 4-field key) and `out_of_omop_range = 0`
+confirm the ids are unique and OMOP-valid. (`sql/unpivot/validate_responses.sql` has broader upstream checks.)
 
 ## Governance / PII
 
-`response_value_verbatim` is free text = PII/PHI. Govern this view at its inputs' sensitivity, and restrict
-which free-text (`response_kind = 'free_text'`) questions you export to Usagi to a vetted allow-list. Do not
-print verbatim values into logs/tickets. See `docs/omop_source_codes.md`.
+`response_value_as_string` on `responses` is free text = PII/PHI. Govern `responses` at its inputs'
+sensitivity and don't print verbatim values into logs/tickets. Selecting which free-text questions to export
+to Usagi (a vetted allow-list) happens **downstream** and never changes ids. See `docs/omop_source_codes.md`.
 
 ## Idempotency / rollback
 
-- Every step is re-runnable: `setup_relational.py --recreate` drops and recreates `responses` with the
-  current schema (then re-run unpivots); each `unpivot_*.sql` clears its own rows first;
-  `response_source_codes.sql` is `CREATE OR REPLACE VIEW`.
-- To roll back just the view: `bq rm -f --view $PROJECT:relational.response_source_codes`.
+- Every step is re-runnable: the `response_unique_id` UDF is `CREATE OR REPLACE FUNCTION`;
+  `setup_relational.py --recreate` drops and recreates `responses` with the current schema (then re-run the
+  unpivots); each `unpivot_*.sql` clears its own rows first.
+- To roll back the fact: `bq rm -f -t $PROJECT:relational.responses` (or re-run with `--recreate`). To drop
+  the UDF: `bq rm -f --routine $PROJECT:relational.response_unique_id`.
 
 ## One-liner recap (stage)
 
@@ -150,5 +146,5 @@ python scripts/smoke_test_omop_hash.py
 sed 's/${PROJECT}/'"$PROJECT"'/g' sql/omop/response_unique_id_udf.sql | bq --project_id=$PROJECT query --use_legacy_sql=false
 python scripts/setup_relational.py --project $PROJECT --mapping $MAPPING --dims --recreate
 for f in "$UNPIVOT_DIR"/unpivot_*.sql; do bq --project_id=$PROJECT query --use_legacy_sql=false < "$f"; done
-sed 's/${PROJECT}/'"$PROJECT"'/g' sql/omop/response_source_codes.sql | bq --project_id=$PROJECT query --use_legacy_sql=false
+# (or just run: scripts/run_pipeline.sh --project $PROJECT)
 ```
