@@ -27,7 +27,6 @@ carried) — the pattern, not the data.
 | `00_responses_ddl.sql` | `CREATE TABLE responses` + the `colmap` view over the loaded mapping. Run once. |
 | `unpivot_<table>.sql`  | per survey table: a `DELETE` (idempotent) then `INSERT … SELECT` (`UNPIVOT` + colmap join). |
 | `type_response_values.sql` | post-load typing step: routes 9-digit strings → `response_value_as_concept_id`, numeric strings → `response_value_as_number`. Run once after all unpivot files. |
-| `v_responses_sata_v2.sql` | **view** presenting the SATA "option-as-answer" representation alongside the legacy `responses` fact (option-as-question). No data copied; non-SATA rows pass through. See [`docs/sata_representation.md`](../../docs/sata_representation.md). |
 | `validate_responses.sql` | post-run checks (volume, grain uniqueness, referential integrity, loop sanity, tooth-loss spot-check). |
 
 **Idempotent:** each `unpivot_<table>.sql` clears that table's rows (`DELETE … WHERE source_table = …`)
