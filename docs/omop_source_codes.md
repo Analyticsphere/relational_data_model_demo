@@ -96,7 +96,7 @@ invalidates every previously-issued id:
 Each distinct verbatim free-text string gets its own id and its own Usagi row — that's the point
 (typed drug names → RxNorm, condition text → SNOMED, etc.). Two consequences:
 
-- **`value_norm`** (a decoration column: NFC + trim + collapse whitespace + lowercase) is offered
+- **`response_value_norm`** (a decoration column: NFC + trim + collapse whitespace + lowercase) is offered
   *only* as an optional grouping key if the volume of near-duplicate strings is painful to map — it
   does **not** change the id.
 - **Governance.** A catalog of every distinct free-text string is a PII/PHI surface. Before

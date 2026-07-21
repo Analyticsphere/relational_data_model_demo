@@ -44,7 +44,7 @@ SELECT
     ELSE 'free_text'
   END AS response_kind,
   -- optional downstream grouping key for free text (NFC/trim/space/lowercase)
-  LOWER(REGEXP_REPLACE(NORMALIZE(TRIM(d.response_value_as_string), NFC), r'\s+', ' ')) AS value_norm,
+  LOWER(REGEXP_REPLACE(NORMALIZE(TRIM(d.response_value_as_string), NFC), r'\s+', ' ')) AS response_value_norm,
   -- Usagi's source_code_description: coded -> question + answer label; else question + verbatim
   CONCAT(COALESCE(q.question_text, ''), ' | ',
          COALESCE(resp.format_value, d.response_value_as_string)) AS source_code_description
