@@ -5,13 +5,19 @@ on synthetic data.
 
 | File | What it does |
 |---|---|
-| `response_source_codes.sql` | Builds `relational.response_source_codes` — one **deterministic** SHA-256 id per unique response (`response_hash_id`), the stable `source_code` a colleague maps to OMOP concepts in **Usagi** (incl. every unique free-text response). Also emits `response_unique_id` — the same id as an integer in OMOP's custom-concept range (>2e9), a pure projection of the hash. |
+| `response_unique_id_udf.sql` | Persistent BigQuery UDF `relational.response_unique_id(...)` — the single canonical definition of the id contract. Returns a stable **INT64** per unique response, in OMOP's custom-concept range (`> 2e9`). Called in every unpivot `INSERT`, so the id lands on `relational.responses`. |
+| [`../../scripts/smoke_test_omop_hash.py`](../../scripts/smoke_test_omop_hash.py) | Production-free smoke test of the id recipe (DuckDB == Python, OMOP range, determinism, collision-safety). |
 
-**Reproducibility contract:** `response_hash_id` hashes **only** four raw, stable fields
+**Reproducibility contract:** `response_unique_id = 2000000001 + (first 15 hex chars of SHA-256(x))`, where
+`x` joins **only** four raw, stable fields
 (`secondary_source_concept_id | source_question_concept_id | question_concept_id | response_value_as_string`,
-`'|'`-joined, `NULL → ''`, UTF-8, SHA-256 → lowercase hex). No normalization, classification, or typed
-columns feed the hash, so it can't drift; all other columns are decoration. The same recipe reproduces on
-Snowflake / Spark / Postgres / Python — best practice is to **compute once here, store, and read**.
+`'|'`-joined, `NULL → ''`, UTF-8). No normalization, classification, or typed columns feed it, so it can't
+drift; the same recipe reproduces on Snowflake / Spark / Postgres / Python. Best practice: **compute once at
+unpivot time, store on `responses`, and read.**
 
-Full spec, cross-platform parity, PII/governance, and the up-front decisions →
+> The Usagi source-code projection (distinct responses + `source_code_description`) is maintained
+> **downstream** by the OMOP mapping owner. This repo's OMOP responsibility ends at `response_unique_id` on
+> `relational.responses`.
+
+Full spec, cross-platform parity, PII/governance →
 [`docs/omop_source_codes.md`](../../docs/omop_source_codes.md).
